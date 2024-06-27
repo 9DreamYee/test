@@ -229,7 +229,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
             AllnetsSegments.emplace_back(net);
             one_net.emplace_back(net);
             }
-        //Processing boundary Info 保留boundaryID的作法 加快後續移動boundary後更新net成員函數的ˊ時間
+        //Processing boundary Info 
         else if(all_net_info_end){
             if(boundary_num){
                 Boundary_filiter = "boundary" + std::to_string(cnt) + ":";
@@ -249,6 +249,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
             }
         }    
     }//while(getline) end
+     //processing the last boundary info
     ID = cnt-1;
     FindStartAndEndPoint(one_boundary,start,end);
     CreatingBoundary(one_boundary,start,end,ID,boundaries);
@@ -274,10 +275,14 @@ int main(int argc,char* argv[]){
     //std::vector<Segment> NetSegments;
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries);
     //OutputFile_OctilinearizeBoundary(file,AllBoundarySegments,AllnetsSegments);
-    //nets.erase(nets.begin());
     /*for (int i = 0;i < nets.size();i++){
         std::cout<<"Net:"<<i<<" "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
         nets[i].PrintNetSegments(); 
+    }
+    for (int i = 0;i< boundaries.size();i++){
+        std::cout<<"Boundary:"<<boundaries[i].BoundaryID<<" "<<boundaries[i].startPoint.a<<" "<<boundaries[i].startPoint.b<<" "<<boundaries[i].endPoint.a<<" "<<boundaries[i].endPoint.b<<std::endl;
+        for(auto seg:boundaries[i].BoundarySegments)
+            std::cout<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<std::endl;
     }*/
     return 0;
 }//end of  main
