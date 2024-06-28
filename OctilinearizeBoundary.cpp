@@ -112,14 +112,20 @@ class Net{
 
         void PrintNetSegments(){
             for(int i = 0;i < NetSegments.size();i++){
-                std::cout<<"Net_segment: "<<NetSegments[i].p0.a<<" "<<NetSegments[i].p0.b<<" "<<NetSegments[i].p1.a<<" "<<NetSegments[i].p1.b<<"\n";
+                std::cout<<"_view.drawLine("<<NetSegments[i].p0.a<<","<<NetSegments[i].p0.b<<","<<NetSegments[i].p1.a<<","<<NetSegments[i].p1.b<<");\n";
+                //std::cout<<"Net_segment: "<<NetSegments[i].p0.a<<" "<<NetSegments[i].p0.b<<" "<<NetSegments[i].p1.a<<" "<<NetSegments[i].p1.b<<"\n";
             }
         }
-        /*void PrintBoundarySegments(){
-            for(int i = 0;i < BoundarySegments.size();i++){
-                std::cout<<"Boundary_segment: "<<BoundarySegments[i].p0.a<<" "<<BoundarySegments[i].p0.b<<" "<<BoundarySegments[i].p1.a<<" "<<BoundarySegments[i].p1.b<<"\n";
+        void PrintBoundarySegments(){
+            for(int i = 0;i < Boundaries.size();i++){
+                /*std::cout<<"Boundary_StartAndEndPoint: "<< Boundaries[i].startPoint.a<<" "<<Boundaries[i].startPoint.b
+                    <<" "<<Boundaries[i].endPoint.a<<" "<<Boundaries[i].endPoint.b<<"\n";*/        
+                for(auto seg:Boundaries[i].BoundarySegments){
+                    std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
+                    //std::cout<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<"\n";
+                }
             }
-        }*/
+        }
 };
 void ProcessingSegmentInfo(std::string &str,double &start_x,double &start_y,double &end_x,double &end_y){
     std::string temp,str_start_x,str_start_y,str_end_x,str_end_y;
@@ -237,7 +243,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
                     ID = cnt-1;
                     cnt++;
                     FindStartAndEndPoint(one_boundary,start,end);
-                    CreatingBoundary(one_boundary,start,end,ID,boundaries);
+                    CreatingBoundary(one_boundary,end,start,ID,boundaries);
                     one_boundary.clear();
                     boundary_num--;
                     continue;
@@ -252,18 +258,50 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
      //processing the last boundary info
     ID = cnt-1;
     FindStartAndEndPoint(one_boundary,start,end);
-    CreatingBoundary(one_boundary,start,end,ID,boundaries);
+    CreatingBoundary(one_boundary,end,start,ID,boundaries);
     one_boundary.clear();
 }
-
 void OutputFile_OctilinearizeBoundary(std::ifstream &file,std::vector<Segment> &segments,std::vector<Segment> &nets){
     std::ofstream outfile("OctilinearizeBoundary_result.txt");
-    for(int i = 0; i < nets.size(); i++){
-        outfile<<nets[i].p0.a<<" "<<nets[i].p0.b<<" "<<nets[i].p1.a<<" "<<nets[i].p1.b<<std::endl;
-    }
-    for(int i = 0; i < segments.size(); i++){
-        outfile<<segments[i].p0.a<<" "<<segments[i].p0.b<<" "<<segments[i].p1.a<<" "<<segments[i].p1.b<<std::endl;
+}
+void FindBoundariesForNet(std::vector<Net> &nets,std::vector<Boundary> &boundaries){
+    Point Net_startPoint(0,0);
+    Point Boundary_startPoint(0,0);
+    int Min = std::numeric_limits<int>::max(),Min_Index = 0;
+    int SecondMin = std::numeric_limits<int>::max(),SecondMin_Index = 0;
+    std::vector<int> DistanceBetweenNetAndBoundary;
+    for(int i = 0;i < nets.size();i++){
+        Min = std::numeric_limits<int>::max();
+        SecondMin = std::numeric_limits<int>::max();
+        Min_Index = 0;
+        SecondMin_Index = 0;
+        Net_startPoint = nets[i].startPoint;
+        for(int j = 0;j < boundaries.size();j++){
+            Boundary_startPoint = boundaries[j].startPoint;
+            DistanceBetweenNetAndBoundary.emplace_back(boost::polygon::manhattan_distance(Net_startPoint,Boundary_startPoint));
+        }
+        for(int i = 0;i < DistanceBetweenNetAndBoundary.size();i++){
+            if(DistanceBetweenNetAndBoundary[i] < Min){
+                SecondMin = Min;
+                Min = DistanceBetweenNetAndBoundary[i];
+                SecondMin_Index = Min_Index;
+                Min_Index = i;
+            }
+            else if(DistanceBetweenNetAndBoundary[i] < SecondMin && DistanceBetweenNetAndBoundary[i] != Min){
+                SecondMin = DistanceBetweenNetAndBoundary[i];
+                SecondMin_Index = i;
+            }
+        }
+        nets[i].AddBoundary(boundaries[Min_Index].startPoint,boundaries[Min_Index].endPoint,
+                boundaries[Min_Index].BoundaryID,boundaries[Min_Index].BoundarySegments);
+        nets[i].AddBoundary(boundaries[SecondMin_Index].startPoint,boundaries[SecondMin_Index].endPoint,
+                boundaries[SecondMin_Index].BoundaryID,boundaries[SecondMin_Index].BoundarySegments);
+        DistanceBetweenNetAndBoundary.clear();
     } 
+}//end of FindBoundariesForNet
+ 
+void OctilinearizeBoundary(std::vector<Net> nets,std::vector<Boundary> boundaries){
+    
 }
 int main(int argc,char* argv[]){
     std::ifstream file(argv[1]);
@@ -271,15 +309,20 @@ int main(int argc,char* argv[]){
     std::vector<Segment> AllnetsSegments;
     std::vector<Net> nets;
     std::vector<Boundary> boundaries;
-    //std::vector<Segment> BoundarySegments;
-    //std::vector<Segment> NetSegments;
+    Rectangle InnerRect = {-5e+07,-5e+07,1e+08,1e+08}; 
+    Rectangle OutterRect = {-1.4e+08,-1.4e+08,2.8e+08,2.8e+08};
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries);
+    //先讓每條net找到屬於他的boundary,並加入其成員中 判斷net的start point與boundaries的start point距離最近與第二近的就是net的兩條boundaries
+    FindBoundariesForNet(nets,boundaries);
+    OctilinearizeBoundary();
     //OutputFile_OctilinearizeBoundary(file,AllBoundarySegments,AllnetsSegments);
-    /*for (int i = 0;i < nets.size();i++){
-        std::cout<<"Net:"<<i<<" "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
+    for (int i = 0;i < nets.size();i++){
+        //std::cout<<"Net:"<<i<<" "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
         nets[i].PrintNetSegments(); 
+        //std::cout<<"Net's boundaries:\n";
+        nets[i].PrintBoundarySegments();
     }
-    for (int i = 0;i< boundaries.size();i++){
+    /*for (int i = 0;i< boundaries.size();i++){
         std::cout<<"Boundary:"<<boundaries[i].BoundaryID<<" "<<boundaries[i].startPoint.a<<" "<<boundaries[i].startPoint.b<<" "<<boundaries[i].endPoint.a<<" "<<boundaries[i].endPoint.b<<std::endl;
         for(auto seg:boundaries[i].BoundarySegments)
             std::cout<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<std::endl;
