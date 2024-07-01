@@ -109,7 +109,10 @@ class Net{
             //Boundary(Point start,Point end,int ID,std::vector<Segment> seg):
             Boundaries.emplace_back(Boundary(start,end,ID,BoundarySegments));
         }
-
+        /*Segment GetStartSegment(){
+            Segment StartSegment
+            return StartSegment;
+        }*/
         void PrintNetSegments(){
             for(int i = 0;i < NetSegments.size();i++){
                 //std::cout<<"_view.drawLine("<<NetSegments[i].p0.a<<","<<NetSegments[i].p0.b<<","<<NetSegments[i].p1.a<<","<<NetSegments[i].p1.b<<");\n";
@@ -329,27 +332,209 @@ void FindNetNearBoundary(std::vector<Net> nets,Net &NetNearBoundary0,Net &NetNea
         }
     }
 }//end of FindNetNearBoundary
+int DirectionBoundaryToExtend(Boundary &boundary,Rectangle &OutterRect){
+    // 1 for top ,2 for bottom, 3 for left, 4 for right
+    int direction = 0;
+    if(boundary.endPoint.b == OutterRect.rect_y + OutterRect.rect_h){
+        direction = 1;
+    }
+    else if (boundary.endPoint.b == OutterRect.rect_y){
+        direction = 2;
+    }
+    else if (boundary.endPoint.a == OutterRect.rect_x){
+        direction = 3;
+    }
+    else if(boundary.endPoint.a == OutterRect.rect_x + OutterRect.rect_w){
+        direction = 4;
+    }
+    return direction;
+}
+int CalculteSlope(Net &net,Segment &StartSegment){
+    // 1 for 45 degree, -1 for 135 degree, 0 for 90 degree, 2 for horizontal 
+    int slope = 0;
+    Point start(0,0);
+    start = net.startPoint;
+    //Find the StartSegment
+    for(int i = 0;i<net.NetSegments.size();i++){
+        if((net.NetSegments[i].p0.a == start.a && net.NetSegments[i].p0.b == start.b)||(net.NetSegments[i].p1.a == start.a && net.NetSegments[i].p1.b == start.b)){
+            StartSegment = net.NetSegments[i];
+            break;
+        }
+    }
+   //cal StartSegment's slope
+   //x is the same -> 90 degree & slope = 0
+    if(StartSegment.p0.a == StartSegment.p1.a){
+        slope = 0;
+    }
+    //y is the same -> horizontal & slope = 2
+    else if (StartSegment.p0.b == StartSegment.p1.b){
+        slope = 2;
+    }
+    else{
+        slope = (StartSegment.p1.b - StartSegment.p0.b) / (StartSegment.p1.a - StartSegment.p0.a);
+    }
+    return slope;
+}
+void SegmentWhichIsAbuts(std::vector<Segment> &segments,Segment &Source,Segment &Target){
+    for(int i = 0;i < segments.size();i++){
+        bool isAbuts = false;
+        isAbuts = boost::polygon::abuts(Source,segments[i]);
+        if(isAbuts){
+            Target = segments[i];
+            break;
+        }
+    }
+}//end of SegmentWhichIsAbuts
+void ExtendBoundaryToOutterRect(Boundary &boundary,Rectangle &OutterRect,int &direction){
+    int BoundarySegmentSize = boundary.BoundarySegments.size()-1;
+    Segment LastSegment = boundary.BoundarySegments[BoundarySegmentSize];
+    Segment temp_segment(LastSegment.p1.a,LastSegment.p1.b,0,0);
+    switch (direction){
+        case 1:
+            temp_segment.p1.a = LastSegment.p1.a;
+            temp_segment.p1.b = OutterRect.rect_y + OutterRect.rect_h;
+            break;
+        case 2:
+            temp_segment.p1.a = LastSegment.p1.a;
+            temp_segment.p1.b = OutterRect.rect_y;
+            break;
+        case 3:
+            temp_segment.p1.a = OutterRect.rect_x;
+            temp_segment.p1.b = LastSegment.p1.b;
+            break;
+        case 4:
+            temp_segment.p1.a = OutterRect.rect_x + OutterRect.rect_w;
+            temp_segment.p1.b = LastSegment.p1.b;
+
+    }
+    boundary.BoundarySegments.emplace_back(temp_segment);
+}
+//Find value of x2 to match the slope
+void FindX2(int &x1,int &y1,int &x2,int &y2,int slope){
+    x2 = x1+(y2-y1)/slope;
+}
+void OctilinearizeBoundaryCase_BothNetsAreVertical(Boundary &boundary,Net &temp_net,Segment &temp_segment,Point &temp_point){
+    int SecondLineSlope = 0;
+    int dx = 0,dy = 0;
+    Segment FirstLine(0,0,0,0);
+    Segment SecondLine(0,0,0,0);
+    Segment AbutswithStartSegment(0,0,0,0);
+    boundary.BoundarySegments.clear();
+    //first line
+    temp_point.a = boundary.startPoint.a;
+    FirstLine.p0.a = boundary.startPoint.a;
+    FirstLine.p0.b = boundary.startPoint.b;
+    FirstLine.p1.a = temp_point.a;
+    FirstLine.p1.b = temp_point.b;
+    boundary.BoundarySegments.emplace_back(FirstLine);
+    //Find Segment which abuts with startSegment
+    SegmentWhichIsAbuts(temp_net.NetSegments,temp_segment,AbutswithStartSegment);
+    dx = AbutswithStartSegment.p0.a - AbutswithStartSegment.p1.a;
+    dy = AbutswithStartSegment.p0.b - AbutswithStartSegment.p1.b;
+    if(dy != 0){
+            SecondLineSlope = dy/dx;
+    }
+    //second line
+    temp_point.b = AbutswithStartSegment.p1.b;
+    //temp_point.a, x2 = x1+(y2-y1)/slope
+    //FindX2(FirstLine.p1.a,FirstLine.p1.b,temp_point.a,temp_point.b,SecondLineSlope);
+    temp_point.a = FirstLine.p1.a + (temp_point.b-FirstLine.p1.b)/SecondLineSlope;
+    SecondLine.p0.a = FirstLine.p1.a;
+    SecondLine.p0.b = FirstLine.p1.b;
+    SecondLine.p1.a = temp_point.a;
+    SecondLine.p1.b = temp_point.b;
+    boundary.BoundarySegments.emplace_back(SecondLine);
+}
+void OctilinearizeBoundaryCase_BothNetsAreHorizontal(Boundary &boundary,Net &temp_net,Segment &temp_segment,Point &temp_point){
+    int SecondLineSlope = 0;
+    int dx = 0, dy = 0;
+    Segment FirstLine(0,0,0,0);
+    Segment SecondLine(0,0,0,0);
+    Segment AbutswithStartSegment(0,0,0,0);
+    boundary.BoundarySegments.clear();
+    //first line
+    temp_point.b = boundary.startPoint.b;
+    FirstLine.p0.a = boundary.startPoint.a;
+    FirstLine.p0.b = boundary.startPoint.b;
+    FirstLine.p1.a = temp_point.a;
+    FirstLine.p1.b = temp_point.b;
+    boundary.BoundarySegments.emplace_back(FirstLine);
+    //Find Segment which abuts with startSegment
+    SegmentWhichIsAbuts(temp_net.NetSegments,temp_segment,AbutswithStartSegment);
+    dx = AbutswithStartSegment.p0.a - AbutswithStartSegment.p1.a;
+    dy = AbutswithStartSegment.p0.b - AbutswithStartSegment.p1.b;
+    if(dy != 0){
+        SecondLineSlope = dy/dx;
+        }
+    //second line
+    temp_point.a = AbutswithStartSegment.p1.a;
+    //temp_point.b, y2 = (slope*x2)-(slope*x1)+y1
+    temp_point.b = (SecondLineSlope * temp_point.a)-(SecondLineSlope * FirstLine.p1.a) + FirstLine.p1.b;
+    SecondLine.p0.a = FirstLine.p1.a;
+    SecondLine.p0.b = FirstLine.p1.b;
+    SecondLine.p1.a = temp_point.a;
+    SecondLine.p1.b = temp_point.b;
+    boundary.BoundarySegments.emplace_back(SecondLine);
+}
 //Octilinearize the boundary
-void OctilinearizeBoundary(std::vector<Net> nets,std::vector<Boundary> boundaries){
+void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundaries,Rectangle &OutterRect){
     Point start(0,0);
     Point end(0,0);
+    Point temp_point(0,0);
+    int direction = 0;
     for(int i = 0;i < boundaries.size();i++){
         int BoundaryID = boundaries[i].BoundaryID;
-        int NetNearBoundary0_SegmentNumber = 0;
-        int NetNearBoundary1_SegmentNumber = 0;
+        int NetNearBoundary0_StartSegmentSlope = 0,NetNearBoundary1_StartSegmentSlope = 0;
+        //Boundary that only has one net
+        bool SpecialCase = false;
         Net NetNearBoundary0(start,end);
         Net NetNearBoundary1(start,end);
+        Net temp_net(start,end);
+        Segment NetNearBoundary0_StartSegment(0,0,0,0);
+        Segment NetNearBoundary1_StartSegment(0,0,0,0);
+        Segment temp_segment(0,0,0,0);
         FindNetNearBoundary(nets,NetNearBoundary0,NetNearBoundary1,BoundaryID);
-        NetNearBoundary0_SegmentNumber = NetNearBoundary0.NetSegments.size();
-        NetNearBoundary1_SegmentNumber = NetNearBoundary1.NetSegments.size();
-        //另外藉由判斷Boundary的start/end point來決定boundary要往哪個地方延伸
-        //先從segment數目少的開始處理
-        /*std::cout<<"Boundary ID"<<boundaries[i].BoundaryID<<" \n"<<
-            "NetNearBoundary0: "<<NetNearBoundary0.startPoint.a<<" "<<NetNearBoundary0.startPoint.b<<" "<<NetNearBoundary0.endPoint.a<<" "<<NetNearBoundary0.endPoint.b<<"\n"<<
-            "NetNearBoundary1: "<<NetNearBoundary1.startPoint.a<<" "<<NetNearBoundary1.startPoint.b<<" "<<NetNearBoundary1.endPoint.a<<" "<<NetNearBoundary1.endPoint.b<<"\n";*/
+        NetNearBoundary0_StartSegmentSlope = CalculteSlope(NetNearBoundary0,NetNearBoundary0_StartSegment);
+        NetNearBoundary1_StartSegmentSlope = CalculteSlope(NetNearBoundary1,NetNearBoundary1_StartSegment);
+        direction = DirectionBoundaryToExtend(boundaries[i],OutterRect);
+        int NetNearBoundary0_StartSegmentLength = boost::polygon::euclidean_distance(NetNearBoundary0_StartSegment.p0,NetNearBoundary0_StartSegment.p1);
+        int NetNearBoundary1_StartSegmentLength = boost::polygon::euclidean_distance(NetNearBoundary1_StartSegment.p0,NetNearBoundary1_StartSegment.p1);
+        //if net0 < net1 then length = 1 ; else length = 2
+        int length = NetNearBoundary0_StartSegmentLength < NetNearBoundary1_StartSegmentLength ? 1 : 2;
+        if(NetNearBoundary1.startPoint.a == 0 && NetNearBoundary1.startPoint.b == 0 && NetNearBoundary1.endPoint.a == 0 && NetNearBoundary1.endPoint.b == 0){
+            length = 1;
+            SpecialCase = true;
+        }
+        if(length == 1){
+            temp_net = NetNearBoundary0;
+            temp_segment = NetNearBoundary0_StartSegment;
+            temp_point.a = temp_segment.p1.a;
+            temp_point.b = temp_segment.p1.b;
+        }
+        else if(length == 2 && !SpecialCase){
+            temp_net = NetNearBoundary1;
+            temp_segment = NetNearBoundary1_StartSegment;
+            temp_point.a = temp_segment.p1.a;
+            temp_point.b = temp_segment.p1.b;
+        }
+        
+        //Nets near Boundary  both are 90 degree (vertical line)
+        if((NetNearBoundary0_StartSegmentSlope == 0 && NetNearBoundary1_StartSegmentSlope == 0)){
+            OctilinearizeBoundaryCase_BothNetsAreVertical(boundaries[i],temp_net,temp_segment,temp_point);
+            //Third line    
+            ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction);
+        }//end of nets noth are 90 drgree case
+        else if(NetNearBoundary0_StartSegmentSlope ==2 && NetNearBoundary1_StartSegmentSlope ==2){
+            OctilinearizeBoundaryCase_BothNetsAreHorizontal(boundaries[i],temp_net,temp_segment,temp_point);
+            //Third line
+            ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction);
+        }
+       for(auto seg:boundaries[i].BoundarySegments){
+            std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
+        }
 
     } 
-}
+}//end of OctilinearizeBoundary
 int main(int argc,char* argv[]){
     std::ifstream file(argv[1]);
     std::vector<Segment> AllBoundarySegments;
@@ -361,7 +546,7 @@ int main(int argc,char* argv[]){
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries);
     //先讓每條net找到屬於他的boundary,並加入其成員中 判斷net的start point與boundaries的start point距離最近與第二近的就是net的兩條boundaries
     FindBoundariesForNet(nets,boundaries);
-    OctilinearizeBoundary(nets,boundaries);
+    OctilinearizeBoundary(nets,boundaries,OutterRect);
     //OutputFile_OctilinearizeBoundary(file,AllBoundarySegments,AllnetsSegments);
     for (int i = 0;i < nets.size();i++){
         //std::cout<<"Net:"<<i<<" "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
@@ -370,7 +555,7 @@ int main(int argc,char* argv[]){
         nets[i].PrintBoundarySegments();
     }
     for (int i = 0;i< boundaries.size();i++){
-        std::cout<<"Boundary:"<<boundaries[i].BoundaryID<<" "<<boundaries[i].startPoint.a<<" "<<boundaries[i].startPoint.b<<" "<<boundaries[i].endPoint.a<<" "<<boundaries[i].endPoint.b<<std::endl;
+        //std::cout<<"Boundary:"<<boundaries[i].BoundaryID<<" "<<boundaries[i].startPoint.a<<" "<<boundaries[i].startPoint.b<<" "<<boundaries[i].endPoint.a<<" "<<boundaries[i].endPoint.b<<std::endl;
         //for(auto seg:boundaries[i].BoundarySegments)
           //  std::cout<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<std::endl;
     }
