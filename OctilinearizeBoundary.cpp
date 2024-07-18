@@ -11,6 +11,9 @@
 #include <utility>
 #include <boost/polygon/polygon.hpp>
 #include <boost/polygon/voronoi.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/segment.hpp>
 using boost::polygon::voronoi_builder;
 using boost::polygon::voronoi_diagram;
 using boost::polygon::x;
@@ -78,6 +81,9 @@ struct segment_traits<Segment> {
 };
 }  // polygon
 }  // boost
+//Define geometry type of Point and Segment to calculate covered_by()
+typedef boost::geometry::model::d2::point_xy<int> Point_g;
+typedef boost::geometry::model::segment<Point_g> Segment_g;
 
 class Net{
     public :
@@ -112,81 +118,63 @@ class Net{
         }
         void PrintNetSegments_drawing(){
             for(int i = 0;i < NetSegments.size();i++){
-                //std::cout<<"_view.drawLine("<<NetSegments[i].p0.a<<","<<NetSegments[i].p0.b<<","<<NetSegments[i].p1.a<<","<<NetSegments[i].p1.b<<");\n";
-                std::cout<<"Net_segment: "<<NetSegments[i].p0.a<<" "<<NetSegments[i].p0.b<<" "<<NetSegments[i].p1.a<<" "<<NetSegments[i].p1.b<<"\n";
+                std::cout<<"_view.drawLine("<<NetSegments[i].p0.a<<","<<NetSegments[i].p0.b<<","<<NetSegments[i].p1.a<<","<<NetSegments[i].p1.b<<");\n";
+                //std::cout<<"Net_segment: "<<NetSegments[i].p0.a<<" "<<NetSegments[i].p0.b<<" "<<NetSegments[i].p1.a<<" "<<NetSegments[i].p1.b<<"\n";
             }
         }
         void PrintBoundarySegments_drawing(){
             for(int i = 0;i < Boundaries.size();i++){
-                /*for(auto seg:Boundaries[i].BoundarySegments){
+                for(auto seg:Boundaries[i].BoundarySegments){
                     std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
-                }*/
+                }
+                /*
                 std::cout<<"Boundary_segment_info_start:\n";
                 std::cout<<"Boundary_"<<i<<"_startPoint: "<<Boundaries[i].startPoint.a<<" "<<Boundaries[i].startPoint.b;
                 std::cout<<" Boundary_"<<i<<"_endPoint: "<<Boundaries[i].endPoint.a<<" "<<Boundaries[i].endPoint.b<<"\n";
                 for(auto seg: Boundaries[i].BoundarySegments){
                     std::cout<<"Boundary_segment: "<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<"\n";
-                }
-            }
-            std::cout<<"Boundary_segment_info_end\n"; 
-            for(int i = 0;i<InnerRectBoundarySegments.size();i++){
-                /*for(auto seg:InnerRectBoundarySegments[i].BoundarySegments){
-                    std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
                 }*/
+            }
+            //std::cout<<"Boundary_segment_info_end\n"; 
+            for(int i = 0;i<InnerRectBoundarySegments.size();i++){
+                for(auto seg:InnerRectBoundarySegments[i].BoundarySegments){
+                    std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
+                }
+                /*
                 std::cout<<"InnerBoundary_segment_info_start:\n";
                 std::cout<<"InnerBoundary_"<<i<<"_startPoint: "<<InnerRectBoundarySegments[i].startPoint.a<<" "<<InnerRectBoundarySegments[i].startPoint.b;
                 std::cout<<" InnerBoundary_"<<i<<"_endPoint: "<<InnerRectBoundarySegments[i].endPoint.a<<" "<<InnerRectBoundarySegments[i].endPoint.b<<"\n";
                 for(auto seg:InnerRectBoundarySegments[i].BoundarySegments){
                     std::cout<<"InnerBoundary_segment: "<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<"\n";
-                }
-            }
-            std::cout<<"InnerBoundary_segment_info_end\n";
-            for(int i = 0 ;i < OutterRectBoundarySegments.size();i++){
-                /*for(auto seg:OutterRectBoundarySegments[i].BoundarySegments){
-                    std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
                 }*/
+            }
+            //std::cout<<"InnerBoundary_segment_info_end\n";
+            for(int i = 0 ;i < OutterRectBoundarySegments.size();i++){
+                for(auto seg:OutterRectBoundarySegments[i].BoundarySegments){
+                    std::cout<<"_view.drawLine("<<seg.p0.a<<","<<seg.p0.b<<","<<seg.p1.a<<","<<seg.p1.b<<");\n";
+                }
+                /*
                 std::cout<<"OutterBoundary_segment_info_start:\n";
                 std::cout<<"OutterBoundary_"<<i<<"_startPoint: "<<OutterRectBoundarySegments[i].startPoint.a<<" "<<OutterRectBoundarySegments[i].startPoint.b;
                 std::cout<<" OutterBoundary_"<<i<<"_endPoint: "<<OutterRectBoundarySegments[i].endPoint.a<<" "<<OutterRectBoundarySegments[i].endPoint.b<<"\n";
                 for(auto seg:OutterRectBoundarySegments[i].BoundarySegments){
                     std::cout<<"OutterBoundary_segment: "<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<"\n";
-                }
+                }*/
             }
-            std::cout<<"OutterBoundary_segment_info_end\n";
+            //std::cout<<"OutterBoundary_segment_info_end\n";
         }
-        void PrintNetSegments_info(Net &net){
-            std::ofstream outfile("OctilinearizeBoundary_result.txt");
-            for(int i = 0;i < net.NetSegments.size();i++){
-                std::cout<<"Net_segment: "<<NetSegments[i].p0.a<<" "<<NetSegments[i].p0.b<<" "<<NetSegments[i].p1.a<<" "<<NetSegments[i].p1.b<<"\n";
-            }
+    //use for calculate area
+    void PrintBoundaryTuple(){
+//        std::unordered_set<std::pair<int,int>> BoundaryTuple;
+//        std::unordered_set<std::pair<int,int>> reverseBoundaryTuple;
+        for(auto seg:Boundaries[0].BoundarySegments){
+            std::cout<<"("<<seg.p0.a<<","<<seg.p0.b<<")\n"<<"("<<seg.p1.a<<","<<seg.p1.b<<")"<<"\n";
         }
-        void PrintBoundarySegments_info(Net &net){
-            std::ofstream outfile("OctilinearizeBoundary_result.txt");
-            for(int i = 0;i < net.Boundaries.size();i++){
-                outfile<<"Boundary_"<<i<<"_startPoint: "<<net.Boundaries[i].startPoint.a<<" "<<net.Boundaries[i].startPoint.b;
-                outfile<<" Boundary_"<<i<<"_endPoint: "<<net.Boundaries[i].endPoint.a<<" "<<net.Boundaries[i].endPoint.b<<"\n";
-                for(int j = 0;j < net.Boundaries[i].BoundarySegments.size();j++){
-                    outfile<<"Boundary_"<<i<<"_segment: "<< net.Boundaries[i].BoundarySegments[j].p0.a<<" "<<net.Boundaries[i].BoundarySegments[j].p0.b<<" "<<
-                        net.Boundaries[i].BoundarySegments[j].p1.a<<" "<<net.Boundaries[i].BoundarySegments[j].p1.b<<"\n";
-                }
-            }
-            for(int i = 0;i < net.InnerRectBoundarySegments.size();i++){
-                outfile<<"InnerBoundary_"<<i<<"_startPoint: "<<net.InnerRectBoundarySegments[i].startPoint.a<<" "<<net.InnerRectBoundarySegments[i].startPoint.b;
-                outfile<<" InnerBoundary_"<<i<<"_endPoint: "<<net.InnerRectBoundarySegments[i].endPoint.a<<" "<<net.InnerRectBoundarySegments[i].endPoint.b<<"\n";
-                for(int j = 0;j < net.InnerRectBoundarySegments[i].BoundarySegments.size();j++){
-                    outfile<<"InnerBoundary_"<<i<<"_segment: "<< net.InnerRectBoundarySegments[i].BoundarySegments[j].p0.a<<" "<<net.InnerRectBoundarySegments[i].BoundarySegments[j].p0.b<<" "<<
-                        net.InnerRectBoundarySegments[i].BoundarySegments[j].p1.a<<" "<<net.InnerRectBoundarySegments[i].BoundarySegments[j].p1.b<<"\n";
-                }
-            }
-            for(int i = 0; i < net.OutterRectBoundarySegments.size();i++){
-                outfile<<"OutterBoundary_"<<i<<"_startPoint: "<<net.OutterRectBoundarySegments[i].startPoint.a<<" "<<net.OutterRectBoundarySegments[i].startPoint.b;
-                outfile<<" OutterBoundary_"<<i<<"_endPoint: "<<net.OutterRectBoundarySegments[i].endPoint.a<<" "<<net.OutterRectBoundarySegments[i].endPoint.b<<"\n";
-                for(int j = 0;j < net.OutterRectBoundarySegments[i].BoundarySegments.size();j++){
-                    outfile<<"OutterBoundary_"<<i<<"_segment: "<< net.OutterRectBoundarySegments[i].BoundarySegments[j].p0.a<<" "<<net.OutterRectBoundarySegments[i].BoundarySegments[j].p0.b<<" "<<
-                        net.OutterRectBoundarySegments[i].BoundarySegments[j].p1.a<<" "<<net.OutterRectBoundarySegments[i].BoundarySegments[j].p1.b<<"\n";
-                }
-            }
+        for(int j = Boundaries[1].BoundarySegments.size()-1;j >= 0;j--){
+            std::cout<<"("<<Boundaries[1].BoundarySegments[j].p1.a<<","<<Boundaries[1].BoundarySegments[j].p1.b<<")\n"<<"("<<Boundaries[1].BoundarySegments[j].p0.a<<","<<Boundaries[1].BoundarySegments[j].p0.b<<")"<<"\n";
         }
+    }
+
 };
 void ProcessingSegmentInfo(std::string &str,double &start_x,double &start_y,double &end_x,double &end_y){
     std::string temp,str_start_x,str_start_y,str_end_x,str_end_y;
@@ -355,8 +343,8 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
     CreatingBoundary(one_boundary,end,start,ID,boundaries);
     one_boundary.clear();
 }
-void OutputFile_OctilinearizeBoundary(std::vector<Net> &nets){
-    /*std::ofstream outfile("OctilinearizeBoundary_result.txt");
+/*void OutputFile_OctilinearizeBoundary(std::vector<Net> &nets){
+    std::ofstream outfile("OctilinearizeBoundary_result.txt");
     for (int i = 0;i < nets.size();i++){
         outfile<<"Net"<<i<<":\n"<<"Net"<<i<<"_startPoint: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" Net"<<i<<"_endPoint: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
         outfile<<"Net"<<i<<"_segments_number: "<<nets[i].NetSegments.size()<<"\n";
@@ -391,8 +379,8 @@ void OutputFile_OctilinearizeBoundary(std::vector<Net> &nets){
                         nets[i].OutterRectBoundarySegments[j].BoundarySegments[k].p1.a<<" "<<nets[i].OutterRectBoundarySegments[j].BoundarySegments[k].p1.b<<"\n";
             }
         }
-    }*/
-}
+    }
+}*/
 void FindBoundariesForNet(std::vector<Net> &nets,std::vector<Boundary> &boundaries){
     Point Net_startPoint(0,0);
     Point Boundary_startPoint(0,0);
@@ -881,7 +869,7 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
         direction = DirectionBoundaryToExtend(boundaries[i],OutterRect);
         int NetNearBoundary0_StartSegmentLength = boost::polygon::euclidean_distance(NetNearBoundary0_StartSegment.p0,NetNearBoundary0_StartSegment.p1);
         int NetNearBoundary1_StartSegmentLength = boost::polygon::euclidean_distance(NetNearBoundary1_StartSegment.p0,NetNearBoundary1_StartSegment.p1);
-        //if net0 < net1 then length = 1 ; else length = 2
+        //if net0 < net1 then length = 1 ; else length = 2 
         int length = NetNearBoundary0_StartSegmentLength < NetNearBoundary1_StartSegmentLength ? 1 : 2;
         if(length == 1){
             temp_net = NetNearBoundary0;
@@ -910,7 +898,6 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
             //Third line
             ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction,temp_endPoint);
         }//end of nets that both are 0 degree case
-        
         //Net near Boundary that both are 45/135degree select longer ner to be refer
         else if((NetNearBoundary0_StartSegmentSlope == 1 && NetNearBoundary1_StartSegmentSlope == 1)||
                 (NetNearBoundary0_StartSegmentSlope == -1 && NetNearBoundary1_StartSegmentSlope == -1)){
@@ -947,7 +934,7 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
             OctilinearizeBoundaryCase_BothNetsAre45or135Degree(boundaries[i],temp_net,temp_segment,temp_point);
             ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction,temp_endPoint);
         }//end of nets that both are 45/135 degree case
-        //Net near Boundary that one is 90 degree and one is 45/135 degree
+        //Net near Boundary that one is 0/90 degree and one is 45/135 degree
         else{
              if(NetNearBoundary0_StartSegmentSlope == 0 || NetNearBoundary0_StartSegmentSlope == 2){
                 temp_net = NetNearBoundary0;
@@ -1184,6 +1171,162 @@ void FindOutterBoundaryForNet(std::vector<Net> &nets,Rectangle &OutterRect){
         }//end of exception
    }
 }//end of FindOutterBoundaryForNet
+
+//Check if the innerboundary segment is contained in the boundary
+bool isSegmentContained(Segment_g &contained,Segment_g &container){
+    Point_g p3 = contained.first;
+    Point_g p4 = contained.second;
+    //check if start point and end point of the inner boundary are contained in the net's boundary
+    bool start_on_container = boost::geometry::covered_by(p3,container);
+    bool end_on_container = boost::geometry::covered_by(p4,container);
+    return start_on_container && end_on_container;
+}
+//Eliminate overlapping between inner boundary and net's boundary
+void EliminateOverlappingBetweenInnerBoundary(std::vector<Net> &nets){
+    Segment_g boundary0_startsegment(Point_g(0,0),Point_g(0,0));
+    Segment_g boundary1_startsegment(Point_g(0,0),Point_g(0,0));
+    Segment_g InnerBoundary0(Point_g(0,0),Point_g(0,0));
+    Segment_g InnerBoundary1(Point_g(0,0),Point_g(0,0));
+    Boundary temp_boundary = nets[0].Boundaries[0];
+    int needUpdateboundaryID = 0;
+    bool needUpdate = false;
+    for(int i = 0;i < nets.size();i++){
+        needUpdate = false;
+        if(nets[i].InnerRectBoundarySegments.size() >1 ){
+            //InnerBoundary info
+            InnerBoundary0.first.x(nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p0.a);
+            InnerBoundary0.first.y(nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p0.b);
+            InnerBoundary0.second.x(nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p1.a);
+            InnerBoundary0.second.y(nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p1.b);
+            InnerBoundary1.first.x(nets[i].InnerRectBoundarySegments[1].BoundarySegments[0].p0.a);
+            InnerBoundary1.first.y(nets[i].InnerRectBoundarySegments[1].BoundarySegments[0].p0.b);
+            InnerBoundary1.second.x(nets[i].InnerRectBoundarySegments[1].BoundarySegments[0].p1.a);
+            InnerBoundary1.second.y(nets[i].InnerRectBoundarySegments[1].BoundarySegments[0].p1.b);
+            //net's boundary info
+            boundary0_startsegment.first.x(nets[i].Boundaries[0].BoundarySegments[0].p0.a);
+            boundary0_startsegment.first.y(nets[i].Boundaries[0].BoundarySegments[0].p0.b);
+            boundary0_startsegment.second.x(nets[i].Boundaries[0].BoundarySegments[0].p1.a);
+            boundary0_startsegment.second.y(nets[i].Boundaries[0].BoundarySegments[0].p1.b);
+            boundary1_startsegment.first.x(nets[i].Boundaries[1].BoundarySegments[0].p0.a);
+            boundary1_startsegment.first.y(nets[i].Boundaries[1].BoundarySegments[0].p0.b);
+            boundary1_startsegment.second.x(nets[i].Boundaries[1].BoundarySegments[0].p1.a);
+            boundary1_startsegment.second.y(nets[i].Boundaries[1].BoundarySegments[0].p1.b);
+            if(isSegmentContained(InnerBoundary0,boundary0_startsegment)){
+                std::cout<<"InnerBoundary0 is contained in boundary0_startsegment,net id"<<i<<std::endl;
+                needUpdate = true;
+                needUpdateboundaryID = nets[i].Boundaries[0].BoundaryID; 
+                if(boundary0_startsegment.first.x() == InnerBoundary0.first.x() && boundary0_startsegment.first.y() == InnerBoundary0.first.y()){
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.a = InnerBoundary0.second.x();
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.b = InnerBoundary0.second.y();
+                    nets[i].Boundaries[0].startPoint.a = InnerBoundary0.second.x();
+                    nets[i].Boundaries[0].startPoint.b = InnerBoundary0.second.y();
+                }
+                else if(boundary0_startsegment.first.x() == InnerBoundary0.second.x() && boundary0_startsegment.first.y() == InnerBoundary0.second.y()){
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.a = InnerBoundary0.first.x();
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.b = InnerBoundary0.first.y();
+                    nets[i].Boundaries[0].startPoint.a = InnerBoundary0.first.x();
+                    nets[i].Boundaries[0].startPoint.b = InnerBoundary0.first.y();
+                }
+                temp_boundary = nets[i].Boundaries[0];
+            }
+            else if(isSegmentContained(InnerBoundary0,boundary1_startsegment)){
+                std::cout<<"InnerBoundary0 is contained in boundary1_startsegment,net id"<<i<<std::endl;
+                needUpdate = true;
+                needUpdateboundaryID = nets[i].Boundaries[1].BoundaryID;
+                if(boundary1_startsegment.first.x() == InnerBoundary0.first.x() && boundary1_startsegment.first.y() == InnerBoundary0.first.y()){
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.a = InnerBoundary0.second.x();
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.b = InnerBoundary0.second.y();
+                    nets[i].Boundaries[1].startPoint.a = InnerBoundary0.second.x();
+                    nets[i].Boundaries[1].startPoint.b = InnerBoundary0.second.y();
+                }
+                else if(boundary1_startsegment.first.x() == InnerBoundary0.second.x() && boundary1_startsegment.first.y() == InnerBoundary0.second.y()){
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.a = InnerBoundary0.first.x();
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.b = InnerBoundary0.first.y();
+                    nets[i].Boundaries[1].startPoint.a = InnerBoundary0.first.x();
+                    nets[i].Boundaries[1].startPoint.b = InnerBoundary0.first.y();
+                }
+                temp_boundary = nets[i].Boundaries[1];
+            }
+            else if(isSegmentContained(InnerBoundary1,boundary0_startsegment)){
+                std::cout<<"InnerBoundary1 is contained in boundary0_startsegment,net id"<<i<<std::endl;
+                needUpdate = true;
+                needUpdateboundaryID = nets[i].Boundaries[0].BoundaryID;
+                if(boundary0_startsegment.first.x() == InnerBoundary1.first.x() && boundary0_startsegment.first.y() == InnerBoundary1.first.y()){
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.a = InnerBoundary1.second.x();
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.b = InnerBoundary1.second.y();
+                    nets[i].Boundaries[0].startPoint.a = InnerBoundary1.second.x();
+                    nets[i].Boundaries[0].startPoint.b = InnerBoundary1.second.y();
+                }
+                else if(boundary0_startsegment.first.x() == InnerBoundary1.second.x() && boundary0_startsegment.first.y() == InnerBoundary1.second.y()){
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.a = InnerBoundary1.first.x();
+                    nets[i].Boundaries[0].BoundarySegments[0].p0.b = InnerBoundary1.first.y();
+                    nets[i].Boundaries[0].startPoint.a = InnerBoundary1.first.x();
+                    nets[i].Boundaries[0].startPoint.b = InnerBoundary1.first.y();
+                }
+                temp_boundary = nets[i].Boundaries[0];
+            }
+            else if (isSegmentContained(InnerBoundary1,boundary1_startsegment)){
+                needUpdate = true;
+                needUpdateboundaryID = nets[i].Boundaries[1].BoundaryID;
+                    if(boundary1_startsegment.first.x() == InnerBoundary1.first.x() && boundary1_startsegment.first.y() == InnerBoundary1.first.y()){
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.a = InnerBoundary1.second.x();
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.b = InnerBoundary1.second.y();
+                    nets[i].Boundaries[1].startPoint.a = InnerBoundary1.second.x();
+                    nets[i].Boundaries[1].startPoint.b = InnerBoundary1.second.y();
+                }
+                else if(boundary1_startsegment.first.x() == InnerBoundary1.second.x() && boundary1_startsegment.first.y() == InnerBoundary1.second.y()){
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.a = InnerBoundary1.first.x();
+                    nets[i].Boundaries[1].BoundarySegments[0].p0.b = InnerBoundary1.first.y();
+                    nets[i].Boundaries[1].startPoint.a = InnerBoundary1.first.x();
+                    nets[i].Boundaries[1].startPoint.b = InnerBoundary1.first.y();
+                }
+                temp_boundary = nets[i].Boundaries[1];
+            }
+
+            //Update the boundary/Innerboundary info
+            if(needUpdate){
+                nets[i].InnerRectBoundarySegments.pop_back();
+                nets[i].InnerRectBoundarySegments[0].startPoint.a = nets[i].Boundaries[0].startPoint.a;
+                nets[i].InnerRectBoundarySegments[0].startPoint.b = nets[i].Boundaries[0].startPoint.b;
+                nets[i].InnerRectBoundarySegments[0].endPoint.a = nets[i].Boundaries[1].startPoint.a;
+                nets[i].InnerRectBoundarySegments[0].endPoint.b = nets[i].Boundaries[1].startPoint.b;
+                nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p0.a = nets[i].Boundaries[0].startPoint.a;
+                nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p0.b = nets[i].Boundaries[0].startPoint.b;
+                nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p1.a = nets[i].Boundaries[1].startPoint.a;
+                nets[i].InnerRectBoundarySegments[0].BoundarySegments[0].p1.b = nets[i].Boundaries[1].startPoint.b;
+                
+                for(int j = 0;j < nets.size();j++){
+                    int temp_ID0 = nets[j].Boundaries[0].BoundaryID;
+                    int temp_ID1 = nets[j].Boundaries[1].BoundaryID;
+                    if(temp_ID0 == needUpdateboundaryID && j!=i ){
+                        nets[j].Boundaries[0] = temp_boundary;
+                    //nets[j]'s InnerRectBoundarySegments info
+                        nets[j].InnerRectBoundarySegments[0].startPoint.a = nets[j].Boundaries[0].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].startPoint.b = nets[j].Boundaries[0].startPoint.b;
+                        nets[j].InnerRectBoundarySegments[0].endPoint.a = nets[j].Boundaries[1].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].endPoint.b = nets[j].Boundaries[1].startPoint.b;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p0.a = nets[j].Boundaries[0].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p0.b = nets[j].Boundaries[0].startPoint.b;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p1.a = nets[j].Boundaries[1].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p1.b = nets[j].Boundaries[1].startPoint.b;
+                    }
+                    else if(temp_ID1 == needUpdateboundaryID && j!=i){
+                        nets[j].Boundaries[1] = temp_boundary;
+                        //nets[j]'s InnerRectBoundarySegments info
+                        nets[j].InnerRectBoundarySegments[0].startPoint.a = nets[j].Boundaries[0].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].startPoint.b = nets[j].Boundaries[0].startPoint.b;
+                        nets[j].InnerRectBoundarySegments[0].endPoint.a = nets[j].Boundaries[1].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].endPoint.b = nets[j].Boundaries[1].startPoint.b;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p0.a = nets[j].Boundaries[0].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p0.b = nets[j].Boundaries[0].startPoint.b;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p1.a = nets[j].Boundaries[1].startPoint.a;
+                        nets[j].InnerRectBoundarySegments[0].BoundarySegments[0].p1.b = nets[j].Boundaries[1].startPoint.b;
+                    }
+                }
+            } //end of if(needupdate)
+        }
+    }
+}//end of EliminateOverlappingBetweenInnerBoundary
 int main(int argc,char* argv[]){
     std::ifstream file(argv[1]);
     std::vector<Segment> AllBoundarySegments;
@@ -1199,16 +1342,24 @@ int main(int argc,char* argv[]){
     UpdateNetBoundaries(nets,boundaries);
     FindInnerBoundaryForNet(nets,InnerRect);
     FindOutterBoundaryForNet(nets,OutterRect);
-    //OutputFile_OctilinearizeBoundary(file,AllBoundarySegments,AllnetsSegments);
-    OutputFile_OctilinearizeBoundary(nets);
-    for (int i = 0;i < nets.size();i++){ 
-        std::cout<<"Net"<<i<<":\n"<<"Net"<<i<<"_startPoint: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" Net"<<i<<"_endPoint: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
-        std::cout<<"Net"<<i<<"_segments_number: "<<nets[i].NetSegments.size()<<"\n";
-        //std::cout<<"Net"<<i<<":\n";
-        nets[i].PrintNetSegments_drawing(); 
-        int nets_BoundaryNumer = nets[i].Boundaries.size() + nets[i].OutterRectBoundarySegments.size() + nets[i].InnerRectBoundarySegments.size();
-        std::cout<<"Net"<<i<<"_Boundaries_number: "<<nets_BoundaryNumer<<"\n";
+    EliminateOverlappingBetweenInnerBoundary(nets);
+    //OutputFile_OctilinearizeBoundary(nets);
+    
+    //Output to check the boundary info
+    /*for (int i = 0;i < nets.size();i++){ 
+        //std::cout<<"Net"<<i<<":\n"<<"Net"<<i<<"_startPoint: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" Net"<<i<<"_endPoint: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
+        //std::cout<<"Net"<<i<<"_segments_number: "<<nets[i].NetSegments.size()<<"\n";
+        //nets[i].PrintNetSegments_drawing(); 
+        //int nets_BoundaryNumer = nets[i].Boundaries.size() + nets[i].OutterRectBoundarySegments.size() + nets[i].InnerRectBoundarySegments.size();
+        //std::cout<<"Net"<<i<<"_Boundaries_number: "<<nets_BoundaryNumer<<"\n";
         nets[i].PrintBoundarySegments_drawing();
+    }*/
+
+    //output to  calculate area of net
+    for(int i = 0;i<nets.size();i++){
+        std::cout<<"Net's tuple begin:\n";
+        nets[i].PrintBoundaryTuple(); 
+        std::cout<<"Net's tuple end\n";
     }
     return 0;
 }//end of  main

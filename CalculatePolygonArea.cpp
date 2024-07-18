@@ -19,6 +19,7 @@ BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
 #include <boost/assign.hpp>
 using boost::assign::tuple_list_of;
 typedef boost::geometry::model::polygon<boost::tuple<int,int>> Polygon;
+//Inputfile that need contain tuple info of each net
 void InputfileCalculateAreaofNet(std::ifstream& file,std::vector<Polygon> &polygons){
     std::string str,str_x,str_y;
     std::stringstream ss;
@@ -48,6 +49,7 @@ void InputfileCalculateAreaofNet(std::ifstream& file,std::vector<Polygon> &polyg
         }
     }
 }
+//Ouput the result to CSV file ; each area*1e-8 because the resolution is 1e-4, so the area is 1e-8
 void Ouptufile_AreaResult_toCSV(std::vector<Polygon> &polygons){
     std::ofstream outfile("polygon_areas.csv");
     if(!outfile.is_open()){
@@ -56,7 +58,8 @@ void Ouptufile_AreaResult_toCSV(std::vector<Polygon> &polygons){
     outfile<<"Polygon Number,Area"<<std::endl;
     for(int i = 0; i < polygons.size();i++){
         boost::geometry::correct(polygons[i]);
-        outfile<<i<<","<<std::scientific<<std::setprecision(5)<<boost::geometry::area(polygons[i])<<std::endl;
+        //std::cout<<i<<","<<std::scientific<<std::setprecision(5)<<boost::geometry::area(polygons[i])*1e-8<<std::endl;
+        outfile<<i<<","<<std::scientific<<std::setprecision(5)<<boost::geometry::area(polygons[i])*1e-8<<std::endl;
     }
     outfile.close();
 }
@@ -65,11 +68,4 @@ int main(int argc, char** argv){
     std::vector<Polygon> polygons;
     InputfileCalculateAreaofNet(file,polygons);
     Ouptufile_AreaResult_toCSV(polygons);
-    /*for(int i = 0; i < polygons.size();i++){
-        //std::cout<<"polygon before corrected: "<<boost::geometry::dsv(polygons[i])<<std::endl;
-        //std::cout<<"Area before corrected of polygon "<<i<<" is: "<<boost::geometry::area(polygons[i])<<std::endl;
-        boost::geometry::correct(polygons[i]);
-        //std::cout<<"polygon After corrected: "<<boost::geometry::dsv(polygons[i])<<std::endl;
-        std::cout<<"Area of polygon "<<i<<" is: "<<boost::geometry::area(polygons[i])<<std::endl;
-    }*/
 }
