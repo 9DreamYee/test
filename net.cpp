@@ -14,6 +14,13 @@ void Net::AddInnerRectBoundarySegments(Point &start,Point &end,const int &ID,con
 void Net::AddOutterRectBoundarySegments(Point &start,Point &end,const int &ID,const std::vector<Segment> &BoundarySegments){
     OutterRectBoundarySegments.emplace_back(Boundary(start,end,ID,BoundarySegments));
 }
+int Net::CalculateNetLength(){
+    int TotalLength = 0;
+    for (auto seg:NetSegments){
+        TotalLength += boost::polygon::length(seg);
+    }
+    return TotalLength;
+}
 void Net::PrintNetSegments_drawing(){
     for(int i = 0;i < NetSegments.size();i++){
         std::cout<<"_view.drawLine("<<NetSegments[i].p0.a<<","<<NetSegments[i].p0.b<<","<<NetSegments[i].p1.a<<","<<NetSegments[i].p1.b<<");\n";

@@ -96,6 +96,8 @@ class Net{
         void AddInnerRectBoundarySegments(Point &start,Point &end,const int &ID,const std::vector<Segment> &BoundarySegments);
         //Add OutterRectBoundary of net 
         void AddOutterRectBoundarySegments(Point &start,Point &end,const int &ID,const std::vector<Segment> &BoundarySegments);
+        //Calculate length of each net
+        int CalculateNetLength();
         //Print net's segments information to drawing
         void PrintNetSegments_drawing();
         //Print Boundary of net information to drawing

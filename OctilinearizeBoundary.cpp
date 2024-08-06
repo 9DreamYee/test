@@ -10,6 +10,7 @@
 #include <fstream>
 #include <utility>
 #include "net.h"
+#include "CalculatePolygonArea.h"
 void ProcessingSegmentInfo(std::string &str,double &start_x,double &start_y,double &end_x,double &end_y){
     std::string temp,str_start_x,str_start_y,str_end_x,str_end_y;
     std::stringstream ss;
@@ -1167,6 +1168,8 @@ int main(int argc,char* argv[]){
     std::vector<Segment> AllnetsSegments;
     std::vector<Net> nets;
     std::vector<Boundary> boundaries;
+    std::vector<Polygon_g> Polygons;
+    std::vector<double> area_result;
     Rectangle InnerRect = {-5e+07,-5e+07,1e+08,1e+08}; 
     Rectangle OutterRect = {-1.4e+08,-1.4e+08,2.8e+08,2.8e+08};
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries,InnerRect);
@@ -1177,6 +1180,7 @@ int main(int argc,char* argv[]){
     FindInnerBoundaryForNet(nets,InnerRect);
     FindOutterBoundaryForNet(nets,OutterRect);
     EliminateOverlappingBetweenInnerBoundary(nets);
+    file.close();
     //OutputFile_OctilinearizeBoundary(nets);
     
     //Output to check the boundary info
@@ -1190,10 +1194,27 @@ int main(int argc,char* argv[]){
     }*/
 
     //output to  calculate area of net
+    
+    /*
     for(int i = 0;i<nets.size();i++){
         std::cout<<"Net's tuple begin:\n";
         nets[i].PrintBoundaryTuple(); 
         std::cout<<"Net's tuple end\n";
+    }*/
+
+    //output to calculate area of net
+    file.open("InitialOctBoundary_tuple_result.txt");
+    Inputfile_CalculateAreaofNet(file,Polygons);
+    CalculateAreaofNet(Polygons,area_result);
+    //output area & length of each net
+    for(int i = 0;i < nets.size();i++){
+        int NetLength = 0;
+        std::cout<<"Net"<<i<<"_area: ";
+        std::cout<<area_result[i]<<"\n";
+        std::cout<<"Net"<<i<<"_length: ";
+        NetLength = nets[i].CalculateNetLength();
+        std::cout<<NetLength<<"\n";
     }
+    file.close();
     return 0;
 }//end of  main
