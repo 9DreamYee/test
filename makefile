@@ -1,7 +1,7 @@
 #compiler
 CXX = g++
 #compiler flags
-CXXFLAGS = -Wall -std=c++17 -O2 -g
+CXXFLAGS = -std=c++17 -O2 -g
 #target file
 TARGET = OctilinearizeBoundary
 #source files

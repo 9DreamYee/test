@@ -1206,15 +1206,16 @@ int main(int argc,char* argv[]){
     file.open("InitialOctBoundary_tuple_result.txt");
     Inputfile_CalculateAreaofNet(file,Polygons);
     CalculateAreaofNet(Polygons,area_result);
+    Outputfile_AreaResult_toCSV(Polygons);
     //output area & length of each net
-    for(int i = 0;i < nets.size();i++){
+    /*for(int i = 0;i < nets.size();i++){
         int NetLength = 0;
         std::cout<<"Net"<<i<<"_area: ";
         std::cout<<area_result[i]<<"\n";
-        std::cout<<"Net"<<i<<"_length: ";
-        NetLength = nets[i].CalculateNetLength();
-        std::cout<<NetLength<<"\n";
-    }
+        //std::cout<<"Net"<<i<<"_length: ";
+        //NetLength = nets[i].CalculateNetLength();
+        //std::cout<<NetLength<<"\n";
+    }*/
     file.close();
     return 0;
 }//end of  main

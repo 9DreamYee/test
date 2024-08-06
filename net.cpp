@@ -69,10 +69,27 @@ void Net::PrintBoundarySegments_drawing(){
     //std::cout<<"OutterBoundary_segment_info_end\n";
 }
 void Net::PrintBoundaryTuple(){
+    //size of InnerRect or OutterRect more than 1 (may cause calculating area error)
+    //Print Boundary[0] info
     for(auto seg:Boundaries[0].BoundarySegments){
         std::cout<<"("<<seg.p0.a<<","<<seg.p0.b<<")\n"<<"("<<seg.p1.a<<","<<seg.p1.b<<")"<<"\n";
     }
+    //Print extra info for net that OutterRectBoundary > 1
+    if(OutterRectBoundarySegments.size() > 1){
+        std::cout<<"("<<OutterRectBoundarySegments[0].startPoint.a<<","<<OutterRectBoundarySegments[0].startPoint.b<<")\n"<<"("<<
+            OutterRectBoundarySegments[0].endPoint.a<<","<<OutterRectBoundarySegments[0].endPoint.b<<")"<<"\n";
+        std::cout<<"("<<OutterRectBoundarySegments[1].startPoint.a<<","<<OutterRectBoundarySegments[1].startPoint.b<<")\n"<<"("<<
+            OutterRectBoundarySegments[1].endPoint.a<<","<<OutterRectBoundarySegments[1].endPoint.b<<")"<<"\n";
+    }
+    //Print Boundary[1] info
     for(int j = Boundaries[1].BoundarySegments.size()-1;j >= 0;j--){
         std::cout<<"("<<Boundaries[1].BoundarySegments[j].p1.a<<","<<Boundaries[1].BoundarySegments[j].p1.b<<")\n"<<"("<<Boundaries[1].BoundarySegments[j].p0.a<<","<<Boundaries[1].BoundarySegments[j].p0.b<<")"<<"\n";
     }
+    if(InnerRectBoundarySegments.size() > 1){
+        std::cout<<"("<<InnerRectBoundarySegments[1].endPoint.a<<","<<InnerRectBoundarySegments[1].endPoint.b<<")\n"<<"("<<
+            InnerRectBoundarySegments[1].startPoint.a<<","<<InnerRectBoundarySegments[1].startPoint.b<<")"<<"\n";
+        std::cout<<"("<<InnerRectBoundarySegments[0].endPoint.a<<","<<InnerRectBoundarySegments[0].endPoint.b<<")\n"<<"("<<
+            InnerRectBoundarySegments[0].startPoint.a<<","<<InnerRectBoundarySegments[0].startPoint.b<<")"<<"\n";
+    }
 }
+
