@@ -178,7 +178,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
     CreatingBoundary(one_boundary,end,start,ID,boundaries);
     one_boundary.clear();
 }
-/*void OutputFile_OctilinearizeBoundary(std::vector<Net> &nets){
+void OutputFile_OctilinearizeBoundary(std::vector<Net> &nets){
     std::ofstream outfile("OctilinearizeBoundary_result.txt");
     for (int i = 0;i < nets.size();i++){
         outfile<<"Net"<<i<<":\n"<<"Net"<<i<<"_startPoint: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" Net"<<i<<"_endPoint: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
@@ -215,7 +215,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
             }
         }
     }
-}*/
+}
 void FindBoundariesForNet(std::vector<Net> &nets,std::vector<Boundary> &boundaries){
     Point Net_startPoint(0,0);
     Point Boundary_startPoint(0,0);
@@ -448,11 +448,11 @@ void OctilinearizeBoundaryCase_BothNetsAre45or135Degree(Boundary &boundary,Net &
         //未來可能還要考慮更多條件 例如boundary的startpoint在第一象限,net的startpoint在第三象限 p1.b位移的量等等
         if(slope == 1){
             if(temp_net.startPoint.a < 0 && temp_net.startPoint.b < 0 && boundary.startPoint.a < 0 && boundary.startPoint.b < 0){
-                    FirstLine.p1.b = temp_point.b + 2000000;
+                    //FirstLine.p1.b = temp_point.b + 2000000;
                     FirstLine.p1.a = boundary.startPoint.a  + (temp_point.b - boundary.startPoint.b) / slope;
             }
             else if(temp_net.startPoint.a > 0 && temp_net.startPoint.b > 0 && boundary.startPoint.a > 0 && boundary.startPoint.b > 0){
-                FirstLine.p1.b = temp_point.b - 2000000;
+                //FirstLine.p1.b = temp_point.b - 2000000;
                 FirstLine.p1.a = boundary.startPoint.a  + (temp_point.b - boundary.startPoint.b) / slope;
             }
         }    
@@ -554,6 +554,7 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
         boundary.BoundarySegments.emplace_back(SecondLine);
     
     }
+    //有問題 需檢查
     else if(temp_net.NetSegments.size() > 2){ 
         Segment ThirdLine(0,0,0,0);
         SegmentWhichIsAbuts(temp_net.NetSegments,temp_segment,AbutswithStartSegment);
@@ -566,7 +567,8 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
         }
         //second line
         if(temp_net.startPoint.a > 0 && temp_net.startPoint.b > 0 && boundary.startPoint.a > 0 && boundary.startPoint.b > 0){
-            temp_point.b = AbutswithStartSegment.p1.b - 1000000;
+            //temp_point.b = AbutswithStartSegment.p1.b - 1000000;
+            temp_point.b = AbutswithStartSegment.p1.b;
             //temp_point.a, x2 = x1+(y2-y1)/slope
             temp_point.a = FirstLine.p1.a + (temp_point.b-FirstLine.p1.b)/SecondLineSlope;
             SecondLine.p0.a = FirstLine.p1.a;
@@ -576,7 +578,8 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
             boundary.BoundarySegments.emplace_back(SecondLine);
         }
         else if(temp_net.startPoint.a < 0 && temp_net.startPoint.b < 0 && boundary.startPoint.a < 0 && boundary.startPoint.b < 0){
-            temp_point.b = AbutswithStartSegment.p1.b + 1000000;
+            //temp_point.b = AbutswithStartSegment.p1.b + 1000000;
+            temp_point.b = AbutswithStartSegment.p1.b;
             //temp_point.a, x2 = x1+(y2-y1)/slope
             temp_point.a = FirstLine.p1.a + (temp_point.b-FirstLine.p1.b)/SecondLineSlope;
             SecondLine.p0.a = FirstLine.p1.a;
@@ -586,7 +589,8 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
             boundary.BoundarySegments.emplace_back(SecondLine);
         }
         else{
-            temp_point.b = AbutswithStartSegment.p1.b - 1000000;
+            //temp_point.b = AbutswithStartSegment.p1.b - 1000000;
+            temp_point.b = AbutswithStartSegment.p1.b;
             //temp_point.a, x2 = x1+(y2-y1)/slope
             temp_point.a = FirstLine.p1.a + (temp_point.b-FirstLine.p1.b)/SecondLineSlope;
             SecondLine.p0.a = FirstLine.p1.a;
@@ -624,24 +628,29 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
         //std::cout<<"ThirdSlope: "<<ThirdSlope<<"isHorizontal: "<<isHorizontal<<std::endl;
         ThirdLine.p0.a = SecondLine.p1.a;
         ThirdLine.p0.b = SecondLine.p1.b;
+       
         if(ThirdSlope == 0 && isHorizontal){
             ThirdLine.p1.b = SecondLine.p1.b;
             ThirdLine.p1.a = AbutswithStartSegment.p1.a;
             if(temp_net.startPoint.a > 0 && temp_net.startPoint.b > 0 && boundary.startPoint.a > 0 && boundary.startPoint.b > 0){
-                ThirdLine.p1.a = AbutswithStartSegment.p1.a + 1000000;    
+                //ThirdLine.p1.a = AbutswithStartSegment.p1.a + 1000000;    
+                ThirdLine.p1.a = AbutswithStartSegment.p1.a ;    
             }
             else if(temp_net.startPoint.a < 0 && temp_net.startPoint.b < 0 && boundary.startPoint.a < 0 && boundary.startPoint.b < 0){
-                ThirdLine.p1.a = AbutswithStartSegment.p1.a - 1000000;
+                //ThirdLine.p1.a = AbutswithStartSegment.p1.a - 1000000;
+                ThirdLine.p1.a = AbutswithStartSegment.p1.a;
             }
         }
         else if (ThirdSlope == 0 && !isHorizontal){
             ThirdLine.p1.a = SecondLine.p1.a;
             ThirdLine.p1.b = AbutswithStartSegment.p1.b;
             if(temp_net.startPoint.a > 0 && temp_net.startPoint.b > 0 && boundary.startPoint.a > 0 && boundary.startPoint.b > 0){
-                ThirdLine.p1.b = AbutswithStartSegment.p1.b + 1000000;    
+                //ThirdLine.p1.b = AbutswithStartSegment.p1.b + 1000000;    
+                ThirdLine.p1.b = AbutswithStartSegment.p1.b;    
             }
             else if(temp_net.startPoint.a < 0 && temp_net.startPoint.b < 0 && boundary.startPoint.a < 0 && boundary.startPoint.b < 0){
-                ThirdLine.p1.b = AbutswithStartSegment.p1.b - 1000000;
+                //ThirdLine.p1.b = AbutswithStartSegment.p1.b - 1000000;
+                ThirdLine.p1.b = AbutswithStartSegment.p1.b;
             }
         }
         boundary.BoundarySegments.emplace_back(ThirdLine);
@@ -722,7 +731,7 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
         if((NetNearBoundary0_StartSegmentSlope == 0 && NetNearBoundary1_StartSegmentSlope == 0)){
             
             OctilinearizeBoundaryCase_BothNetsAreVertical(boundaries[i],temp_net,temp_segment,temp_point);
-            //Third line    
+            //Third line  
             ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction,temp_endPoint);
         }//end of nets that both are 90 drgree case
          
@@ -1181,21 +1190,23 @@ int main(int argc,char* argv[]){
     FindOutterBoundaryForNet(nets,OutterRect);
     EliminateOverlappingBetweenInnerBoundary(nets);
     file.close();
+    //Output to check the boundary info to txt file
     //OutputFile_OctilinearizeBoundary(nets);
     
-    //Output to check the boundary info
-    /*for (int i = 0;i < nets.size();i++){ 
+    //Output to check the boundary info to drawing
+    for (int i = 0;i < nets.size();i++){ 
         //std::cout<<"Net"<<i<<":\n"<<"Net"<<i<<"_startPoint: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" Net"<<i<<"_endPoint: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
         //std::cout<<"Net"<<i<<"_segments_number: "<<nets[i].NetSegments.size()<<"\n";
         //nets[i].PrintNetSegments_drawing(); 
         //int nets_BoundaryNumer = nets[i].Boundaries.size() + nets[i].OutterRectBoundarySegments.size() + nets[i].InnerRectBoundarySegments.size();
         //std::cout<<"Net"<<i<<"_Boundaries_number: "<<nets_BoundaryNumer<<"\n";
         nets[i].PrintBoundarySegments_drawing();
-    }*/
+    }
 
     //output to  calculate area of net
     
     /*
+    //印出InitialOctBoudnary_tuple_result.txt
     for(int i = 0;i<nets.size();i++){
         std::cout<<"Net's tuple begin:\n";
         nets[i].PrintBoundaryTuple(); 
@@ -1203,7 +1214,10 @@ int main(int argc,char* argv[]){
     }*/
 
     //output to calculate area of net
-    file.open("InitialOctBoundary_tuple_result.txt");
+    //尚未統合file讀取方式
+    //file.open("InitialOctBoundary_tuple_result.txt");
+    //file.open("1127_correct_tuple.txt");
+    file.open("256io_16nets_one_shorter_sides_tuple.txt");
     Inputfile_CalculateAreaofNet(file,Polygons);
     CalculateAreaofNet(Polygons,area_result);
     Outputfile_AreaResult_toCSV(Polygons);
