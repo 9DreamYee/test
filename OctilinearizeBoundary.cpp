@@ -11,6 +11,34 @@
 #include <utility>
 #include "net.h"
 #include "CalculatePolygonArea.h"
+
+void AddPadandBall(std::vector<Point> &Pads,std::vector<Point> &Balls){
+    std::ifstream file1;
+    int loop_count = 0;
+    file1.open("256io_16nets_one_shorter_sides_pad_info.txt");
+    if(file1.is_open()){
+        std::string line;
+        while(getline(file1,line)){
+            //std::cout<<line<<"\n";
+            //std::istringstream iss(line);
+            std::stringstream ss(line);
+            std::string temp,temp1,temp2;
+            int x,y;
+            ss>>x;
+            ss>>y;
+            //std::cout<<x<<" "<<y<<"\n";
+            if(loop_count % 2 == 0){
+                Pads.emplace_back(Point(x,y));
+            }
+            else{
+                Balls.emplace_back(Point(x,y));
+            }
+            ss.str("");
+            ss.clear();
+            loop_count++;
+        }
+    }
+}
 void ProcessingSegmentInfo(std::string &str,double &start_x,double &start_y,double &end_x,double &end_y){
     std::string temp,str_start_x,str_start_y,str_end_x,str_end_y;
     std::stringstream ss;
@@ -1179,6 +1207,8 @@ int main(int argc,char* argv[]){
     std::vector<Boundary> boundaries;
     std::vector<Polygon_g> Polygons;
     std::vector<double> area_result;
+    std::vector<Point> Pad;
+    std::vector<Point> Ball;
     Rectangle InnerRect = {-5e+07,-5e+07,1e+08,1e+08}; 
     Rectangle OutterRect = {-1.4e+08,-1.4e+08,2.8e+08,2.8e+08};
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries,InnerRect);
@@ -1200,7 +1230,7 @@ int main(int argc,char* argv[]){
         //nets[i].PrintNetSegments_drawing(); 
         //int nets_BoundaryNumer = nets[i].Boundaries.size() + nets[i].OutterRectBoundarySegments.size() + nets[i].InnerRectBoundarySegments.size();
         //std::cout<<"Net"<<i<<"_Boundaries_number: "<<nets_BoundaryNumer<<"\n";
-        nets[i].PrintBoundarySegments_drawing();
+        //nets[i].PrintBoundarySegments_drawing();
     }
 
     //output to  calculate area of net
@@ -1221,6 +1251,15 @@ int main(int argc,char* argv[]){
     Inputfile_CalculateAreaofNet(file,Polygons);
     CalculateAreaofNet(Polygons,area_result);
     Outputfile_AreaResult_toCSV(Polygons);
+    AddPadandBall(Pad,Ball);
+
+    /*
+    for(auto pad1:Pad){
+        std::cout<<"Pad: "<<pad1.a<<" "<<pad1.b<<"\n";
+    }
+    for(auto ball1:Ball){
+        std::cout<<"Ball: "<<ball1.a<<" "<<ball1.b<<"\n";
+    }*/
     //output area & length of each net
     /*for(int i = 0;i < nets.size();i++){
         int NetLength = 0;
