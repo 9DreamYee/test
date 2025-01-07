@@ -36,14 +36,139 @@ struct commonBoundary{
     int netA,netB;
     point_t startPoint;
     line_t boundarySegment;
+    //若該邊界線為corner net則加入initialRouteSegment
+    line_t initialRouteSegment;
+    //每條邊界線平移後對多邊形面積的線性影響係數
+    double alpha;
     point_t netA_pad,netB_pad;
-    double shiftAmount;
+    // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
+    int shift_Direction;
+    int shiftAmount;
     commonBoundary(): boundaryID(-1),
                      netA(-1),netB(-1),
-                     shiftAmount(0.0)
+                     alpha(0.0),
+                     shiftAmount(0)
     {}
 
 };
+double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction){
+    polygon_t poly;
+    line_t shifted_line;
+    double area = 0;
+    // shifted_direction = 0 -> x
+    if (shifted_direction == 0){
+        for(const auto &point : line){
+            shifted_line.push_back(point_t(point.x() + unit, point.y()));
+        }
+    }
+    // shifted_direction = 1 -> y
+    else if (shifted_direction == 1){
+        for(const auto &point : line){
+            shifted_line.push_back(point_t(point.x(), point.y() + unit));
+        }
+    }
+    else if(shifted_direction == 2){
+        return 0;
+    }
+    for(const auto &point : line){
+        bg::append(poly, point);
+    }
+    for(auto it = shifted_line.rbegin(); it != shifted_line.rend(); it++){
+        bg::append(poly, *it);
+    }
+    bg::correct(poly);
+    std::string reason;
+    if (!bg::is_valid(poly, reason)) {
+        //std::cout << "Polygon is valid" << std::endl;
+        std::cout << "Polygon is invalid: " << reason << std::endl;
+    }
+    area = bg::area(poly)*1e-08;
+    return area;
+
+}
+//Update CommonBounary info: alpha,shift_Direction,shiftAmount
+void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries){
+    std::ifstream file("Gurobi_area_assignment_result.txt");
+    std::string line;
+    int rows = commonBoundaries.size(), cols = 2;
+    int temp_value = 0,row = 0,col = 0;
+    double unit = 1000;
+    //std::vector<std::vector<int>> matrix(rows,std::vector<int> (cols));
+    std::vector<std::vector<int>> matrix(rows,std::vector<int>(2));
+    //特例處理 commonBoundary Boundary ID 1
+    int temp_id = 0;
+    point_t temp_point;
+    temp_id = commonBoundaries[1].netA;
+    commonBoundaries[1].netA = commonBoundaries[1].netB;
+    commonBoundaries[1].netB = temp_id;
+    temp_point = commonBoundaries[1].netA_pad;
+    commonBoundaries[1].netA_pad = commonBoundaries[1].netB_pad;
+    commonBoundaries[1].netB_pad = temp_point;
+     
+    auto modIdx = [&] (int idx){
+        return (idx+rows) % rows;
+    };
+    //shift_Direction
+    for (auto &commonBoundary:commonBoundaries){
+        if(commonBoundary.netA_pad.y() == commonBoundary.netB_pad.y()){
+            commonBoundary.shift_Direction = 0;
+        }
+        else if (commonBoundary.netA_pad.x() == commonBoundary.netB_pad.x()){
+            commonBoundary.shift_Direction = 1;
+        }
+        else{
+            commonBoundary.shift_Direction = 2;
+        }
+    }
+    //alpha
+    for (auto &commonBoundary:commonBoundaries){
+        commonBoundary.alpha = cal_shifted_area(commonBoundary.boundarySegment,unit,commonBoundary.shift_Direction);
+    }
+    //shiftAmount
+    while(std::getline(file,line)){
+       std::stringstream ss(line);
+       while(ss >> temp_value){
+           matrix[row][col] = temp_value;
+           col++;
+           if(col == cols){
+               col = 0;
+               row++;
+           }
+       }
+    }
+   
+    for(int i = 0;i < rows;i++){
+        for(int j = 0;j < cols ;j++){
+            int ip1 = modIdx(i+1);
+            int im1 = modIdx(i-1);
+            for (auto &commonBoundary:commonBoundaries){
+                if (matrix[i][0]!= 0){
+                  if(commonBoundary.netA == i && commonBoundary.netB == ip1 || commonBoundary.netA == ip1 && commonBoundary.netB == i){
+                      commonBoundary.shiftAmount = matrix[i][0];
+                  }
+                }
+                if(matrix[i][1]!=0){
+                    if(commonBoundary.netA == i && commonBoundary.netB == im1 || commonBoundary.netA == im1 && commonBoundary.netB == i){
+                        commonBoundary.shiftAmount = matrix[i][1];
+                    }
+                }
+            }
+            /*
+            if(matrix[i][j] != 0){
+                int ip1 = modIdx(i+1);
+                int im1 = modIdx(i-1);
+                std::cout<<"matrix["<<i<<"]["<<j<<"] = "<<matrix[i][j]<<std::endl;
+                for(auto &commonBoundary:commonBoundaries){
+                    if(commonBoundary.netA == i && commonBoundary.netB == ip1 || commonBoundary.netA == j && commonBoundary.netB == i){
+                        commonBoundary.shiftAmount = matrix[i][j];
+                    }
+                }
+            }
+            */
+        }
+    }
+    file.close();
+}
 void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries){
     std::ofstream outfile("commonBoundary_toGurobi.txt");
     for(auto commonBoundary:commonBoundaries){
@@ -51,14 +176,17 @@ void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries){
         outfile<<"NetA: "<<commonBoundary.netA<<std::endl;
         outfile<<"NetB: "<<commonBoundary.netB<<std::endl;
         outfile<<"StartPoint: "<<bg::get<0>(commonBoundary.startPoint)<<" "<<bg::get<1>(commonBoundary.startPoint)<<std::endl;
-        /*outfile<<"BoundarySegment: ";
+        outfile<<"BoundarySegment: ";
         for(auto point:commonBoundary.boundarySegment){
             outfile<<bg::get<0>(point)<<" "<<bg::get<1>(point)<<" ";
-        }*/
+        }
         outfile<<std::endl;
         outfile<<"NetA_pad: "<<bg::get<0>(commonBoundary.netA_pad)<<" "<<bg::get<1>(commonBoundary.netA_pad)<<std::endl;
         outfile<<"NetB_pad: "<<bg::get<0>(commonBoundary.netB_pad)<<" "<<bg::get<1>(commonBoundary.netB_pad)<<std::endl;
+        outfile<<"Alpha: "<<commonBoundary.alpha<<std::endl;
+        outfile<<"ShiftDirection: "<<commonBoundary.shift_Direction<<std::endl;
         outfile<<"ShiftAmount: "<<commonBoundary.shiftAmount<<std::endl;
+        outfile<<std::endl;
     }
 }
 void outputNetsInfo(std::vector<netInfo> &nets){
@@ -294,8 +422,8 @@ int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
     auto nets = parseNetsInfo(file);
     auto commonBoundaries = buildCommonBoundaries(nets);
-    file.close();
-    file.open(argv[1]);
+    //同時特例處利Boundary 1
+    UpdateCommonBoundaryInfo(commonBoundaries);
     outputNetsInfo(nets);
     outputCommonBoundaries(commonBoundaries);
     file.close();
