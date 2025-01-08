@@ -1,56 +1,17 @@
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-
-namespace bg = boost::geometry;
-
-typedef bg::model::d2::point_xy<double> point_t;
-typedef bg::model::linestring<point_t> line_t;
-typedef bg::model::polygon<point_t> polygon_t;
-
-struct netInfo{
-    int netID;
-    double pad_x,pad_y;
-    double ball_x,ball_y;
-    double areaInitial;
-    point_t startPoint0;
-    point_t startPoint1;
-    std::vector<line_t> boundarySegments;
-    std::vector<line_t> innerBoundarySegments;
-    std::vector<line_t> outterBoundarySegments;
-    line_t InitialRoute;
-    netInfo(): netID(-1),
-               pad_x(0.0), pad_y(0.0),
-               ball_x(0.0), ball_y(0.0),
-               areaInitial(0.0)
-    {}
-};
-struct commonBoundary{
-    int boundaryID;
-    int netA,netB;
-    point_t startPoint;
-    line_t boundarySegment;
-    //若該邊界線為corner net則加入initialRouteSegment
-    line_t initialRouteSegment;
-    //每條邊界線平移後對多邊形面積的線性影響係數
-    double alpha;
-    point_t netA_pad,netB_pad;
-    // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
-    int shift_Direction;
-    int shiftAmount;
-    commonBoundary(): boundaryID(-1),
-                     netA(-1),netB(-1),
-                     alpha(0.0),
-                     shiftAmount(0)
+#include "ParseNetInfoToGurobi.h"
+netInfo::netInfo():
+    netID(-1),
+    pad_x(0.0), pad_y(0.0),
+    ball_x(0.0), ball_y(0.0),
+    areaInitial(0.0)
     {}
 
-};
+commonBoundary::commonBoundary(): 
+    boundaryID(-1),
+    netA(-1),netB(-1),
+    alpha(0.0),
+    shiftAmount(0)
+    {}
 double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction){
     polygon_t poly;
     line_t shifted_line;
@@ -216,13 +177,15 @@ void outputNetsInfo(std::vector<netInfo> &nets){
         outfile<<"Area Initial: "<<net.areaInitial<<std::endl;
     }
 }
+/*
 bool isSameBoundary(const point_t p, const point_t q){
     auto eq = [&](double a, double b){
         return std::fabs(a-b) < 1e-6;
     };
     bool case1 = eq(p.x(),q.x()) && eq(p.y(),q.y());
     return case1;
-}
+}*/
+
 std::vector<commonBoundary> buildCommonBoundaries(std::vector<netInfo> &nets){
     std::vector<commonBoundary> commonBoundaries;
     std::vector<point_t> usedPoint;
@@ -418,6 +381,7 @@ std::vector<netInfo> parseNetsInfo(std::ifstream &file){
     }
     return nets;
 }
+/*
 int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
     auto nets = parseNetsInfo(file);
@@ -429,3 +393,4 @@ int main(int argc, char* argv[]){
     file.close();
     return 0;
 }
+*/
