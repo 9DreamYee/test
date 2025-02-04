@@ -40,6 +40,7 @@ struct commonBoundary{
     //每條邊界線平移後對多邊形面積的線性影響係數
     double alpha;
     point_t netA_pad,netB_pad;
+    double shiftMin,shiftMax;
     // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
     int shift_Direction;
     int shiftAmount;

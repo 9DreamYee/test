@@ -12,8 +12,12 @@
 #include "net.h"
 #include "CalculatePolygonArea.h"
 
-void AddPadandBall(std::vector<Point> &Pads,std::vector<Point> &Balls){
+void AddPadandBall(std::vector<Net> &nets){
     std::ifstream file1;
+    std::pair<int,int> t_pad;
+    std::pair<int,int> t_ball;
+    std::vector<std::pair<int,int>> pads;
+    std::vector<std::pair<int,int>> balls;
     int loop_count = 0;
     file1.open("256io_16nets_one_shorter_sides_pad_info.txt");
     if(file1.is_open()){
@@ -28,14 +32,27 @@ void AddPadandBall(std::vector<Point> &Pads,std::vector<Point> &Balls){
             ss>>y;
             //std::cout<<x<<" "<<y<<"\n";
             if(loop_count % 2 == 0){
-                Pads.emplace_back(Point(x,y));
+               pads.emplace_back(std::make_pair(x,y)); 
             }
             else{
-                Balls.emplace_back(Point(x,y));
+                balls.emplace_back(std::make_pair(x,y));
             }
             ss.str("");
             ss.clear();
             loop_count++;
+        }
+        file1.close();
+        //std::cout<<pads.size()<<" "<<balls.size()<<"\n";
+        for(int i = 0; i < nets.size();i++){
+            t_pad = pads[i];
+            t_ball = balls[i];
+            //nets[i].pad = t_pad;
+            //nets[i].ball = t_ball;
+            /*
+            std::cout<<"Net: "<<i<<"\n";
+            std::cout<<"Pad location: "<<nets[i].pad.first<<" "<<nets[i].pad.second<<"\n";
+            std::cout<<"Ball location: "<<nets[i].ball.first<<" "<<nets[i].ball.second<<"\n";
+            */
         }
     }
 }
@@ -112,6 +129,7 @@ void FindStartAndEndPoint(std::vector<Segment> &one_net,Point &start,Point &end,
 }//end of FindStartAndEndPoint
 void CreatingNet(std::vector<Segment> &one_net,Point &start,Point &end,std::vector<Net> &nets){
     Net net(start,end);
+
     //Need to fix net 35 bug 
     //1.correct start/end point 2.correct the net35 Netsegments
     for(int i = 0;i < one_net.size();i++){
@@ -160,7 +178,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
             getline(file,str); //str = boundary0:;
             //processing the last net info
             FindStartAndEndPoint(one_net,start,end,InnerRect_CenterPoint,all_net_info_end);
-            CreatingNet(one_net,start,end,nets);
+            CreatingNet(one_net,start,end,nets); 
             one_net.clear();
             continue;
         } 
@@ -583,9 +601,11 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
     
     }
     //有問題 需檢查
-    else if(temp_net.NetSegments.size() > 2){ 
+    else if(temp_net.NetSegments.size() > 2){
+        //std::cout<<temp_segment.p0.a<<" "<<temp_segment.p0.b<<" "<<temp_segment.p1.a<<" "<<temp_segment.p1.b<<std::endl;
         Segment ThirdLine(0,0,0,0);
         SegmentWhichIsAbuts(temp_net.NetSegments,temp_segment,AbutswithStartSegment);
+        //std::cout<<"Abuts: "<<AbutswithStartSegment.p0.a<<" "<<AbutswithStartSegment.p0.b<<" "<<AbutswithStartSegment.p1.a<<" "<<AbutswithStartSegment.p1.b<<std::endl;
         dx = AbutswithStartSegment.p0.a - AbutswithStartSegment.p1.a;
         dy = AbutswithStartSegment.p0.b - AbutswithStartSegment.p1.b;
         //std::cout<<"boundaryID: "<<boundary.BoundaryID<<"temp_segment: "<<temp_segment.p0.a<<" "<<temp_segment.p0.b<<" "<<temp_segment.p1.a<<" "<<temp_segment.p1.b<<std::endl;
@@ -636,7 +656,7 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
         temp_segment1.p1.b = AbutswithStartSegment.p1.b;
         //std::cout<<"Abuts: "<<AbutswithStartSegment.p0.a<<" "<<AbutswithStartSegment.p0.b<<" "<<AbutswithStartSegment.p1.a<<" "<<AbutswithStartSegment.p1.b<<std::endl;
         SegmentWhichIsAbuts(temp_net.NetSegments,temp_segment1,AbutswithStartSegment);
-//        std::cout<<"Abuts: "<<AbutswithStartSegment.p0.a<<" "<<AbutswithStartSegment.p0.b<<" "<<AbutswithStartSegment.p1.a<<" "<<AbutswithStartSegment.p1.b<<std::endl;
+        //std::cout<<"Abuts: "<<AbutswithStartSegment.p0.a<<" "<<AbutswithStartSegment.p0.b<<" "<<AbutswithStartSegment.p1.a<<" "<<AbutswithStartSegment.p1.b<<std::endl;
         int ThirdSlope = 0;
         bool isHorizontal = false;
         if(AbutswithStartSegment.p0.b == AbutswithStartSegment.p1.b){
@@ -681,7 +701,7 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
                 ThirdLine.p1.b = AbutswithStartSegment.p1.b;
             }
         }
-        boundary.BoundarySegments.emplace_back(ThirdLine);
+        //boundary.BoundarySegments.emplace_back(ThirdLine);
     }
 }
 
@@ -716,6 +736,7 @@ void OctilinearzeBoundaryCase_ReferNetIsHorizontal(Boundary &boundary,Net &temp_
     SecondLine.p1.b = temp_point.b;
     boundary.BoundarySegments.emplace_back(SecondLine);
 }
+
 //Octilinearize the boundary
 void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundaries,Rectangle &OutterRect){
     Point start(0,0);
@@ -806,7 +827,8 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
             OctilinearizeBoundaryCase_BothNetsAre45or135Degree(boundaries[i],temp_net,temp_segment,temp_point);
             ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction,temp_endPoint);
         }//end of nets that both are 45/135 degree case
-        //Net near Boundary that one is 0/90 degree and one is 45/135 degree
+
+        //Net near Boundary that one is 0/90 degree and one is 45/135 degree 問題待解決
         else{
              if(NetNearBoundary0_StartSegmentSlope == 0 || NetNearBoundary0_StartSegmentSlope == 2){
                 temp_net = NetNearBoundary0;
@@ -820,9 +842,11 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
                 temp_point.a = temp_segment.p1.a;
                 temp_point.b = temp_segment.p1.b;
             }
+            
             if(NetNearBoundary0_StartSegmentSlope == 0 || NetNearBoundary1_StartSegmentSlope == 0){
                 OctilinearizeBoundaryCase_ReferNetIsVertical(boundaries[i],temp_net,temp_segment,temp_point);
             }
+            
             else if(NetNearBoundary0_StartSegmentSlope == 2 || NetNearBoundary1_StartSegmentSlope == 2){
                 OctilinearzeBoundaryCase_ReferNetIsHorizontal(boundaries[i],temp_net,temp_segment,temp_point);
             }
@@ -1209,8 +1233,13 @@ int main(int argc,char* argv[]){
     std::vector<double> area_result;
     std::vector<Point> Pad;
     std::vector<Point> Ball;
+    //Rectangle 代表左下角座標,寬,高
+    //InnerRect area = 1e+16
     Rectangle InnerRect = {-5e+07,-5e+07,1e+08,1e+08}; 
+    //OutterRect area = 2.8e+08 * 2.8e+08 = 7.84e+16
+    //上述值皆未考慮到resoultion = 1e-04, area resoultion = 1e-08
     Rectangle OutterRect = {-1.4e+08,-1.4e+08,2.8e+08,2.8e+08};
+    //建立net資訊 包含boundary與net本身的所有起終點segment
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries,InnerRect);
     FindBoundariesForNet(nets,boundaries);
     OctilinearizeBoundary(nets,boundaries,OutterRect); 
@@ -1219,47 +1248,60 @@ int main(int argc,char* argv[]){
     FindInnerBoundaryForNet(nets,InnerRect);
     FindOutterBoundaryForNet(nets,OutterRect);
     EliminateOverlappingBetweenInnerBoundary(nets);
+    //AddPadandBall(nets);
     file.close();
     //Output to check the boundary info to txt file
     //OutputFile_OctilinearizeBoundary(nets);
     
-    //Output to check the boundary info to drawing
-    for (int i = 0;i < nets.size();i++){ 
-        //std::cout<<"Net"<<i<<":\n"<<"Net"<<i<<"_startPoint: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<" Net"<<i<<"_endPoint: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
-        //std::cout<<"Net"<<i<<"_segments_number: "<<nets[i].NetSegments.size()<<"\n";
-        //nets[i].PrintNetSegments_drawing(); 
-        //int nets_BoundaryNumer = nets[i].Boundaries.size() + nets[i].OutterRectBoundarySegments.size() + nets[i].InnerRectBoundarySegments.size();
-        //std::cout<<"Net"<<i<<"_Boundaries_number: "<<nets_BoundaryNumer<<"\n";
-        //nets[i].PrintBoundarySegments_drawing();
-    }
 
     //output to  calculate area of net
     
-    /*
+    //為每個net建立tuple
     //印出InitialOctBoudnary_tuple_result.txt
     for(int i = 0;i<nets.size();i++){
-        std::cout<<"Net's tuple begin:\n";
-        nets[i].PrintBoundaryTuple(); 
-        std::cout<<"Net's tuple end\n";
-    }*/
-
+        std::ofstream NetFile("Octilinear_tuple.txt",std::ios::app);
+        NetFile<<"Net's tuple begin:\n";
+        NetFile.close();
+        nets[i].PrintBoundaryTuple();
+        NetFile.open("Octilinear_tuple.txt",std::ios::app);
+        NetFile<<"Net's tuple end\n";
+        NetFile.close();
+    }
     //output to calculate area of net
     //尚未統合file讀取方式
+    file.open("Octilinear_tuple.txt");
     //file.open("InitialOctBoundary_tuple_result.txt");
     //file.open("1127_correct_tuple.txt");
-    file.open("256io_16nets_one_shorter_sides_tuple.txt");
+    //file.open("256io_16nets_one_shorter_sides_tuple.txt");
     Inputfile_CalculateAreaofNet(file,Polygons);
     CalculateAreaofNet(Polygons,area_result);
     Outputfile_AreaResult_toCSV(Polygons);
-    AddPadandBall(Pad,Ball);
-
+    
+    //Output to check the boundary info to drawing
     /*
-    for(auto pad1:Pad){
-        std::cout<<"Pad: "<<pad1.a<<" "<<pad1.b<<"\n";
+    for (int i = 0; i < nets.size();i++){
+        nets[i].PrintNetSegments_drawing();
+        nets[i].PrintBoundarySegments_drawing();
     }
-    for(auto ball1:Ball){
-        std::cout<<"Ball: "<<ball1.a<<" "<<ball1.b<<"\n";
-    }*/
+   */ 
+    
+    //Input to MILP formulation / Output to check each net info 
+    /*
+    double total_area = 0, avg_area = 0, temp_area = 0 ;
+    for (int i = 0;i < nets.size();i++){ 
+        std::cout<<"Net"<<i<<":\n";
+        std::cout<<"pad_location: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<"\n";
+        std::cout<<"ball_location: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
+        nets[i].PrintNetSegments_info();
+        nets[i].PrintBoundarySegments_info();
+        nets[i].SetNetArea(area_result[i]);
+        temp_area = nets[i].GetNetArea();
+        std::cout<<"Net"<<i<<"_area: ";
+        std::cout<<temp_area<<"\n";
+        total_area += temp_area;
+    }
+    */
+
     //output area & length of each net
     /*for(int i = 0;i < nets.size();i++){
         int NetLength = 0;

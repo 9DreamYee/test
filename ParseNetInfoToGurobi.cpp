@@ -10,7 +10,7 @@ commonBoundary::commonBoundary():
     boundaryID(-1),
     netA(-1),netB(-1),
     alpha(0.0),
-    shiftAmount(0)
+    shiftAmount(0),shiftMin(0),shiftMax(0)
     {}
 double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction){
     polygon_t poly;
@@ -53,7 +53,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries){
     std::string line;
     int rows = commonBoundaries.size(), cols = 2;
     int temp_value = 0,row = 0,col = 0;
-    double unit = 1000;
+    double unit = 1;
     //std::vector<std::vector<int>> matrix(rows,std::vector<int> (cols));
     std::vector<std::vector<int>> matrix(rows,std::vector<int>(2));
     //特例處理 commonBoundary Boundary ID 1
@@ -69,21 +69,30 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries){
     auto modIdx = [&] (int idx){
         return (idx+rows) % rows;
     };
-    //shift_Direction
+    //shift_Direction shiftMax,shiftMin
     for (auto &commonBoundary:commonBoundaries){
+        //在x座標平移
         if(commonBoundary.netA_pad.y() == commonBoundary.netB_pad.y()){
             commonBoundary.shift_Direction = 0;
+            //shiftMin = netA_pad.x - startPoint.x 
+            //shiftMax = netB_pad.x - startPoint.x
+            commonBoundary.shiftMin = commonBoundary.netA_pad.x() - commonBoundary.startPoint.x();
+            commonBoundary.shiftMax = commonBoundary.netB_pad.x() - commonBoundary.startPoint.x();
         }
+        //在y座標平移
         else if (commonBoundary.netA_pad.x() == commonBoundary.netB_pad.x()){
             commonBoundary.shift_Direction = 1;
+            commonBoundary.shiftMin = commonBoundary.netA_pad.y() - commonBoundary.startPoint.y();
+            commonBoundary.shiftMax = commonBoundary.netB_pad.y() - commonBoundary.startPoint.y();
         }
         else{
             commonBoundary.shift_Direction = 2;
         }
     }
-    //alpha
+    //alpha 
     for (auto &commonBoundary:commonBoundaries){
         commonBoundary.alpha = cal_shifted_area(commonBoundary.boundarySegment,unit,commonBoundary.shift_Direction);
+
     }
     //shiftAmount
     while(std::getline(file,line)){
@@ -97,7 +106,6 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries){
            }
        }
     }
-   
     for(int i = 0;i < rows;i++){
         for(int j = 0;j < cols ;j++){
             int ip1 = modIdx(i+1);
@@ -146,6 +154,8 @@ void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries){
         outfile<<"NetB_pad: "<<bg::get<0>(commonBoundary.netB_pad)<<" "<<bg::get<1>(commonBoundary.netB_pad)<<std::endl;
         outfile<<"Alpha: "<<commonBoundary.alpha<<std::endl;
         outfile<<"ShiftDirection: "<<commonBoundary.shift_Direction<<std::endl;
+        outfile<<"ShiftMin: "<<commonBoundary.shiftMin<<std::endl;
+        outfile<<"ShiftMax: "<<commonBoundary.shiftMax<<std::endl;
         outfile<<"ShiftAmount: "<<commonBoundary.shiftAmount<<std::endl;
         outfile<<std::endl;
     }
