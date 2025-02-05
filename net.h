@@ -1,6 +1,10 @@
 #ifndef NET_H
 #define NET_H
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <utility>
 #include </home/m11115061/boost_1_85_0/boost/polygon/polygon.hpp>
 #include </home/m11115061/boost_1_85_0/boost/polygon/voronoi.hpp>
 #include </home/m11115061/boost_1_85_0/boost/geometry.hpp>
@@ -80,14 +84,22 @@ class Net{
     public:
         Point startPoint;
         Point endPoint;
+        long long NetArea;
+        //std::pair<int,int> pad;
+        //std::pair<int,int> ball;
         // Net's segment
         std::vector<Segment> NetSegments;
+        std::vector<Segment> Extended_NetSegments;
         std::vector<Boundary> Boundaries;
         //Vector of InnerRectBoundary & OutterRectBoundary of nets
         std::vector<Boundary> InnerRectBoundarySegments,OutterRectBoundarySegments;
         //Constructor
         Net(Point start,Point end);
         
+        //Set area of net
+        void SetNetArea(const long long &area);
+        //Get area of net
+        double GetNetArea();
         //Add segment of net
         void AddNetSegment(const Segment &segment);
         //Add Boundary of net
@@ -100,8 +112,16 @@ class Net{
         int CalculateNetLength();
         //Print net's segments information to drawing
         void PrintNetSegments_drawing();
+        //Print net's segments information
+        void PrintNetSegments_info();
+        //Print Extended initial routing segments information to drawing
+        void PrintExtendedInitialRouting_drawing();
+        //Print Extended initial routing segments information
+        void PrintExtendedInitialRouting_info();
         //Print Boundary of net information to drawing
         void PrintBoundarySegments_drawing();
+        //Print Boundary of net information 
+        void PrintBoundarySegments_info();
         //Print tuple of Boundary of net to calculate area of net
         void PrintBoundaryTuple();
 };

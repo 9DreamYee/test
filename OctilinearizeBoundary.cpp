@@ -1223,6 +1223,54 @@ void EliminateOverlappingBetweenInnerBoundary(std::vector<Net> &nets){
         }
     }
 }//end of EliminateOverlappingBetweenInnerBoundary
+void ExtendInitialRoute(std::vector<Net> &nets){
+    for(int i = 0;i < nets.size();i++){
+        nets[i].Extended_NetSegments = nets[i].NetSegments;
+        Segment temp_segment(0,0,0,0);
+        temp_segment.p0.a = nets[i].endPoint.a;
+        temp_segment.p0.b = nets[i].endPoint.b;
+        Point B0_EndPoint = nets[i].Boundaries[0].endPoint;
+        Point B1_EndPoint = nets[i].Boundaries[1].endPoint;
+        if(B0_EndPoint.a == B1_EndPoint.a){
+            temp_segment.p1.a = B0_EndPoint.a;
+            temp_segment.p1.b = nets[i].endPoint.b;
+            nets[i].Extended_NetSegments.emplace_back(temp_segment);
+        }
+        else if (B0_EndPoint.b == B1_EndPoint.b){
+            temp_segment.p1.a = nets[i].endPoint.a;
+            temp_segment.p1.b = B0_EndPoint.b;
+            nets[i].Extended_NetSegments.emplace_back(temp_segment);
+        }
+        else {
+            Segment temp_segment1(0,0,0,0);
+            temp_segment1 = temp_segment;
+            if (abs(B0_EndPoint.a) > abs(B0_EndPoint.b)){
+                temp_segment.p1.a = B0_EndPoint.a;
+                temp_segment.p1.b = nets[i].endPoint.b;
+            }
+            else{
+                temp_segment.p1.a = nets[i].endPoint.a;
+                temp_segment.p1.b = B0_EndPoint.b;
+            }
+            if (abs(B1_EndPoint.a) > abs(B1_EndPoint.b)){
+                temp_segment1.p1.a = B1_EndPoint.a;
+                temp_segment1.p1.b = nets[i].endPoint.b;
+            }
+            else{
+                temp_segment1.p1.a = nets[i].endPoint.a;
+                temp_segment1.p1.b = B1_EndPoint.b;
+            }
+            int temp_segment_length = boost::polygon::length(temp_segment);
+            int temp_segmnet1_length = boost::polygon::length(temp_segment1);
+            if(temp_segment_length < temp_segmnet1_length){
+                nets[i].Extended_NetSegments.emplace_back(temp_segment);
+            }
+            else{
+                nets[i].Extended_NetSegments.emplace_back(temp_segment1);
+            }
+        }
+    } 
+}
 int main(int argc,char* argv[]){
     std::ifstream file(argv[1]);
     std::vector<Segment> AllBoundarySegments;
@@ -1248,6 +1296,7 @@ int main(int argc,char* argv[]){
     FindInnerBoundaryForNet(nets,InnerRect);
     FindOutterBoundaryForNet(nets,OutterRect);
     EliminateOverlappingBetweenInnerBoundary(nets);
+    ExtendInitialRoute(nets);
     //AddPadandBall(nets);
     file.close();
     //Output to check the boundary info to txt file
@@ -1284,23 +1333,21 @@ int main(int argc,char* argv[]){
         nets[i].PrintBoundarySegments_drawing();
     }
    */ 
-    
     //Input to MILP formulation / Output to check each net info 
-    /*
+    //output file name "256io_16nets_one_shorter_sides_nets_info.txt"; 
     double total_area = 0, avg_area = 0, temp_area = 0 ;
     for (int i = 0;i < nets.size();i++){ 
         std::cout<<"Net"<<i<<":\n";
         std::cout<<"pad_location: "<<nets[i].startPoint.a<<" "<<nets[i].startPoint.b<<"\n";
         std::cout<<"ball_location: "<<nets[i].endPoint.a<<" "<<nets[i].endPoint.b<<"\n";
         nets[i].PrintNetSegments_info();
+        nets[i].PrintExtendedInitialRouting_info();
         nets[i].PrintBoundarySegments_info();
         nets[i].SetNetArea(area_result[i]);
         temp_area = nets[i].GetNetArea();
-        std::cout<<"Net"<<i<<"_area: ";
-        std::cout<<temp_area<<"\n";
-        total_area += temp_area;
+        std::cout<<"Net"<<i<<"_area: "<<temp_area<<"\n";
+        //total_area += temp_area;
     }
-    */
 
     //output area & length of each net
     /*for(int i = 0;i < nets.size();i++){

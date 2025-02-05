@@ -41,6 +41,18 @@ void Net::PrintNetSegments_info(){
     }
     std::cout<<"\n";
 }
+void Net::PrintExtendedInitialRouting_drawing(){
+    for(int i = 0;i < Extended_NetSegments.size();i++){
+        std::cout<<"_view.drawLine("<<Extended_NetSegments[i].p0.a<<","<<Extended_NetSegments[i].p0.b<<","<<Extended_NetSegments[i].p1.a<<","<<Extended_NetSegments[i].p1.b<<");\n";
+    }
+}
+void Net::PrintExtendedInitialRouting_info(){
+    std::cout<<"Extended_Initial_route_segment: ";
+    for(int i = 0;i < Extended_NetSegments.size();i++){
+        std::cout<<Extended_NetSegments[i].p0.a<<" "<<Extended_NetSegments[i].p0.b<<" "<<Extended_NetSegments[i].p1.a<<" "<<Extended_NetSegments[i].p1.b<<" ";
+    }
+    std::cout<<"\n";
+}
 void Net::PrintBoundarySegments_drawing(){
     for(int i = 0;i < Boundaries.size();i++){
         for(auto seg:Boundaries[i].BoundarySegments){

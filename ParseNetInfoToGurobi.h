@@ -28,6 +28,7 @@ struct netInfo{
     std::vector<line_t> innerBoundarySegments;
     std::vector<line_t> outterBoundarySegments;
     line_t InitialRoute;
+    line_t ExtendedInitialRoute;
     netInfo();
 };
 struct commonBoundary{
@@ -52,7 +53,7 @@ struct commonBoundary{
 double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction);
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount
 //特例處理 commonBoundary Boundary ID 1
-void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries);
+//void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries);
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount
 void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries);
 // output CommonBoundaries info to commonBoundary_toFurobi.txt

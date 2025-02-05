@@ -179,6 +179,11 @@ void outputNetsInfo(std::vector<netInfo> &nets){
         outfile<<"NetID: "<<net.netID<<std::endl;
         outfile<<"Pad Location: "<<net.pad_x<<" "<<net.pad_y<<std::endl;
         outfile<<"Ball Location: "<<net.ball_x<<" "<<net.ball_y<<std::endl;
+        outfile<<"ExtendedInitialRoute: ";
+        for (const auto & point : net.ExtendedInitialRoute){
+            outfile<<point.x()<<" "<<point.y()<<" ";
+        }
+        outfile<<std::endl;
         outfile<<"boundarySegment.size() = "<<net.boundarySegments.size()<<std::endl;
         outfile<<"startPoint0:"<<bg::get<0>(net.startPoint0)<<" "<<bg::get<1>(net.startPoint0)<<std::endl;
         outfile<<"startPoint1:"<<bg::get<0>(net.startPoint1)<<" "<<bg::get<1>(net.startPoint1)<<std::endl;
@@ -318,6 +323,12 @@ std::vector<netInfo> parseNetsInfo(std::ifstream &file){
             currentNet.InitialRoute = parseLineString(line.substr(pos+1));
             continue;
         }
+        //Extended Initial route
+        if(line.rfind("Extended_Initial_route_segment:",0) == 0 && line.find(":") != std::string::npos){
+            auto pos = line.find(":");
+            currentNet.ExtendedInitialRoute = parseLineString(line.substr(pos+1));
+            continue;
+        }
         // Boundary_segmnet_? info_start -> ignore
         if(line.rfind("Boundary_segment_",0) == 0 && line.find(":")!= std::string::npos){
             continue;
@@ -391,7 +402,7 @@ std::vector<netInfo> parseNetsInfo(std::ifstream &file){
     }
     return nets;
 }
-/*
+
 int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
     auto nets = parseNetsInfo(file);
@@ -403,4 +414,4 @@ int main(int argc, char* argv[]){
     file.close();
     return 0;
 }
-*/
+
