@@ -1,0 +1,3191 @@
+(session 256io_16nets_one_shorter_sides.ses
+  (base_design 256io_16nets_one_shorter_sides.dsn)
+  (placement
+    (resolution um 10000)
+    (component DIE_SAMPLE_DIE1
+      (place DIE1 0 0 front 0)
+    )
+    (component BGA_BGA
+      (place BGA 0 0 front 0)
+    )
+  )
+  (was_is
+  )
+  (routes 
+    (resolution um 10000)
+    (parser
+      (host_cad allegro)
+      (host_version 3823098_10/7/2019)
+      (constant pcb_xlo '-50000' )
+      (constant pcb_ylo '-50000' )
+      (constant pcb_xhi 50000 )
+      (constant pcb_yhi 50000 )
+      (constant board_name C:/Users/M11115061/Desktop/PCB/ase/APD_TEST/2018_Case1/ASECL_20180416_training_256io.mcm )
+      (write_resolution U 10000)
+    )
+    (library_out 
+      (padstack VIA250
+        (shape
+          (circle C1 2500000 0 0)
+        )
+        (shape
+          (circle DRILL 1000000 0 0)
+        )
+        (shape
+          (circle C2 2500000 0 0)
+        )
+      )
+    )
+    (network_out 
+      (net NET_5.2
+        (via BF5h -50000000 29820800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 22924300
+            -50000000 29820800
+          )
+          (type protect)
+        )
+      )
+      (net NET_5.1
+        (via BF5h -50000000 31216300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 23724300
+            -50000000 31216300
+          )
+          (type protect)
+        )
+      )
+      (net NET_4.2
+        (via BF5h -50000000 32632600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 24524300
+            -50000000 32632600
+          )
+          (type protect)
+        )
+      )
+      (net NET_4.1
+        (via BF5h -50000000 34071800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 25324300
+            -50000000 34071800
+          )
+          (type protect)
+        )
+      )
+      (net NET_3.2
+        (via BF5h -50000000 35536200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 26124300
+            -50000000 35536200
+          )
+          (type protect)
+        )
+      )
+      (net NET_3.1
+        (via BF5h -50000000 37673500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 26924300
+            -50000000 37673500
+          )
+          (type protect)
+        )
+      )
+      (net NET_2.2
+        (via BF5h -50000000 40087100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 27724300
+            -50000000 40087100
+          )
+          (type protect)
+        )
+      )
+      (net NET_2.1
+        (via BF5h -50000000 43199400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 28524300
+            -50000000 43199400
+          )
+          (type protect)
+        )
+      )
+      (net NET_128.2
+        (via BF5 -48281000 48773000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -31575800 33824300
+            -48281000 48773000
+          )
+          (type protect)
+        )
+      )
+      (net NET_128.1
+        (via BF5 -46213600 49850500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -29375800 33824300
+            -46213600 49850500
+          )
+          (type protect)
+        )
+      )
+      (net NET_127.2
+        (via BF5 -44207300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -28375800 33824300
+            -44207300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_127.1
+        (via BF5 -42431500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -27575800 33824300
+            -42431500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_126.2
+        (via BF5 -40708400 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -26775800 33824300
+            -40708400 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_126.1
+        (via BF5 -39033400 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -25975800 33824300
+            -39033400 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_125.2
+        (via BF5 -37402300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -25175800 33824300
+            -37402300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_125.1
+        (wire
+          (path C1 600000
+            -35811400 50000000
+            -35811400 65811400
+            -60000000 90000000
+          )
+        )
+        (via BF5 -35811400 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -24375800 33824300
+            -35811400 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_124.2
+        (via BF5 -34257200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -23575800 33824300
+            -34257200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_124.1
+        (via BF5 -31308500 49704800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -22775800 33824300
+            -31308500 49704800
+          )
+          (type protect)
+        )
+      )
+      (net NET_123.2
+        (via BF5 -29324600 49704800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -20375800 33824300
+            -29324600 49704800
+          )
+          (type protect)
+        )
+      )
+      (net NET_123.1
+        (via BF5 -27184900 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -19575800 33824300
+            -27184900 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_122.2
+        (via BF5 -25771200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -17175800 33824300
+            -25771200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_122.1
+        (via BF5 -24334500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -16375800 33824300
+            -24334500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_121.2
+        (via BF5 -22920600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -15575800 33824300
+            -22920600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_121.1
+        (via BF5 -21527500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -14775800 33824300
+            -21527500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_120.2
+        (wire
+          (path C1 600000
+            -20153100 50000000
+            -20153100 70153100
+            -40000000 90000000
+          )
+        )
+        (via BF5 -20153100 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -13975800 33824300
+            -20153100 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_120.1
+        (via BF5 -18795500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -13175800 33824300
+            -18795500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_119.2
+        (via BF5 -17453000 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -12375800 33824300
+            -17453000 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_119.1
+        (via BF5 -16124000 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -11575800 33824300
+            -16124000 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_118.2
+        (via BF5 -14806900 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -10775800 33824300
+            -14806900 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_118.1
+        (via BF5 -13500300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -9975800 33824300
+            -13500300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_117.2
+        (via BF5 -11690500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -7575800 33824300
+            -11690500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_117.1
+        (via BF5 -10382300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -6775800 33824300
+            -10382300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_116.2
+        (via BF5 -9083500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -5975800 33824300
+            -9083500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_116.1
+        (via BF5 -7792600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -5175800 33824300
+            -7792600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_115.2
+        (via BF5 -6508600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -4375800 33824300
+            -6508600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_115.1
+        (via BF5 -5230100 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -3575800 33824300
+            -5230100 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_114.2
+        (via BF5 -3956000 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -2775800 33824300
+            -3956000 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_114.1
+        (via BF5 -2685200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -1975800 33824300
+            -2685200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_113.2
+        (via BF5 -1416600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -1175800 33824300
+            -1416600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_113.1
+        (wire
+          (path C1 600000
+            -150100 50000000
+            -150100 69849900
+            20000000 90000000
+          )
+        )
+        (via BF5 -150100 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -350800 33824300
+            -150100 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_112.2
+        (via BF5 1116200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            499300 33824300
+            1116200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_112.1
+        (via BF5 2385400 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            1324300 33824300
+            2385400 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_111.2
+        (via BF5 3658500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            2124300 33824300
+            3658500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_111.1
+        (via BF5 4935800 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            2924300 33824300
+            4935800 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_110.2
+        (wire
+          (path C1 600000
+            6218300 50000000
+            6218300 66218300
+            30000000 90000000
+          )
+        )
+        (via BF5 6218300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            3724300 33824300
+            6218300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_110.1
+        (via BF5 7507300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            4524300 33824300
+            7507300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_109.2
+        (via BF5 8804000 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            5324300 33824300
+            8804000 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_109.1
+        (via BF5 10109800 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            6124300 33824300
+            10109800 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_108.2
+        (via BF5 11425900 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            6924300 33824300
+            11425900 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_108.1
+        (via BF5 12753800 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            7724300 33824300
+            12753800 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_107.2
+        (via BF5 14062800 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            10124300 33824300
+            14062800 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_107.1
+        (via BF5 15377900 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            10924300 33824300
+            15377900 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_106.2
+        (via BF5 16704600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            11724300 33824300
+            16704600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_106.1
+        (via BF5 18044600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            12524300 33824300
+            18044600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_105.2
+        (wire
+          (path C1 600000
+            19399300 50000000
+            19399300 59399300
+            50000000 90000000
+          )
+        )
+        (via BF5 19399300 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            13324300 33824300
+            19399300 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_105.1
+        (via BF5 20770500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            14124300 33824300
+            20770500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_104.2
+        (via BF5 22160100 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            14924300 33824300
+            22160100 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_104.1
+        (via BF5 23570100 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            15724300 33824300
+            23570100 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_103.2
+        (via BF5 25002500 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            16524300 33824300
+            25002500 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_103.1
+        (via BF5 26459700 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            17324300 33824300
+            26459700 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_102.2
+        (via BF5 27891200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            19724300 33824300
+            27891200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_102.1
+        (via BF5 29336000 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            20524300 33824300
+            29336000 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_101.2
+        (via BF5 30756700 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            22924300 33824300
+            30756700 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_101.1
+        (via BF5 32188600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            23724300 33824300
+            32188600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_100.2
+        (via BF5 33645200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            24524300 33824300
+            33645200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_100.1
+        (via BF5 35129000 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            25324300 33824300
+            35129000 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_99.2
+        (via BF5 36642700 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            26124300 33824300
+            36642700 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_99.1
+        (via BF5 38189200 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            26924300 33824300
+            38189200 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_98.2
+        (via BF5 40793400 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            27724300 33824300
+            40793400 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_98.1
+        (wire
+          (path C1 600000
+            43651600 50000000
+            83651600 90000000
+            90000000 90000000
+          )
+        )
+        (via BF5 43651600 50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            28524300 33824300
+            43651600 50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_97.2
+        (via BF5 46720300 49694700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            29524300 33824300
+            46720300 49694700
+          )
+          (type protect)
+        )
+      )
+      (net NET_97.1
+        (via BF5 47894300 49077200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            31724300 33824300
+            47894300 49077200
+          )
+          (type protect)
+        )
+      )
+      (net NET_96.2
+        (via BF5hsh 49060400 47917800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 31724300
+            49060400 47917800
+          )
+          (type protect)
+        )
+      )
+      (net NET_96.1
+        (via BF5h 49839500 46256700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 29524300
+            49839500 46256700
+          )
+          (type protect)
+        )
+      )
+      (net NET_95.2
+        (via BF5h 50000000 43723200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 28524300
+            50000000 43723200
+          )
+          (type protect)
+        )
+      )
+      (net NET_95.1
+        (via BF5h 50000000 41247200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 27724300
+            50000000 41247200
+          )
+          (type protect)
+        )
+      )
+      (net NET_94.2
+        (via BF5h 50000000 39593000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 26924300
+            50000000 39593000
+          )
+          (type protect)
+        )
+      )
+      (net NET_94.1
+        (via BF5h 50000000 37981000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 26124300
+            50000000 37981000
+          )
+          (type protect)
+        )
+      )
+      (net NET_93.2
+        (via BF5h 50000000 36407500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 25324300
+            50000000 36407500
+          )
+          (type protect)
+        )
+      )
+      (net NET_93.1
+        (via BF5h 50000000 34869100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 24524300
+            50000000 34869100
+          )
+          (type protect)
+        )
+      )
+      (net NET_92.2
+        (via BF5h 50000000 33362800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 23724300
+            50000000 33362800
+          )
+          (type protect)
+        )
+      )
+      (net NET_92.1
+        (via BF5h 50000000 31885800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 22924300
+            50000000 31885800
+          )
+          (type protect)
+        )
+      )
+      (net NET_91.2
+        (via BF5h 50000000 30427000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 20524300
+            50000000 30427000
+          )
+          (type protect)
+        )
+      )
+      (net NET_91.1
+        (via BF5h 50000000 28939100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 19724300
+            50000000 28939100
+          )
+          (type protect)
+        )
+      )
+      (net NET_90.2
+        (via BF5h 50000000 27471200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 17324300
+            50000000 27471200
+          )
+          (type protect)
+        )
+      )
+      (net NET_90.1
+        (via BF5h 50000000 25973300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 16524300
+            50000000 25973300
+          )
+          (type protect)
+        )
+      )
+      (net NET_89.2
+        (via BF5h 50000000 24503800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 15724300
+            50000000 24503800
+          )
+          (type protect)
+        )
+      )
+      (net NET_89.1
+        (wire
+          (path C1 600000
+            50000000 23060200
+            73060200 23060200
+            90000000 40000000
+          )
+        )
+        (via BF5h 50000000 23060200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 14924300
+            50000000 23060200
+          )
+          (type protect)
+        )
+      )
+      (net NET_88.2
+        (via BF5h 50000000 21640100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 14124300
+            50000000 21640100
+          )
+          (type protect)
+        )
+      )
+      (net NET_88.1
+        (via BF5h 50000000 20241300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 13324300
+            50000000 20241300
+          )
+          (type protect)
+        )
+      )
+      (net NET_87.2
+        (via BF5h 50000000 18861800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 12524300
+            50000000 18861800
+          )
+          (type protect)
+        )
+      )
+      (net NET_87.1
+        (via BF5h 50000000 17499600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 11724300
+            50000000 17499600
+          )
+          (type protect)
+        )
+      )
+      (net NET_86.2
+        (via BF5h 50000000 16153100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 10924300
+            50000000 16153100
+          )
+          (type protect)
+        )
+      )
+      (net NET_86.1
+        (via BF5h 50000000 14820400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 10124300
+            50000000 14820400
+          )
+          (type protect)
+        )
+      )
+      (net NET_85.2
+        (via BF5h 50000000 13493300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 7724300
+            50000000 13493300
+          )
+          (type protect)
+        )
+      )
+      (net NET_85.1
+        (via BF5h 50000000 12146800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 6924300
+            50000000 12146800
+          )
+          (type protect)
+        )
+      )
+      (net NET_84.2
+        (via BF5h 50000000 10814300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 6124300
+            50000000 10814300
+          )
+          (type protect)
+        )
+      )
+      (net NET_84.1
+        (via BF5h 50000000 9494100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 5324300
+            50000000 9494100
+          )
+          (type protect)
+        )
+      )
+      (net NET_83.2
+        (via BF5h 50000000 8184800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 4524300
+            50000000 8184800
+          )
+          (type protect)
+        )
+      )
+      (net NET_83.1
+        (via BF5h 50000000 6885000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 3724300
+            50000000 6885000
+          )
+          (type protect)
+        )
+      )
+      (net NET_82.2
+        (via BF5h 50000000 5593400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 2924300
+            50000000 5593400
+          )
+          (type protect)
+        )
+      )
+      (net NET_82.1
+        (via BF5h 50000000 4308700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 2124300
+            50000000 4308700
+          )
+          (type protect)
+        )
+      )
+      (net NET_81.2
+        (via BF5h 50000000 3029600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 1324300
+            50000000 3029600
+          )
+          (type protect)
+        )
+      )
+      (net NET_81.1
+        (via BF5h 50000000 1756100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 499300
+            50000000 1756100
+          )
+          (type protect)
+        )
+      )
+      (net NET_80.2
+        (wire
+          (path C1 600000
+            50000000 486800
+            69513200 486800
+            90000000 -20000000
+          )
+        )
+        (via BF5h 50000000 486800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -350800
+            50000000 486800
+          )
+          (type protect)
+        )
+      )
+      (net NET_80.1
+        (via BF5h 50000000 -781300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -1175800
+            50000000 -781300
+          )
+          (type protect)
+        )
+      )
+      (net NET_79.2
+        (via BF5h 50000000 -2049000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -1975800
+            50000000 -2049000
+          )
+          (type protect)
+        )
+      )
+      (net NET_79.1
+        (via BF5h 50000000 -3317100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -2775800
+            50000000 -3317100
+          )
+          (type protect)
+        )
+      )
+      (net NET_78.2
+        (via BF5h 50000000 -4587000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -3575800
+            50000000 -4587000
+          )
+          (type protect)
+        )
+      )
+      (net NET_78.1
+        (via BF5h 50000000 -5859700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -4375800
+            50000000 -5859700
+          )
+          (type protect)
+        )
+      )
+      (net NET_77.2
+        (via BF5h 50000000 -7136500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -5175800
+            50000000 -7136500
+          )
+          (type protect)
+        )
+      )
+      (net NET_77.1
+        (via BF5h 50000000 -8418400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -5975800
+            50000000 -8418400
+          )
+          (type protect)
+        )
+      )
+      (net NET_76.2
+        (via BF5h 50000000 -9706700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -6775800
+            50000000 -9706700
+          )
+          (type protect)
+        )
+      )
+      (net NET_76.1
+        (via BF5h 50000000 -11002500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -7575800
+            50000000 -11002500
+          )
+          (type protect)
+        )
+      )
+      (net NET_75.2
+        (via BF5h 50000000 -12280300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -9975800
+            50000000 -12280300
+          )
+          (type protect)
+        )
+      )
+      (net NET_75.1
+        (via BF5h 50000000 -13566600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -10775800
+            50000000 -13566600
+          )
+          (type protect)
+        )
+      )
+      (net NET_74.2
+        (via BF5h 50000000 -14860100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -11575800
+            50000000 -14860100
+          )
+          (type protect)
+        )
+      )
+      (net NET_74.1
+        (via BF5h 50000000 -16162200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -12375800
+            50000000 -16162200
+          )
+          (type protect)
+        )
+      )
+      (net NET_73.2
+        (via BF5h 50000000 -17474100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -13175800
+            50000000 -17474100
+          )
+          (type protect)
+        )
+      )
+      (net NET_73.1
+        (via BF5h 50000000 -18797200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -13975800
+            50000000 -18797200
+          )
+          (type protect)
+        )
+      )
+      (net NET_72.2
+        (via BF5h 50000000 -20133000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -14775800
+            50000000 -20133000
+          )
+          (type protect)
+        )
+      )
+      (net NET_72.1
+        (via BF5h 50000000 -21483100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -15575800
+            50000000 -21483100
+          )
+          (type protect)
+        )
+      )
+      (net NET_71.2
+        (via BF5h 50000000 -22849200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -16375800
+            50000000 -22849200
+          )
+          (type protect)
+        )
+      )
+      (net NET_71.1
+        (via BF5h 50000000 -24233100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -17175800
+            50000000 -24233100
+          )
+          (type protect)
+        )
+      )
+      (net NET_70.2
+        (wire
+          (path C1 600000
+            50000000 -25596900
+            55596900 -25596900
+            90000000 -60000000
+          )
+        )
+        (via BF5h 50000000 -25596900
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -19575800
+            50000000 -25596900
+          )
+          (type protect)
+        )
+      )
+      (net NET_70.1
+        (via BF5h 50000000 -26966500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -20375800
+            50000000 -26966500
+          )
+          (type protect)
+        )
+      )
+      (net NET_69.2
+        (via BF5h 50000000 -28316300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -22775800
+            50000000 -28316300
+          )
+          (type protect)
+        )
+      )
+      (net NET_69.1
+        (via BF5h 50000000 -29671600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -23575800
+            50000000 -29671600
+          )
+          (type protect)
+        )
+      )
+      (net NET_68.2
+        (via BF5h 50000000 -31043500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -24375800
+            50000000 -31043500
+          )
+          (type protect)
+        )
+      )
+      (net NET_68.1
+        (via BF5h 50000000 -32433800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -25175800
+            50000000 -32433800
+          )
+          (type protect)
+        )
+      )
+      (net NET_67.2
+        (via BF5h 50000000 -33844500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -25975800
+            50000000 -33844500
+          )
+          (type protect)
+        )
+      )
+      (net NET_67.1
+        (via BF5h 50000000 -36497800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -26775800
+            50000000 -36497800
+          )
+          (type protect)
+        )
+      )
+      (net NET_66.2
+        (via BF5h 50000000 -39102000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -27575800
+            50000000 -39102000
+          )
+          (type protect)
+        )
+      )
+      (net NET_66.1
+        (via BF5h 50000000 -42786000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -28375800
+            50000000 -42786000
+          )
+          (type protect)
+        )
+      )
+      (net NET_65.2
+        (via BF5h 49880400 -46086900
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -29375800
+            49880400 -46086900
+          )
+          (type protect)
+        )
+      )
+      (net NET_65.1
+        (wire
+          (path C1 600000
+            48867200 -50000000
+            50000000 -50000000
+            90000000 -90000000
+          )
+        )
+        (via BF5 48867200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            33824300 -31575800
+            48867200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_64.2
+        (via BF5 47529800 -49312800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            31724300 -33675800
+            47529800 -49312800
+          )
+          (type protect)
+        )
+      )
+      (net NET_64.1
+        (via BF5 46246300 -49842200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            29524300 -33675800
+            46246300 -49842200
+          )
+          (type protect)
+        )
+      )
+      (net NET_63.2
+        (via BF5 44286800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            28524300 -33675800
+            44286800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_63.1
+        (via BF5 42254300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            27724300 -33675800
+            42254300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_62.2
+        (via BF5 40285300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            26924300 -33675800
+            40285300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_62.1
+        (wire
+          (path C1 600000
+            38294200 -50000000
+            38294200 -68294200
+            60000000 -90000000
+          )
+        )
+        (via BF5 38294200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            26124300 -33675800
+            38294200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_61.2
+        (via BF5 35934400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            25324300 -33675800
+            35934400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_61.1
+        (via BF5 34124200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            24524300 -33675800
+            34124200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_60.2
+        (via BF5 32250500 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            23724300 -33675800
+            32250500 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_60.1
+        (via BF5 30567300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            22924300 -33675800
+            30567300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_59.2
+        (via BF5 28598300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            20524300 -33675800
+            28598300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_59.1
+        (via BF5 27183200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            19724300 -33675800
+            27183200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_58.2
+        (via BF5 25776600 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            17324300 -33675800
+            25776600 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_58.1
+        (via BF5 24348100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            16524300 -33675800
+            24348100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_57.2
+        (via BF5 22941500 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            15724300 -33675800
+            22941500 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_57.1
+        (via BF5 21554800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            14924300 -33675800
+            21554800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_56.2
+        (via BF5 20186100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            14124300 -33675800
+            20186100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_56.1
+        (via BF5 18833400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            13324300 -33675800
+            18833400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_55.2
+        (via BF5 17495200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            12524300 -33675800
+            17495200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_55.1
+        (via BF5 16169900 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            11724300 -33675800
+            16169900 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_54.2
+        (via BF5 14856000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            10924300 -33675800
+            14856000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_54.1
+        (via BF5 13552100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            10124300 -33675800
+            13552100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_53.2
+        (via BF5 12254900 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            7724300 -33675800
+            12254900 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_53.1
+        (via BF5 10939200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            6924300 -33675800
+            10939200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_52.2
+        (via BF5 9633800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            6124300 -33675800
+            9633800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_52.1
+        (wire
+          (path C1 600000
+            8337300 -50000000
+            8337300 -78337300
+            20000000 -90000000
+          )
+        )
+        (via BF5 8337300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            5324300 -33675800
+            8337300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_51.2
+        (via BF5 7048400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            4524300 -33675800
+            7048400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_51.1
+        (via BF5 5766000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            3724300 -33675800
+            5766000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_50.2
+        (via BF5 4488800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            2924300 -33675800
+            4488800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_50.1
+        (via BF5 3215700 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            2124300 -33675800
+            3215700 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_49.2
+        (via BF5 1945600 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            1324300 -33675800
+            1945600 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_49.1
+        (via BF5 678500 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            499300 -33675800
+            678500 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_48.2
+        (via BF5 -586900 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -350800 -33675800
+            -586900 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_48.1
+        (via BF5 -1854300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -1175800 -33675800
+            -1854300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_47.2
+        (via BF5 -3124600 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -1975800 -33675800
+            -3124600 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_47.1
+        (via BF5 -4398200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -2775800 -33675800
+            -4398200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_46.2
+        (via BF5 -5675900 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -3575800 -33675800
+            -5675900 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_46.1
+        (via BF5 -6959100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -4375800 -33675800
+            -6959100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_45.2
+        (via BF5 -8248900 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -5175800 -33675800
+            -8248900 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_45.1
+        (via BF5 -9546400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -5975800 -33675800
+            -9546400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_44.2
+        (wire
+          (path C1 600000
+            -10853000 -50000000
+            -10853000 -60853000
+            -40000000 -90000000
+          )
+        )
+        (via BF5 -10853000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -6775800 -33675800
+            -10853000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_44.1
+        (via BF5 -12170000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -7575800 -33675800
+            -12170000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_43.2
+        (via BF5 -13961200 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -9975800 -33675800
+            -13961200 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_43.1
+        (via BF5 -15276300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -10775800 -33675800
+            -15276300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_42.2
+        (via BF5 -16602900 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -11575800 -33675800
+            -16602900 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_42.1
+        (via BF5 -17942500 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -12375800 -33675800
+            -17942500 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_41.2
+        (via BF5 -19296800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -13175800 -33675800
+            -19296800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_41.1
+        (via BF5 -20667400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -13975800 -33675800
+            -20667400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_40.2
+        (via BF5 -22056100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -14775800 -33675800
+            -22056100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_40.1
+        (via BF5 -23464800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -15575800 -33675800
+            -23464800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_39.2
+        (via BF5 -24895700 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -16375800 -33675800
+            -24895700 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_39.1
+        (via BF5 -26351000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -17175800 -33675800
+            -26351000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_38.2
+        (via BF5 -27781100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -19575800 -33675800
+            -27781100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_38.1
+        (via BF5 -29224100 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -20375800 -33675800
+            -29224100 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_37.2
+        (via BF5 -30643400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -22775800 -33675800
+            -30643400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_37.1
+        (wire
+          (path C1 600000
+            -32073500 -50000000
+            -32073500 -51046200
+            -71027300 -90000000
+            -80000000 -90000000
+          )
+        )
+        (via BF5 -32073500 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -23575800 -33675800
+            -32073500 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_36.2
+        (via BF5 -33527800 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -24375800 -33675800
+            -33527800 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_36.1
+        (via BF5 -35009000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -25175800 -33675800
+            -35009000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_35.2
+        (via BF5 -36519400 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -25975800 -33675800
+            -36519400 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_35.1
+        (via BF5 -38062000 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -26775800 -33675800
+            -38062000 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_34.1
+        (via BF5 -44191300 -50000000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -28375800 -33675800
+            -44191300 -50000000
+          )
+          (type protect)
+        )
+      )
+      (net NET_33.2
+        (via BF5 -46743000 -49686300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -29375800 -33675800
+            -46743000 -49686300
+          )
+          (type protect)
+        )
+      )
+      (net NET_33.1
+        (via BF5 -48169100 -48867400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -31575800 -33675800
+            -48169100 -48867400
+          )
+          (type protect)
+        )
+      )
+      (net NET_32.2
+        (via BF5h -49373600 -47423200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -31575800
+            -49373600 -47423200
+          )
+          (type protect)
+        )
+      )
+      (net NET_32.1
+        (via BF5h -49900000 -45994800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -29375800
+            -49900000 -45994800
+          )
+          (type protect)
+        )
+      )
+      (net NET_31.2
+        (via BF5h -50000000 -43214400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -28375800
+            -50000000 -43214400
+          )
+          (type protect)
+        )
+      )
+      (net NET_31.1
+        (via BF5h -50000000 -40578500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -27575800
+            -50000000 -40578500
+          )
+          (type protect)
+        )
+      )
+      (net NET_30.2
+        (via BF5h -50000000 -38609500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -26775800
+            -50000000 -38609500
+          )
+          (type protect)
+        )
+      )
+      (net NET_30.1
+        (via BF5h -50000000 -36674800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -25975800
+            -50000000 -36674800
+          )
+          (type protect)
+        )
+      )
+      (net NET_29.2
+        (via BF5h -50000000 -35157800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -25175800
+            -50000000 -35157800
+          )
+          (type protect)
+        )
+      )
+      (net NET_29.1
+        (via BF5h -50000000 -33670600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -24375800
+            -50000000 -33670600
+          )
+          (type protect)
+        )
+      )
+      (net NET_28.2
+        (via BF5h -50000000 -32210800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -23575800
+            -50000000 -32210800
+          )
+          (type protect)
+        )
+      )
+      (net NET_28.1
+        (via BF5h -50000000 -30775700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -22775800
+            -50000000 -30775700
+          )
+          (type protect)
+        )
+      )
+      (net NET_27.2
+        (via BF5h -50000000 -29352200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -20375800
+            -50000000 -29352200
+          )
+          (type protect)
+        )
+      )
+      (net NET_27.1
+        (via BF5h -50000000 -27904500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -19575800
+            -50000000 -27904500
+          )
+          (type protect)
+        )
+      )
+      (net NET_26.2
+        (via BF5h -50000000 -26470300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -17175800
+            -50000000 -26470300
+          )
+          (type protect)
+        )
+      )
+      (net NET_26.1
+        (via BF5h -50000000 -25010400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -16375800
+            -50000000 -25010400
+          )
+          (type protect)
+        )
+      )
+      (net NET_25.2
+        (via BF5h -50000000 -23575400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -15575800
+            -50000000 -23575400
+          )
+          (type protect)
+        )
+      )
+      (net NET_25.1
+        (via BF5h -50000000 -22162800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -14775800
+            -50000000 -22162800
+          )
+          (type protect)
+        )
+      )
+      (net NET_24.2
+        (wire
+          (path C1 600000
+            -50000000 -20770700
+            -70770700 -20770700
+            -90000000 -40000000
+          )
+        )
+        (via BF5h -50000000 -20770700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -13975800
+            -50000000 -20770700
+          )
+          (type protect)
+        )
+      )
+      (net NET_24.1
+        (via BF5h -50000000 -19397000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -13175800
+            -50000000 -19397000
+          )
+          (type protect)
+        )
+      )
+      (net NET_23.2
+        (via BF5h -50000000 -18040000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -12375800
+            -50000000 -18040000
+          )
+          (type protect)
+        )
+      )
+      (net NET_23.1
+        (via BF5h -50354400 -16842300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -11575800
+            -50354400 -16842300
+          )
+          (type protect)
+        )
+      )
+      (net NET_21.2
+        (via BF5h -50000000 -12290400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -7575800
+            -50000000 -12290400
+          )
+          (type protect)
+        )
+      )
+      (net NET_21.1
+        (via BF5h -50000000 -10970800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -6775800
+            -50000000 -10970800
+          )
+          (type protect)
+        )
+      )
+      (net NET_20.2
+        (via BF5h -50000000 -9661900
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -5975800
+            -50000000 -9661900
+          )
+          (type protect)
+        )
+      )
+      (net NET_20.1
+        (via BF5h -50000000 -8362500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -5175800
+            -50000000 -8362500
+          )
+          (type protect)
+        )
+      )
+      (net NET_19.2
+        (via BF5h -50000000 -7071000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -4375800
+            -50000000 -7071000
+          )
+          (type protect)
+        )
+      )
+      (net NET_19.1
+        (via BF5h -50000000 -5786500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -3575800
+            -50000000 -5786500
+          )
+          (type protect)
+        )
+      )
+      (net NET_18.2
+        (via BF5h -50000000 -4507500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -2775800
+            -50000000 -4507500
+          )
+          (type protect)
+        )
+      )
+      (net NET_18.1
+        (via BF5h -50000000 -3233100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -1975800
+            -50000000 -3233100
+          )
+          (type protect)
+        )
+      )
+      (net NET_17.2
+        (via BF5h -50000000 -1962100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -1175800
+            -50000000 -1962100
+          )
+          (type protect)
+        )
+      )
+      (net NET_17.1
+        (via BF5h -50000000 -694400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 -350800
+            -50000000 -694400
+          )
+          (type protect)
+        )
+      )
+      (net NET_16.2
+        (via BF5h -50000000 571100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 499300
+            -50000000 571100
+          )
+          (type protect)
+        )
+      )
+      (net NET_16.1
+        (via BF5h -50000000 1838000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 1324300
+            -50000000 1838000
+          )
+          (type protect)
+        )
+      )
+      (net NET_15.2
+        (via BF5h -50000000 3107500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 2124300
+            -50000000 3107500
+          )
+          (type protect)
+        )
+      )
+      (net NET_15.1
+        (via BF5h -50000000 4379800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 2924300
+            -50000000 4379800
+          )
+          (type protect)
+        )
+      )
+      (net NET_14.2
+        (via BF5h -50000000 5656000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 3724300
+            -50000000 5656000
+          )
+          (type protect)
+        )
+      )
+      (net NET_14.1
+        (via BF5h -50000000 6937100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 4524300
+            -50000000 6937100
+          )
+          (type protect)
+        )
+      )
+      (net NET_13.2
+        (via BF5h -50000000 8224400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 5324300
+            -50000000 8224400
+          )
+          (type protect)
+        )
+      )
+      (net NET_13.1
+        (via BF5h -50000000 9519100
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 6124300
+            -50000000 9519100
+          )
+          (type protect)
+        )
+      )
+      (net NET_12.2
+        (via BF5h -50000000 10822300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 6924300
+            -50000000 10822300
+          )
+          (type protect)
+        )
+      )
+      (net NET_12.1
+        (via BF5h -50000000 12135500
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 7724300
+            -50000000 12135500
+          )
+          (type protect)
+        )
+      )
+      (net NET_11.2
+        (via BF5h -50000000 13430400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 10124300
+            -50000000 13430400
+          )
+          (type protect)
+        )
+      )
+      (net NET_11.1
+        (via BF5h -50000000 14732000
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 10924300
+            -50000000 14732000
+          )
+          (type protect)
+        )
+      )
+      (net NET_10.2
+        (via BF5h -50000000 16043300
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 11724300
+            -50000000 16043300
+          )
+          (type protect)
+        )
+      )
+      (net NET_10.1
+        (via BF5h -50000000 17365700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 12524300
+            -50000000 17365700
+          )
+          (type protect)
+        )
+      )
+      (net NET_9.2
+        (via BF5h -50000000 18700600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 13324300
+            -50000000 18700600
+          )
+          (type protect)
+        )
+      )
+      (net NET_9.1
+        (via BF5h -50000000 20049600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 14124300
+            -50000000 20049600
+          )
+          (type protect)
+        )
+      )
+      (net NET_8.2
+        (via BF5h -50000000 21414200
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 14924300
+            -50000000 21414200
+          )
+          (type protect)
+        )
+      )
+      (net NET_8.1
+        (via BF5h -50000000 22796400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 15724300
+            -50000000 22796400
+          )
+          (type protect)
+        )
+      )
+      (net NET_7.2
+        (via BF5h -50000000 24197900
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 16524300
+            -50000000 24197900
+          )
+          (type protect)
+        )
+      )
+      (net NET_7.1
+        (wire
+          (path C1 600000
+            -50000000 25620800
+            -55620800 25620800
+            -90000000 60000000
+          )
+        )
+        (via BF5h -50000000 25620800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 17324300
+            -50000000 25620800
+          )
+          (type protect)
+        )
+      )
+      (net NET_6.2
+        (via BF5h -50000000 27022400
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 19724300
+            -50000000 27022400
+          )
+          (type protect)
+        )
+      )
+      (net NET_6.1
+        (via BF5h -50000000 28431800
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 20524300
+            -50000000 28431800
+          )
+          (type protect)
+        )
+      )
+      (net NET_1.2
+        (via BF5 -50000000 46057700
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 29524300
+            -50000000 46057700
+          )
+          (type protect)
+        )
+      )
+      (net NET_1.1
+        (via BF5hsv -49264400 47610600
+          (type protect)
+        )
+        (wire
+          (path DIE1_1_DIE1 200000
+            -33675800 31724300
+            -49264400 47610600
+          )
+          (type protect)
+        )
+      )
+    )
+  )
+)
