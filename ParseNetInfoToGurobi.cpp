@@ -401,6 +401,50 @@ void outputNetsInfo(std::vector<netInfo> &nets){
         outfile<<std::endl;
     }
 }
+void outputCommonBoundaries_drawing(std::vector<commonBoundary> &commonBoundaries){
+    for(auto &boundary:commonBoundaries){
+        for(int i = 0;i < boundary.boundarySegment.size(); i+=2){
+            std::cout<<"_view.drawLine("<<boundary.boundarySegment[i].x()<<","<<boundary.boundarySegment[i].y()<<","<<
+                boundary.boundarySegment[i+1].x()<<","<<boundary.boundarySegment[i+1].y()<<");\n";
+        }
+    }
+}
+void outputNetsInfo_drawing(std::vector<netInfo> &nets){
+    for(auto &net:nets){
+        //boundarySegment[0]
+        for(int i = 0;i < net.boundarySegments[0].size(); i+=2){
+            std::cout<<"_view.drawLine("<<net.boundarySegments[0][i].x()<<","<<net.boundarySegments[0][i].y()<<","<<
+                net.boundarySegments[0][i+1].x()<<","<<net.boundarySegments[0][i+1].y()<<");\n";
+        }
+        //outterBoundarySegment
+        for(int i = 0; i < net.outterBoundarySegments[0].size();i+=2){
+            std::cout<<"_view.drawLine("<<net.outterBoundarySegments[0][i].x()<<","<<net.outterBoundarySegments[0][i].y()<<","<<
+                net.outterBoundarySegments[0][i+1].x()<<","<<net.outterBoundarySegments[0][i+1].y()<<");\n";
+        }
+        if(net.outterBoundarySegments.size() == 2){
+            for(int i = 0; i < net.outterBoundarySegments[1].size();i+=2){
+                std::cout<<"_view.drawLine("<<net.outterBoundarySegments[1][i].x()<<","<<net.outterBoundarySegments[1][i].y()<<","<<
+                    net.outterBoundarySegments[1][i+1].x()<<","<<net.outterBoundarySegments[1][i+1].y()<<");\n";
+            }
+        }
+        //boundarySegment[1]
+        for(int i = 0; i < net.boundarySegments[1].size();i+=2){
+            std::cout<<"_view.drawLine("<<net.boundarySegments[1][i].x()<<","<<net.boundarySegments[1][i].y()<<","<<
+                net.boundarySegments[1][i+1].x()<<","<<net.boundarySegments[1][i+1].y()<<");\n";
+        }
+        //innerBoundarySegment
+        for(int i = 0; i < net.innerBoundarySegments[0].size(); i+=2){
+            std::cout<<"_view.drawLine("<<net.innerBoundarySegments[0][i].x()<<","<<net.innerBoundarySegments[0][i].y()<<","<<
+                net.innerBoundarySegments[0][i+1].x()<<","<<net.innerBoundarySegments[0][i+1].y()<<");\n";
+        }
+        if(net.innerBoundarySegments.size() == 2){
+            for(int i = 0; i < net.innerBoundarySegments[1].size();i+=2){
+                std::cout<<"_view.drawLine("<<net.innerBoundarySegments[1][i].x()<<","<<net.innerBoundarySegments[1][i].y()<<","<<
+                    net.innerBoundarySegments[1][i+1].x()<<","<<net.innerBoundarySegments[1][i+1].y()<<");\n";
+            }
+        }
+    }
+}
 /*
 bool isSameBoundary(const point_t p, const point_t q){
     auto eq = [&](double a, double b){
@@ -615,27 +659,30 @@ std::vector<netInfo> parseNetsInfo(std::ifstream &file){
 }
 
 void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets){
-    std::vector<bool> isBoundaryChanged(commonBoundaries.size(),false);
     std::vector<bool> isNetChanged(nets.size(),false);
     //更新所有commonBoundaries的boundarySegments, startPoint(邊界線本身)
     for(int i = 0;i < commonBoundaries.size();i++){
-        int deltaBias_netA = 0, deltaBias_netB = 0;
-        deltaBias_netA =  commonBoundaries[i].startPoint.x() - commonBoundaries[i].netA_pad.x(); 
-        deltaBias_netB =  commonBoundaries[i].startPoint.x() - commonBoundaries[i].netB_pad.x();
-        /*
-        if(deltaVector[i]!=0){
-            isBoundaryChanged[i] = true;
-        }
-        */
+        int deltaBias_netA_x = 0, deltaBias_netB_x = 0;
+        int deltaBias_netA_y = 0, deltaBias_netB_y = 0;
+        deltaBias_netA_x =  commonBoundaries[i].startPoint.x() - commonBoundaries[i].netA_pad.x(); 
+        deltaBias_netB_x =  commonBoundaries[i].startPoint.x() - commonBoundaries[i].netB_pad.x();
+        deltaBias_netA_y = commonBoundaries[i].startPoint.y() - commonBoundaries[i].netA_pad.y();
+        deltaBias_netB_y = commonBoundaries[i].startPoint.y() - commonBoundaries[i].netB_pad.y();
         //邊界線往netA移動
         if(commonBoundaries[i].boundary_move_direction == 0){
-            if(deltaBias_netA > 0){
+            if(deltaBias_netA_x > 0){
+                deltaVector[i] = 0 - deltaVector[i];
+            }
+            if(deltaBias_netA_y > 0){
                 deltaVector[i] = 0 - deltaVector[i];
             }
         }
         //邊界線往netB移動
         else if(commonBoundaries[i].boundary_move_direction == 1){
-            if(deltaBias_netB > 0){
+            if(deltaBias_netB_x > 0){
+                deltaVector[i] = 0 - deltaVector[i];
+            }
+            if(deltaBias_netB_y > 0){
                 deltaVector[i] = 0 - deltaVector[i];
             }
         }
@@ -736,11 +783,13 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
     }
 }//end of Phase2UpdateAllInfo_normal_nets
 
+
 /*
 int main(){
 return 0;
 }
 */
+
 /*
 int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
@@ -752,6 +801,8 @@ int main(int argc, char* argv[]){
     Phase2UpdateAllInfo_normal_nets(deltaVector,commonBoundaries,nets);
     outputNetsInfo(nets);
     outputCommonBoundaries(commonBoundaries);
+    outputCommonBoundaries_drawing(commonBoundaries);
+    outputnetInfo_drawing(nets);
     file.close();
     return 0;
 }

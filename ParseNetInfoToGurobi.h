@@ -69,6 +69,10 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries,std:
 void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries);
 // output Nets info to netInfo_toGurobi.txt
 void outputNetsInfo(std::vector<netInfo> &nets);
+//output CommonBoundaries info to drawing
+void outputCommonBoundaries_drawing(std::vector<commonBoundary> &commonBoundaries);
+//output Nets info to drawing
+void outputNetsInfo_drawing(std::vector<netInfo> &nets);
 // build commonBoundaries from nets info
 std::vector<commonBoundary> buildCommonBoundaries(std::vector<netInfo> &nets);
 //parse commonBoundary info from xxx_nets_info.txt
