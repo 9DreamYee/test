@@ -1307,6 +1307,8 @@ int main(int argc,char* argv[]){
     
     //為每個net建立tuple
     //印出InitialOctBoudnary_tuple_result.txt
+    std::ofstream Netfile("Octilinear_tuple.txt",std::ios::trunc);
+    Netfile.close();
     for(int i = 0;i<nets.size();i++){
         std::ofstream NetFile("Octilinear_tuple.txt",std::ios::app);
         NetFile<<"Net's tuple begin:\n";
@@ -1317,7 +1319,7 @@ int main(int argc,char* argv[]){
         NetFile.close();
     }
     //output to calculate area of net
-    //尚未統合file讀取方式
+    //統一以Octilinear_tuple.txt當作輸入檔案
     file.open("Octilinear_tuple.txt");
     //file.open("InitialOctBoundary_tuple_result.txt");
     //file.open("1127_correct_tuple.txt");
@@ -1327,12 +1329,14 @@ int main(int argc,char* argv[]){
     Outputfile_AreaResult_toCSV(Polygons);
     
     //Output to check the boundary info to drawing
-    /*
+    /*    
     for (int i = 0; i < nets.size();i++){
-        nets[i].PrintNetSegments_drawing();
+        //nets[i].PrintNetSegments_drawing();
+        nets[i].PrintExtendedInitialRouting_drawing();
         nets[i].PrintBoundarySegments_drawing();
     }
-   */ 
+  */  
+  
     //Input to MILP formulation / Output to check each net info 
     //output file name "256io_16nets_one_shorter_sides_nets_info.txt"; 
     double total_area = 0, avg_area = 0, temp_area = 0 ;
