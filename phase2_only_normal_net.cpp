@@ -82,7 +82,9 @@ int main(int argc, char* argv[])
 	if(status == GRB_OPTIMAL){
             std::cout << "Optimal solution found.\n";
             std::cout << "ObjVal = " << model.get(GRB_DoubleAttr_ObjVal) << "\n";
-
+	    std::cout << "Number of Variables: "<< model.get(GRB_IntAttr_NumVars) << std::endl;
+	    std::cout << "Number of Constraints: "<< model.get(GRB_IntAttr_NumConstrs) << std::endl;
+	    std::cout << "Solve time from Gurobi: "<< model.get(GRB_DoubleAttr_Runtime)<< std::endl;
             // 輸出解
             for(int e=0; e<E; e++){
                 double deltaVal = deltaVars[e].get(GRB_DoubleAttr_X);
@@ -90,12 +92,14 @@ int main(int argc, char* argv[])
                 auto &b = boundaries[e];
                 // 實際對應的面積移動 = alpha_e * deltaVal
                 double actualArea = b.alpha * deltaVal;
+		double ratio = actualArea/b.shiftAmount;
 		deltaVector.push_back(deltaVal);
                 std::cout 
                     << "Boundary " << b.boundaryID 
                     << ": delta= " << deltaVal
                     << ", shiftAmount= " << b.shiftAmount
                     << ", actualArea= " << actualArea
+		    << ", ratio= "<< ratio
                     << ", u= " << uVal
                     << "\n";
             }

@@ -206,7 +206,7 @@ segments.push_back(Segment(-55620800,25620800, -90000000,60000000));
 */
 
   //16 nets
-
+/*
 segments.push_back(Segment(-20153100,50000000, -20153100,70153100));
 segments.push_back(Segment(-20153100,70153100, -40000000,90000000));
 segments.push_back(Segment(-150100,50000000, -150100,69849900));
@@ -240,8 +240,9 @@ segments.push_back(Segment(-50000000,25620800, -55620800,25620800));
 segments.push_back(Segment(-55620800,25620800, -90000000,60000000));
 segments.push_back(Segment(-50000000,46057700, -90000000,86057700));
 segments.push_back(Segment(-90000000,86057700, -90000000,90000000));
-// 52 nets  
-/*
+*/
+  // 52 nets  
+
 segments.push_back(Segment(-50000000,37673500, -90000000,77673500));
 segments.push_back(Segment(-90000000,77673500, -90000000,80000000));
 segments.push_back(Segment(-44207300,50000000, -44207300,54207300));
@@ -297,8 +298,8 @@ segments.push_back(Segment(50000000,-25596900, 55596900,-25596900));
 segments.push_back(Segment(55596900,-25596900, 90000000,-60000000));
 segments.push_back(Segment(50000000,-33844500, 90000000,-73844500));
 segments.push_back(Segment(90000000,-73844500, 90000000,-80000000));
-segments.push_back(Segment(48867200,-48169400, 90000000,-89302200));
-segments.push_back(Segment(90000000,-89302200, 90000000,-90000000));
+segments.push_back(Segment(48867200,-50000000, 50000000,-50000000));
+segments.push_back(Segment(50000000,-50000000, 90000000,-90000000));
 segments.push_back(Segment(44286800,-50000000, 44286800,-54286800));
 segments.push_back(Segment(44286800,-54286800, 80000000,-90000000));
 segments.push_back(Segment(38294200,-50000000, 38294200,-68294200));
@@ -327,7 +328,7 @@ segments.push_back(Segment(-71113000,-90000000, -80000000,-90000000));
 segments.push_back(Segment(-41364900,-50000000, -74965100,-83600200));
 segments.push_back(Segment(-74965100,-83600200, -83600200,-83600200));
 segments.push_back(Segment(-83600200,-83600200, -90000000,-90000000));
-segments.push_back(Segment(-49900000,-45994800, -55994800,-45994800));
+segments.push_back(Segment(-50000000,-45994800, -55994800,-45994800));
 segments.push_back(Segment(-55994800,-45994800, -90000000,-80000000));
 segments.push_back(Segment(-50000000,-35157800, -65157800,-35157800));
 segments.push_back(Segment(-65157800,-35157800, -90000000,-60000000));
@@ -335,7 +336,7 @@ segments.push_back(Segment(-50000000,-27904500, -67904500,-27904500));
 segments.push_back(Segment(-67904500,-27904500, -90000000,-50000000));
 segments.push_back(Segment(-50000000,-20770700, -70770700,-20770700));
 segments.push_back(Segment(-70770700,-20770700, -90000000,-40000000));
-segments.push_back(Segment(-49968300,-14965600, -74965600,-14965600));
+segments.push_back(Segment(-50000000,-14965600, -74965600,-14965600));
 segments.push_back(Segment(-74965600,-14965600, -90000000,-30000000));
 segments.push_back(Segment(-50000000,-7071000, -77071000,-7071000));
 segments.push_back(Segment(-77071000,-7071000, -90000000,-20000000));
@@ -351,7 +352,7 @@ segments.push_back(Segment(-50000000,25620800, -55620800,25620800));
 segments.push_back(Segment(-55620800,25620800, -90000000,60000000));
 segments.push_back(Segment(-50000000,46057700, -90000000,86057700));
 segments.push_back(Segment(-90000000,86057700, -90000000,90000000));
-*/  
+
 //output segment to _view.drawLine(_sx,_sy,_ex,_ey);
    
     std::cout<< "all_net_coord_info_start:"<<std::endl;

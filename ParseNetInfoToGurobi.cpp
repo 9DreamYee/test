@@ -187,8 +187,8 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
             //commonBoundary.shiftMin = commonBoundary.netA_pad.x() - commonBoundary.startPoint.x();
             //commonBoundary.shiftMax = commonBoundary.netB_pad.x() - commonBoundary.startPoint.x();
             commonBoundary.shiftMin = 0;
-            //根據shiftAmount的正負來決定要將面積調整至哪個pad的方向
-	    //distance model預設為euclidean model(直線距離)
+            // boundary_move_direction根據shiftAmount的正負來決定要將面積調整至哪個pad的方向
+	        //distance model預設為euclidean model(直線距離)
             if(commonBoundary.shiftAmount > 0){
                 commonBoundary.shiftMax = bg::distance(commonBoundary.netA_pad,commonBoundary.startPoint);
 		        commonBoundary.boundary_move_direction = 0;
@@ -218,6 +218,95 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
         //shiftAmount > 0 採用 netA的ExtendedInitialRoute, shiftAmount < 0 採用 netB的ExtendedInitialRoute 
         else{
             commonBoundary.shift_Direction = 2;
+            //紀錄哪條netInfo需要更新
+            int netID_needUpdate = -1;
+            //紀錄net更新時要參照commonBoundary的netA或netB的pad 0 -> netA, 1 -> netB
+            int referenceNet = 0;
+            //代表Boundary的某個net pad 座標需移動到inner boundary上
+            if((commonBoundary.netA_pad.x() != commonBoundary.netB_pad.y()) || (commonBoundary.netA_pad.y() != commonBoundary.netB_pad.y())){
+                //代表netB pad需移動
+                if((commonBoundary.startPoint.x() == commonBoundary.netA_pad.x()) || (commonBoundary.startPoint.y() == commonBoundary.netA_pad.y())){
+                    netID_needUpdate = commonBoundary.netB;
+                    referenceNet = 1;
+                    double netB_xOffset = 5e+7 - abs( commonBoundary.netB_pad.x() );
+                    double netB_yOffset = 5e+7 - abs( commonBoundary.netB_pad.y() );
+                    //代表net B pad應該往y座標平移至innerBoundary比較近
+                    if(netB_xOffset > netB_yOffset){
+                        if(commonBoundary.netB_pad.y() < 0){
+                            netB_yOffset = 0 - netB_yOffset;
+                        }
+                        commonBoundary.netB_pad.y(commonBoundary.netB_pad.y() + netB_yOffset) ;
+                    }
+                    else if(netB_xOffset < netB_yOffset){
+                        if(commonBoundary.netB_pad.x() < 0){
+                            netB_xOffset = 0 - netB_xOffset;
+                        }
+                        commonBoundary.netB_pad.x(commonBoundary.netB_pad.x() + netB_xOffset) ;
+                    }
+                }
+                //代表netA pad需移動
+                else if (commonBoundary.startPoint.x() == commonBoundary.netB_pad.x() || commonBoundary.startPoint.y() == commonBoundary.netB_pad.y()){
+                    netID_needUpdate = commonBoundary.netA;
+                    referenceNet = 0;
+                    double netA_xOffset = 5e+7 - abs( commonBoundary.netA_pad.x());
+                    double netA_yOffset = 5e+7 - abs( commonBoundary.netA_pad.y());
+                    if(netA_xOffset > netA_yOffset){
+                        if(commonBoundary.netA_pad.y() < 0){
+                            netA_yOffset = 0 - netA_yOffset;
+                        }
+                        commonBoundary.netA_pad.y(commonBoundary.netA_pad.y() + netA_yOffset) ;
+                    }
+                    else if(netA_xOffset < netA_yOffset){
+                        if(commonBoundary.netA_pad.x() < 0){
+                            netA_xOffset = 0 - netA_xOffset;
+                        }
+                        commonBoundary.netA_pad.x(commonBoundary.netA_pad.x() + netA_xOffset) ;
+                    }
+                }
+                //更新受影響的Boundary: shift_Direction,shiftMax,boundary_move_direction
+                if(commonBoundary.netA_pad.y() == commonBoundary.netB_pad.y()){
+                    commonBoundary.shift_Direction = 0;
+                    commonBoundary.shiftMin = 0;
+                    // boundary_move_direction根據shiftAmount的正負來決定要將面積調整至哪個pad的方向
+	                //distance model預設為euclidean model(直線距離)
+                    if(commonBoundary.shiftAmount > 0){
+                        commonBoundary.shiftMax = bg::distance(commonBoundary.netA_pad,commonBoundary.startPoint);
+		                commonBoundary.boundary_move_direction = 0;
+                    }
+                    else {
+            	        commonBoundary.shiftMax = bg::distance(commonBoundary.netB_pad,commonBoundary.startPoint);
+		                commonBoundary.boundary_move_direction = 1;
+                    }
+                }
+                //在y座標平移
+                else if (commonBoundary.netA_pad.x() == commonBoundary.netB_pad.x()){
+                    commonBoundary.shift_Direction = 1;
+                    commonBoundary.shiftMin = 0;
+                    if(commonBoundary.shiftAmount > 0){
+                        commonBoundary.shiftMax = bg::distance(commonBoundary.netA_pad,commonBoundary.startPoint);
+		                commonBoundary.boundary_move_direction = 0;
+                    }
+                    else {
+            	        commonBoundary.shiftMax = bg::distance(commonBoundary.netB_pad,commonBoundary.startPoint);
+		                commonBoundary.boundary_move_direction = 1;
+                    }
+                }
+                //更新受影響的net: pad,pad_x,pad_y
+                for(auto &net:nets){
+                    if(net.netID == netID_needUpdate){
+                        if(referenceNet == 0){
+                            net.pad = commonBoundary.netA_pad;
+                            net.pad_x = net.pad.x();
+                            net.pad_y = net.pad.y();
+                        }
+                        else if(referenceNet == 1){
+                            net.pad = commonBoundary.netB_pad;
+                            net.pad_x = net.pad.x();
+                            net.pad_y = net.pad.y();
+                        }
+                    }
+                }
+            }//end of pad移動
             /*
             //找出每個corner net的轉角座標
             point_t corner_point;

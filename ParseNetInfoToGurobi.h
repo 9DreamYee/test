@@ -40,7 +40,6 @@ struct netInfo{
 struct commonBoundary{
     int boundaryID;
     int netA,netB;
-    //標記邊界線要往netA或是netB移動, 0 表示往netA, 1 表示往netB
     point_t startPoint;
     line_t boundarySegment;
     //若該邊界線為corner net則加入initialRouteSegment
@@ -53,6 +52,7 @@ struct commonBoundary{
     // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
     int shift_Direction;
     int shiftAmount;
+    //協助計算phase2_delta
     int boundary_move_direction;
     commonBoundary();
 };
