@@ -291,7 +291,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
 		                commonBoundary.boundary_move_direction = 1;
                     }
                 }
-                //更新受影響的net: pad,pad_x,pad_y
+                //更新受影響的net
                 for(auto &net:nets){
                     if(net.netID == netID_needUpdate){
                         if(referenceNet == 0){

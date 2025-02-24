@@ -2,18 +2,23 @@
 #include <vector>
 #include "gurobi_c++.h"
 #include "ParseNetInfoToGurobi.h"
-/*
-struct BoundaryInfo {
-    int    boundaryID;
-    double alpha;
-    double shiftAmount;
-    double shiftMin;
-    double shiftMax;
-};
-*/
+void exportToCSV(std::vector<commonBoundary> &boundaries, std::vector<double> actualAreaVector, std::vector<double> ratioVector){
+	std::ofstream csvFile("net_area_data.csv");
+	csvFile << "BoundayID,ShiftAmount,ActualArea,Ratio\n";
+	for(int i = 0; i < boundaries.size(); i++){
+		csvFile << boundaries[i].boundaryID<<","
+		        << boundaries[i].shiftAmount<<","
+			<< actualAreaVector[i]<<","
+			<< (ratioVector[i] >= 0 ? ratioVector[i] : 0)
+			<<"\n";
+	}
+	csvFile.close();
+}
 int main(int argc, char* argv[]) 
 {
     // 0. 建立netInfo & commonBoundary資料結構
+    std::vector<double> actualAreaVector;
+    std::vector<double> ratioVector;
     std::vector<double> deltaVector;
     std::ifstream file(argv[1]);
     auto nets = parseNetsInfo(file);
@@ -92,8 +97,11 @@ int main(int argc, char* argv[])
                 auto &b = boundaries[e];
                 // 實際對應的面積移動 = alpha_e * deltaVal
                 double actualArea = b.alpha * deltaVal;
+		actualAreaVector.push_back(actualArea);
 		double ratio = actualArea/b.shiftAmount;
+		ratioVector.push_back(ratio);
 		deltaVector.push_back(deltaVal);
+		std::cout<< std::setprecision(10);
                 std::cout 
                     << "Boundary " << b.boundaryID 
                     << ": delta= " << deltaVal
@@ -108,6 +116,7 @@ int main(int argc, char* argv[])
 	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);
 	    //outputNetsInfo_drawing(nets);
+	    exportToCSV(boundaries,actualAreaVector,ratioVector);
         } 
 	//找不到最佳解
 	else {
