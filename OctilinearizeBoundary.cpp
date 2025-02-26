@@ -11,7 +11,121 @@
 #include <utility>
 #include "net.h"
 #include "CalculatePolygonArea.h"
+/*
+void sortNetsClockwise(std::vector<Net> &nets, Rectangle &InnerRect) {
+    if (nets.empty()) return;
 
+    // **處理 pad 位置，確保在 InnerRect 的邊界**
+    std::map<int, std::pair<double, double>> pad_offset;
+    for (int i = 0; i < nets.size(); i++) {
+        if ((abs(nets[i].pad.x()) != abs(InnerRect.rect_x)) && (abs(nets[i].pad.y()) != abs(InnerRect.rect_y))) {
+            double x_offset = abs(InnerRect.rect_x) - abs(nets[i].pad.x());
+            double y_offset = abs(InnerRect.rect_y) - abs(nets[i].pad.y());
+
+            if (x_offset > y_offset) {
+                if (nets[i].pad.y() < 0) y_offset = -y_offset;
+                nets[i].pad.y(nets[i].pad.y() + y_offset);
+                pad_offset[i] = {0, y_offset};
+            } else {
+                if (nets[i].pad.x() < 0) x_offset = -x_offset;
+                nets[i].pad.x(nets[i].pad.x() + x_offset);
+                pad_offset[i] = {x_offset, 0};
+            }
+        }
+    }
+
+    // **1. 找到最左上角的 `pad` 作為基準點**
+    auto topLeft = std::min_element(nets.begin(), nets.end(), [](const Net &a, const Net &b) {
+        return (a.pad.y() < b.pad.y()) || (a.pad.y() == b.pad.y() && a.pad.x() < b.pad.x());
+    });
+
+    point_t center = topLeft->pad; // 以 `topLeft` 為中心
+
+    // **2. 將座標轉換為極座標 `(r, θ)`，並按照 `θ` 由小到大排序**
+    std::sort(nets.begin(), nets.end(), [&](const Net &a, const Net &b) {
+        double dxA = a.pad.x() - center.x();
+        double dyA = a.pad.y() - center.y();
+        double thetaA = atan2(dyA, dxA);  // 計算角度
+        if (thetaA < 0) thetaA += 2 * M_PI; // 轉換為 `0~2π` 範圍
+
+        double dxB = b.pad.x() - center.x();
+        double dyB = b.pad.y() - center.y();
+        double thetaB = atan2(dyB, dxB);
+        if (thetaB < 0) thetaB += 2 * M_PI;
+
+        return thetaA < thetaB; // 角度小的排前面 (順時針)
+    });
+
+    // **3. 還原 pad 位置**
+    for (auto &p : pad_offset) {
+        nets[p.first].pad.x(nets[p.first].pad.x() - p.second.first);
+        nets[p.first].pad.y(nets[p.first].pad.y() - p.second.second);
+    }
+}
+*/
+std::pair<int, double> getNetEdgeKey(const Net &n, const Rectangle &r) {
+    // 先計算四條邊的世界座標
+    double leftX   = r.rect_x;
+    double rightX  = r.rect_x + r.rect_w;
+    double bottomY = r.rect_y;
+    double topY    = r.rect_y + r.rect_h;
+
+    double px = n.pad.x();
+    double py = n.pad.y();
+
+    // 由於浮點運算易有誤差，故用 EPS 來判斷「幾乎相等」
+    const double EPS = 1e-9;
+
+    // 上邊 (編號 0):    y = topY   ，x 從小到大
+    if (std::fabs(py - topY) < EPS) {
+        return {0, px};
+    }
+    // 右邊 (編號 1):    x = rightX ，y 從大到小 => key = -y
+    else if (std::fabs(px - rightX) < EPS) {
+        return {1, -py};
+    }
+    // 下邊 (編號 2):    y = bottomY，x 從大到小 => key = -x
+    else if (std::fabs(py - bottomY) < EPS) {
+        return {2, -px};
+    }
+    // 左邊 (編號 3):    x = leftX  ，y 從小到大 => key = y
+    else {
+        return {3, py};
+    }
+}
+
+// 對 nets 進行順時針排序的函式
+void sortNetsClockwise(std::vector<Net> &nets, const Rectangle &InnerRect) {
+    // 如果沒有 net，直接 return
+    if (nets.empty()) return;
+
+    for (int i = 0; i < nets.size(); i++) {
+        if ((abs(nets[i].pad.x()) != abs(InnerRect.rect_x)) && (abs(nets[i].pad.y()) != abs(InnerRect.rect_y))) {
+            double x_offset = abs(InnerRect.rect_x) - abs(nets[i].pad.x());
+            double y_offset = abs(InnerRect.rect_y) - abs(nets[i].pad.y());
+
+            if (x_offset > y_offset) {
+                if (nets[i].pad.y() < 0) y_offset = -y_offset;
+                nets[i].pad.y(nets[i].pad.y() + y_offset);
+            } else {
+                if (nets[i].pad.x() < 0) x_offset = -x_offset;
+                nets[i].pad.x(nets[i].pad.x() + x_offset);
+            }
+        }
+    }
+    // 以順時針「上邊→右邊→下邊→左邊」為基準進行排序
+    std::sort(nets.begin(), nets.end(), [&](const Net &a, const Net &b) {
+        auto keyA = getNetEdgeKey(a, InnerRect);
+        auto keyB = getNetEdgeKey(b, InnerRect);
+
+        // 1. 先比邊編號
+        if (keyA.first != keyB.first) {
+            return keyA.first < keyB.first;
+        }
+        // 2. 若邊相同，再比此邊上的排序鍵
+        return keyA.second < keyB.second;
+    });
+}
 void AddPadandBall(std::vector<Net> &nets){
     std::ifstream file1;
     std::pair<int,int> t_pad;
@@ -127,14 +241,37 @@ void FindStartAndEndPoint(std::vector<Segment> &one_net,Point &start,Point &end,
         
     }
 }//end of FindStartAndEndPoint
-void CreatingNet(std::vector<Segment> &one_net,Point &start,Point &end,std::vector<Net> &nets){
+void CreatingNet(std::vector<Segment> &one_net,Point &start,Point &end,std::vector<Net> &nets, Rectangle &InnerRect){
+    /*
+    if((abs(start.a) != abs(InnerRect.rect_x)) && (abs(start.b) != abs(InnerRect.rect_y))){
+        double x_offset = abs(InnerRect.rect_x) - abs(start.a);
+        double y_offset = abs(InnerRect.rect_y) - abs(start.b);
+        //x_offset > y_offset ? start.b = start.b + y_offset : start.a = start.a + x_offset;
+        if(x_offset > y_offset){
+            if(start.b < 0){
+                y_offset = 0-y_offset;
+            }
+            start.b = start.b + y_offset;
+        }
+        else{
+            if(start.a < 0){
+                x_offset = 0-x_offset;
+            }
+            start.a = start.a + x_offset;
+        }
+    }
+    */
     Net net(start,end);
-
+    net.pad.x(start.a);
+    net.pad.y(start.b);
+    net.ball.x(end.a);
+    net.ball.y(end.b);
     //Need to fix net 35 bug 
     //1.correct start/end point 2.correct the net35 Netsegments
     for(int i = 0;i < one_net.size();i++){
         net.AddNetSegment(one_net[i]);
-    } 
+    }
+
     nets.emplace_back(net);
 } //end of CreatingNet
 void CreatingBoundary(std::vector<Segment> &one_boundary,Point &start,Point &end,int ID,std::vector<Boundary> &boundaries){
@@ -178,7 +315,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
             getline(file,str); //str = boundary0:;
             //processing the last net info
             FindStartAndEndPoint(one_net,start,end,InnerRect_CenterPoint,all_net_info_end);
-            CreatingNet(one_net,start,end,nets); 
+            CreatingNet(one_net,start,end,nets,InnerRect); 
             one_net.clear();
             continue;
         } 
@@ -188,7 +325,7 @@ void InputFile_ExtendBoundaryToOutterRect_result(std::ifstream &file,std::vector
             if(str == Net_filiter){
                 cnt++;
                 FindStartAndEndPoint(one_net,start,end,InnerRect_CenterPoint,all_net_info_end);
-                CreatingNet(one_net,start,end,nets);
+                CreatingNet(one_net,start,end,nets,InnerRect);
                 one_net.clear();
                 continue;
             }
@@ -586,6 +723,10 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
         SegmentWhichIsAbuts(temp_net.NetSegments,temp_segment,AbutswithStartSegment);
         dx = AbutswithStartSegment.p0.a - AbutswithStartSegment.p1.a;
         dy = AbutswithStartSegment.p0.b - AbutswithStartSegment.p1.b;
+        /*
+        std::cout<<"dx: "<<dx<<"dy: "<<dy<<std::endl;
+        std::cout<<"bug found!"<<std::endl;
+        */
         if(dy != 0){
             SecondLineSlope = dy/dx;
         }
@@ -647,7 +788,6 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
             SecondLine.p1.b = temp_point.b;
             boundary.BoundarySegments.emplace_back(SecondLine);
         }
-        
         //Third line
         Segment temp_segment1(0,0,0,0);
         temp_segment1.p0.a = AbutswithStartSegment.p0.a;
@@ -703,6 +843,7 @@ void OctilinearizeBoundaryCase_ReferNetIsVertical(Boundary &boundary,Net &temp_n
         }
         //boundary.BoundarySegments.emplace_back(ThirdLine);
     }
+    
 }
 
 void OctilinearzeBoundaryCase_ReferNetIsHorizontal(Boundary &boundary,Net &temp_net,Segment &temp_segment,Point &temp_point){ 
@@ -744,6 +885,7 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
     Point temp_point(0,0);
     Point temp_endPoint(0,0);
     int direction = 0;
+    int cnt = 0;
     for(int i = 0;i < boundaries.size();i++){
         int BoundaryID = boundaries[i].BoundaryID;
         int NetNearBoundary0_StartSegmentSlope = 0,NetNearBoundary1_StartSegmentSlope = 0;
@@ -759,6 +901,7 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
         // 1 for 45 degree, -1 for 135 degree, 0 for 90 degree, 2 for horizontal 
         NetNearBoundary0_StartSegmentSlope = CalculateSlope(NetNearBoundary0,NetNearBoundary0_StartSegment);
         NetNearBoundary1_StartSegmentSlope = CalculateSlope(NetNearBoundary1,NetNearBoundary1_StartSegment);
+        //std::cout<<"NetNearBoundary0_StartSegmentSlope: "<<NetNearBoundary0_StartSegmentSlope<<", NetNearBoundary1_StartSegmentSlope: "<<NetNearBoundary1_StartSegmentSlope<<std::endl;
         direction = DirectionBoundaryToExtend(boundaries[i],OutterRect);
         int NetNearBoundary0_StartSegmentLength = boost::polygon::euclidean_distance(NetNearBoundary0_StartSegment.p0,NetNearBoundary0_StartSegment.p1);
         int NetNearBoundary1_StartSegmentLength = boost::polygon::euclidean_distance(NetNearBoundary1_StartSegment.p0,NetNearBoundary1_StartSegment.p1);
@@ -829,6 +972,8 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
         }//end of nets that both are 45/135 degree case
 
         //Net near Boundary that one is 0/90 degree and one is 45/135 degree 問題待解決
+        // 1 for 45 degree, -1 for 135 degree, 0 for 90 degree, 2 for horizontal 
+        //bug found!!
         else{
              if(NetNearBoundary0_StartSegmentSlope == 0 || NetNearBoundary0_StartSegmentSlope == 2){
                 temp_net = NetNearBoundary0;
@@ -844,6 +989,7 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
             }
             
             if(NetNearBoundary0_StartSegmentSlope == 0 || NetNearBoundary1_StartSegmentSlope == 0){
+
                 OctilinearizeBoundaryCase_ReferNetIsVertical(boundaries[i],temp_net,temp_segment,temp_point);
             }
             
@@ -853,12 +999,10 @@ void OctilinearizeBoundary(std::vector<Net> &nets,std::vector<Boundary> &boundar
              //std::cout<<"BoundaryID: "<<boundaries[i].BoundaryID<<" temp_net.NetSegments.size(): "<<temp_net.NetSegments.size()<<" NetNearBoundary0_StartSegmentSlope: "<<NetNearBoundary0_StartSegmentSlope<<"  NetNearBoundary1_StartSegmentSlope: "<<NetNearBoundary1_StartSegmentSlope<<std::endl;
             ExtendBoundaryToOutterRect(boundaries[i],OutterRect,direction,temp_endPoint);
         }//end of one is 90 degree and one is 45/135 degree case
-        
         //Update each boundary endPoint
         boundaries[i].endPoint = temp_endPoint;
     
     }//end of for(boundaries) loop 
-
 }//end of OctilinearizeBoundary
 
 //Update each boundary's info for each net
@@ -1289,6 +1433,7 @@ int main(int argc,char* argv[]){
     Rectangle OutterRect = {-1.4e+08,-1.4e+08,2.8e+08,2.8e+08};
     //建立net資訊 包含boundary與net本身的所有起終點segment
     InputFile_ExtendBoundaryToOutterRect_result(file,AllBoundarySegments,AllnetsSegments,nets,boundaries,InnerRect);
+    sortNetsClockwise(nets,InnerRect);
     FindBoundariesForNet(nets,boundaries);
     OctilinearizeBoundary(nets,boundaries,OutterRect); 
     //After boundaries octilinearize, update every net of elements in net.Boundaries first,note the bounday.ID and update the new boundary info
@@ -1336,7 +1481,6 @@ int main(int argc,char* argv[]){
         nets[i].PrintBoundarySegments_drawing();
     }
   */  
-  
     //Input to MILP formulation / Output to check each net info 
     //output file name "256io_16nets_one_shorter_sides_nets_info.txt"; 
     double total_area = 0, avg_area = 0, temp_area = 0 ;
@@ -1352,7 +1496,6 @@ int main(int argc,char* argv[]){
         std::cout<<"Net"<<i<<"_area: "<<temp_area<<"\n";
         //total_area += temp_area;
     }
-
     //output area & length of each net
     /*for(int i = 0;i < nets.size();i++){
         int NetLength = 0;

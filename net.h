@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <map>
 #include </home/m11115061/boost_1_85_0/boost/polygon/polygon.hpp>
 #include </home/m11115061/boost_1_85_0/boost/polygon/voronoi.hpp>
 #include </home/m11115061/boost_1_85_0/boost/geometry.hpp>
@@ -80,10 +81,13 @@ struct segment_traits<Segment> {
 typedef boost::geometry::model::d2::point_xy<int> Point_g;
 typedef boost::geometry::model::segment<Point_g> Segment_g;
 
+typedef boost::geometry::model::d2::point_xy<double> point_t;
 class Net{
     public:
         Point startPoint;
         Point endPoint;
+        point_t pad;
+        point_t ball;
         long long NetArea;
         //std::pair<int,int> pad;
         //std::pair<int,int> ball;
