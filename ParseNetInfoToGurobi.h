@@ -24,6 +24,7 @@ struct Rectangle{
     double rect_w;
     double rect_h;
     Rectangle();
+    Rectangle(double x, double y, double w, double h);
 };
 //struct宣告
 struct netInfo{

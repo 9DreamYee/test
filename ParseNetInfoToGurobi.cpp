@@ -2,7 +2,8 @@
 Rectangle::Rectangle():
     rect_x(-5e+07),rect_y(-5e+07),rect_w(1e+08),rect_h(1e+08)
     {}
-
+Rectangle::Rectangle(double x, double y, double w, double h) :
+    rect_x(x), rect_y(y), rect_w(w), rect_h(h) {}
 netInfo::netInfo():
     netID(-1),
     pad_x(0.0), pad_y(0.0),
@@ -18,7 +19,66 @@ commonBoundary::commonBoundary():
     initial_route_alpha(0.0),
     shiftAmount(0),shiftMin(0),shiftMax(0),shiftMax_corner(0),cornerArea(0.0)
     {}
-void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &temp_CB, const double &original_area, const double &unit){
+//協助判斷特例處理邊界線起點與終點, 不在同個方向上平移的狀況
+bool getCornerBoundaryDirection(const commonBoundary &CB, const Rectangle &r, const Rectangle &outterRect) {
+    // 先計算四條邊的世界座標
+    double leftX   = r.rect_x;
+    double rightX  = r.rect_x + r.rect_w;
+    double bottomY = r.rect_y;
+    double topY    = r.rect_y + r.rect_h;
+    double outter_leftX = outterRect.rect_x;
+    double outter_rightX = outterRect.rect_x + outterRect.rect_w;
+    double outter_bottomY = outterRect.rect_y;
+    double outter_topY = outterRect.rect_y + outterRect.rect_h;
+
+    double px = CB.startPoint.x();
+    double py = CB.startPoint.y();
+    double endx = CB.boundarySegment.back().x();
+    double endy = CB.boundarySegment.back().y();
+    // 0 -> 上邊, 1 -> 右邊, 2 -> 下邊, 3 -> 左邊
+    int startPoint_Direction = -1, endPoint_Direction = -1;
+    // 由於浮點運算易有誤差，故用 EPS 來判斷「幾乎相等」
+    const double EPS = 1e-9;
+    //判斷起點位在innerRect的哪條邊    
+    // 上邊 (編號 0):    y = topY   ，x 從小到大
+    if (std::fabs(py - topY) < EPS) {
+        startPoint_Direction = 0;
+    }
+    // 右邊 (編號 1):    x = rightX ，y 從大到小 => key = -y
+    else if (std::fabs(px - rightX) < EPS) {
+        startPoint_Direction = 1;
+    }
+    // 下邊 (編號 2):    y = bottomY，x 從大到小 => key = -x
+    else if (std::fabs(py - bottomY) < EPS) {
+        startPoint_Direction = 2;
+    }
+    // 左邊 (編號 3):    x = leftX  ，y 從小到大 => key = y
+    else {
+        startPoint_Direction = 3;
+    }
+    //判斷終點位在outterRect的哪條邊
+    if( std::fabs(endy - outter_topY) < EPS ){
+        endPoint_Direction = 0;
+    }
+    else if (std::fabs(endx - outter_rightX) < EPS){
+        endPoint_Direction = 1;
+    }
+    else if (std::fabs(endy - outter_bottomY) < EPS){
+        endPoint_Direction = 2;
+    }
+    else {
+        endPoint_Direction = 3;
+    }
+    //若起點與終點不在同個方向上 即為特例
+    if(startPoint_Direction != endPoint_Direction){
+        return true;
+    }
+    else{
+        return false;
+    } 
+}
+void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &temp_CB, const double &original_area, const double &unit,
+       const Rectangle &innerRect, const Rectangle &outterRect ){
     /*
     //處理initial route要平移到corner net狀況
     double offset = 0.0;
@@ -81,9 +141,7 @@ void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &tem
     //original_area = bg::area(poly)*1e-08;
     slash_area = bg::area(slash_poly)*1e-08;
     CB.cornerArea = original_area - slash_area;
-    std::cout<<"original_area = "<<original_area<<std::endl;
-    std::cout<<"slash_area = "<<slash_area<<std::endl;
-    std::cout<<"corner_area = "<<CB.cornerArea<<std::endl;
+    std::cout<<"BoundaryID: "<<CB.boundaryID<<" original_area: "<<original_area<<" slash_area: "<<slash_area<<" cornerArea: "<<CB.cornerArea<<std::endl;
    /* 
     if(line1.back().x() != line2.back().x() && line1.back().y() != line2.back().y()){
         point_t outterPoint(0.0,0.0),temp_point(0.0,0.0),temp_point2(0.0,0.0);
@@ -111,8 +169,15 @@ void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &tem
     */
 
     //alpha
+    //特例處理邊界線起點與終點, 不在同個方向上平移的狀況
+    bool isSpecialCase = getCornerBoundaryDirection(CB,innerRect,outterRect);
+    /*
+    if (isSpecialCase){
+        std::cout<<"BoundaryID: "<<CB.boundaryID<<std::endl;
+    }
+    */
     //startPoint與corner net同點, 直接以corner line替代
-    if(CB.startPoint.x() == corner_line.front().x() && CB.startPoint.y() == corner_line.front().y()){
+    if((CB.startPoint.x() == corner_line.front().x()) && (CB.startPoint.y() == corner_line.front().y()) || isSpecialCase){
         CB.alpha = 0.0;
     }
     //在y軸仍有平移的空間
@@ -231,7 +296,7 @@ void sortBoundaryClockwise(std::vector<commonBoundary> &commonBoundaries, const 
     });
 }
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount netInfo.boundary0ID, boundary1ID
-void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets){
+void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets, Rectangle &innerRect, Rectangle &outterRect){
     std::ifstream file("Gurobi_area_assignment_result.txt");
     std::string line;
     int rows = commonBoundaries.size(), cols = 2;
@@ -497,7 +562,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                     double original_area = nets[commonBoundary.netA].areaInitial;
                     auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID - 1)];
                     //commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
-                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit);
+                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit,innerRect,outterRect);
                 }
             }
             
@@ -539,7 +604,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                     auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID + 1)];
                     //commonBoundary.initialRouteSegment = nets[commonBoundary.netB].ExtendedInitialRoute;
                     double original_area = nets[commonBoundary.netB].areaInitial;
-                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit);
+                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit,innerRect,outterRect);
                 }
             }
         }//end of shift_Direction = 2
@@ -1048,9 +1113,10 @@ int main(int argc, char* argv[]){
     auto nets = parseNetsInfo(file);
     auto commonBoundaries = buildCommonBoundaries(nets);
     Rectangle innerRect;
+    Rectangle outterRect =Rectangle(-1.4e+08,-1.4e+08,2.8e+08,2.8e+08);
     sortBoundaryClockwise(commonBoundaries,innerRect);
     //同時特例處利Boundary 1
-    UpdateCommonBoundaryInfo(commonBoundaries,nets);
+    UpdateCommonBoundaryInfo(commonBoundaries,nets,innerRect,outterRect);
     //Phase2UpdateAllInfo_normal_nets(deltaVector,commonBoundaries,nets);
     
     outputNetsInfo(nets);
