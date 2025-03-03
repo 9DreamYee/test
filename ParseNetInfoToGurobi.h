@@ -18,6 +18,13 @@ typedef bg::model::d2::point_xy<double> point_t;
 typedef bg::model::linestring<point_t> line_t;
 typedef bg::model::polygon<point_t> polygon_t;
 
+struct Rectangle{
+    double rect_x;
+    double rect_y;
+    double rect_w;
+    double rect_h;
+    Rectangle();
+};
 //struct宣告
 struct netInfo{
     int netID;
@@ -46,19 +53,25 @@ struct commonBoundary{
     //若該邊界線為corner net則加入initialRouteSegment
     line_t initialRouteSegment;
     //每條邊界線平移後對多邊形面積的線性影響係數
-    double alpha;
+    //alpha_corner 為corner net獨有的線性影響係數, normal net皆設為0
+    double alpha,alpha_corner;
     double initial_route_alpha;
     point_t netA_pad,netB_pad;
-    double shiftMin,shiftMax;
+    //shiftMax_corner為corner net獨有的平移上限, normal net皆設為0
+    double shiftMin,shiftMax,shiftMax_corner;
     // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
     int shift_Direction;
     int shiftAmount;
     //協助計算phase2_delta
+    // boundary_move_direction根據shiftAmount的正負來決定要將面積調整至哪個pad的方向 0代表往netA 1代表往netB
     int boundary_move_direction;
+    //corner_area為corner net獨有的面積,切換成corner line需要扣除的面積值
+    double cornerArea;
     commonBoundary();
 };
 //函式宣告
 
+void cal_corner_area(commonBoundary &commonBoundary, line_t &corner_line, point_t &outter_corner_point, const double &unit);
 // 計算單位面積線性影響係數ˋ
 double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction);
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount

@@ -1,4 +1,8 @@
 #include "ParseNetInfoToGurobi.h"
+Rectangle::Rectangle():
+    rect_x(-5e+07),rect_y(-5e+07),rect_w(1e+08),rect_h(1e+08)
+    {}
+
 netInfo::netInfo():
     netID(-1),
     pad_x(0.0), pad_y(0.0),
@@ -10,14 +14,14 @@ netInfo::netInfo():
 commonBoundary::commonBoundary(): 
     boundaryID(-1),
     netA(-1),netB(-1),
-    alpha(0.0),boundary_move_direction(-1),
+    alpha(0.0),alpha_corner(0.0),boundary_move_direction(-1),
     initial_route_alpha(0.0),
-    shiftAmount(0),shiftMin(0),shiftMax(0)
+    shiftAmount(0),shiftMin(0),shiftMax(0),shiftMax_corner(0),cornerArea(0.0)
     {}
-double cal_corner_area(const line_t &line1, const line_t &line2, const point_t &corner_point){
-    polygon_t poly;
+void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &temp_CB, const double &original_area, const double &unit){
+    /*
+    //處理initial route要平移到corner net狀況
     double offset = 0.0;
-    line_t temp_line2 = line2;
     if(corner_point.x() == temp_line2.front().x()){
         offset = corner_point.y() - temp_line2.front().y();
         std::cout<<"offset = "<<offset<<std::endl;
@@ -33,12 +37,54 @@ double cal_corner_area(const line_t &line1, const line_t &line2, const point_t &
             point.x(point.x() + offset);
         }
     }
-    double area = 0;
-
-    for(const auto &point : line1){
+    */
+    double  slash_area = 0;
+    polygon_t poly, slash_poly;
+    std::string reason;
+    line_t temp_line2 = corner_line;
+    point_t outter_corner_point = temp_line2.back();
+    point_t inner_corner_point = corner_line.front();
+    //原邊界線 原面積
+    /*
+    bg::append(poly, inner_corner_point);
+    for(const auto &point: temp_CB.boundarySegment){
         bg::append(poly, point);
     }
+    bg::append(poly, outter_corner_point);
+    for(auto it = CB.boundarySegment.rbegin(); it != CB.boundarySegment.rend(); it++){
+        bg::append(poly, *it);
+    }
+    bg::unique(poly);
+    bg::correct(poly);
+    std::cout<<"poly WKT: "<<bg::wkt(poly)<<std::endl;
+    if (!bg::is_valid(poly, reason)) {
+        std::cout << "Original_Polygon is invalid .: " << reason << std::endl;
+    }
+    */
 
+    //slash_corner
+    bg::append(slash_poly.outer(),inner_corner_point);
+    for(const auto &point : temp_CB.boundarySegment){
+        bg::append(slash_poly.outer(), point);
+    }
+    bg::append(slash_poly.outer(),outter_corner_point);
+    for(auto it = temp_line2.rbegin(); it != temp_line2.rend(); it++){
+        bg::append(slash_poly.outer(), *it);
+    }
+    bg::unique(slash_poly);
+    bg::correct(slash_poly);
+    std::cout<<"slash_poly WKT: "<<bg::wkt(slash_poly)<<std::endl;
+    if (!bg::is_valid(slash_poly, reason)) {
+        std::cout << "Slash_Polygon is invalid: " << reason << std::endl;
+    }
+    //計算面積
+    //original_area = bg::area(poly)*1e-08;
+    slash_area = bg::area(slash_poly)*1e-08;
+    CB.cornerArea = original_area - slash_area;
+    std::cout<<"original_area = "<<original_area<<std::endl;
+    std::cout<<"slash_area = "<<slash_area<<std::endl;
+    std::cout<<"corner_area = "<<CB.cornerArea<<std::endl;
+   /* 
     if(line1.back().x() != line2.back().x() && line1.back().y() != line2.back().y()){
         point_t outterPoint(0.0,0.0),temp_point(0.0,0.0),temp_point2(0.0,0.0);
         temp_point = line1.back();
@@ -57,21 +103,47 @@ double cal_corner_area(const line_t &line1, const line_t &line2, const point_t &
         }
         bg::append(poly, outterPoint);
     }
-
+    //corner_line
     for(auto it = temp_line2.rbegin(); it != temp_line2.rend(); it++){
         bg::append(poly, *it);
     }
     bg::correct(poly);
-    /*
-    std::string reason;
-    if (!bg::is_valid(poly, reason)) {
-        //std::cout << "Polygon is valid" << std::endl;
-        std::cout << "Polygon is invalid: " << reason << std::endl;
-    }
-    std::cout<<"polygon WKT Format: "<<bg::wkt(poly)  << std::endl;
     */
-    area = bg::area(poly)*1e-08;
-    return area;
+
+    //alpha
+    //startPoint與corner net同點, 直接以corner line替代
+    if(CB.startPoint.x() == corner_line.front().x() && CB.startPoint.y() == corner_line.front().y()){
+        CB.alpha = 0.0;
+    }
+    //在y軸仍有平移的空間
+    else if(CB.startPoint.x() == corner_line.front().x()){
+        CB.alpha = cal_shifted_area(CB.boundarySegment,unit,1); 
+    }
+    //在x軸仍有平移的空間
+    else if(CB.startPoint.y() == corner_line.front().y()){
+        CB.alpha = cal_shifted_area(CB.boundarySegment,unit,0);
+    }
+    //boundary_move_direction, alpha_corner
+    if(CB.shiftAmount > 0){
+        CB.boundary_move_direction = 0;
+        //代表corner _line在y座標平移
+        if(corner_line.front().x() == CB.netA_pad.x()){
+            CB.alpha_corner = cal_shifted_area(corner_line,unit,1);
+        }
+        //代表corner_line在x座標平移
+        else if(corner_line.front().y() == CB.netA_pad.y()){
+            CB.alpha_corner = cal_shifted_area(corner_line,unit,0);
+        }
+    }
+    else if(CB.shiftAmount < 0){
+        CB.boundary_move_direction = 1;
+        if(corner_line.front().x() == CB.netB_pad.x()){
+            CB.alpha_corner = cal_shifted_area(corner_line,unit,1);
+        }
+        else if(corner_line.front().y() == CB.netB_pad.y()){
+            CB.alpha_corner = cal_shifted_area(corner_line,unit,0);
+        }
+    }
 }
 double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction){
     polygon_t poly;
@@ -89,28 +161,74 @@ double cal_shifted_area(const line_t &line,const double &unit,const int &shifted
             shifted_line.push_back(point_t(point.x(), point.y() + unit));
         }
     }
-    // shifted_direction = 2 -> corner net initial_route_alpha
-    //計算corner net的initial_route_alpha
-    else if(shifted_direction == 2){
-        return 0;
-    }
     for(const auto &point : line){
         bg::append(poly, point);
     }
     for(auto it = shifted_line.rbegin(); it != shifted_line.rend(); it++){
         bg::append(poly, *it);
     }
+    bg::unique(poly);
     bg::correct(poly);
-    /*
+    
     std::string reason;
     if (!bg::is_valid(poly, reason)) {
         //std::cout << "Polygon is valid" << std::endl;
+        std::cout<<"Poly WKT: "<<bg::wkt(poly)<<std::endl;
         std::cout << "Polygon is invalid: " << reason << std::endl;
     }
-    */
+    
     area = bg::area(poly)*1e-08;
     return area;
 
+}
+std::pair<int, double> getNetEdgeKey(const commonBoundary &CB, const Rectangle &r) {
+    // 先計算四條邊的世界座標
+    double leftX   = r.rect_x;
+    double rightX  = r.rect_x + r.rect_w;
+    double bottomY = r.rect_y;
+    double topY    = r.rect_y + r.rect_h;
+
+    double px = CB.startPoint.x() ;
+    double py = CB.startPoint.y();
+
+    // 由於浮點運算易有誤差，故用 EPS 來判斷「幾乎相等」
+    const double EPS = 1e-9;
+
+    // 上邊 (編號 0):    y = topY   ，x 從小到大
+    if (std::fabs(py - topY) < EPS) {
+        return {0, px};
+    }
+    // 右邊 (編號 1):    x = rightX ，y 從大到小 => key = -y
+    else if (std::fabs(px - rightX) < EPS) {
+        return {1, -py};
+    }
+    // 下邊 (編號 2):    y = bottomY，x 從大到小 => key = -x
+    else if (std::fabs(py - bottomY) < EPS) {
+        return {2, -px};
+    }
+    // 左邊 (編號 3):    x = leftX  ，y 從小到大 => key = y
+    else {
+        return {3, py};
+    }
+}
+
+// 對 commonBoundaries 進行順時針排序的函式
+void sortBoundaryClockwise(std::vector<commonBoundary> &commonBoundaries, const Rectangle &InnerRect) {
+    // 如果沒有 net，直接 return
+    if (commonBoundaries.empty()) return;
+
+    // 以順時針「上邊→右邊→下邊→左邊」為基準進行排序
+    std::sort(commonBoundaries.begin(), commonBoundaries.end(), [&](const commonBoundary &a, const commonBoundary &b) {
+        auto keyA = getNetEdgeKey(a, InnerRect);
+        auto keyB = getNetEdgeKey(b, InnerRect);
+
+        // 1. 先比邊編號
+        if (keyA.first != keyB.first) {
+            return keyA.first < keyB.first;
+        }
+        // 2. 若邊相同，再比此邊上的排序鍵
+        return keyA.second < keyB.second;
+    });
 }
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount netInfo.boundary0ID, boundary1ID
 void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets){
@@ -121,16 +239,21 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
     double unit = 1;
     //std::vector<std::vector<int>> matrix(rows,std::vector<int> (cols));
     std::vector<std::vector<int>> matrix(rows,std::vector<int>(2));
-    //特例處理 commonBoundary Boundary ID 1
-    int temp_id = 0;
+    //特例處理 commonBoundary Boundary ID 0
+    
+    int temp_id = 0, temp_BoundaryID = -1;
     point_t temp_point;
-    temp_id = commonBoundaries[1].netA;
-    commonBoundaries[1].netA = commonBoundaries[1].netB;
-    commonBoundaries[1].netB = temp_id;
-    temp_point = commonBoundaries[1].netA_pad;
-    commonBoundaries[1].netA_pad = commonBoundaries[1].netB_pad;
-    commonBoundaries[1].netB_pad = temp_point;
-     
+    temp_id = commonBoundaries[0].netA;
+    commonBoundaries[0].netA = commonBoundaries[0].netB;
+    commonBoundaries[0].netB = temp_id;
+
+    temp_point = commonBoundaries[0].netA_pad;
+    commonBoundaries[0].netA_pad = commonBoundaries[0].netB_pad;
+    commonBoundaries[0].netB_pad = temp_point;
+    
+    commonBoundaries[0].boundaryID = 0;
+    commonBoundaries[1].boundaryID = 1;
+    
     auto modIdx = [&] (int idx){
         return (idx+rows) % rows;
     };
@@ -177,11 +300,12 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
         }
     }
     file.close();
-    //shift_Direction shiftMax,shiftMin
+    //shift_Direction shiftMax,shiftMin,boundary_move_direction
     for (auto &commonBoundary:commonBoundaries){
         //在x座標平移
         if(commonBoundary.netA_pad.y() == commonBoundary.netB_pad.y()){
             commonBoundary.shift_Direction = 0;
+            commonBoundary.shiftMax_corner = 0;
             //shiftMin = netA_pad.x - startPoint.x 
             //shiftMax = netB_pad.x - startPoint.x
             //commonBoundary.shiftMin = commonBoundary.netA_pad.x() - commonBoundary.startPoint.x();
@@ -201,6 +325,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
         //在y座標平移
         else if (commonBoundary.netA_pad.x() == commonBoundary.netB_pad.x()){
             commonBoundary.shift_Direction = 1;
+            commonBoundary.shiftMax_corner = 0;
             //commonBoundary.shiftMin = commonBoundary.netA_pad.y() - commonBoundary.startPoint.y();
             //commonBoundary.shiftMax = commonBoundary.netB_pad.y() - commonBoundary.startPoint.y();
             commonBoundary.shiftMin = 0;
@@ -218,6 +343,8 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
         //shiftAmount > 0 採用 netA的ExtendedInitialRoute, shiftAmount < 0 採用 netB的ExtendedInitialRoute 
         else{
             commonBoundary.shift_Direction = 2;
+            point_t outter_corner_point(1.4e+08,1.4e+08);
+            //先排除掉pad沒有對齊inner boundary的情況
             //紀錄哪條netInfo需要更新
             int netID_needUpdate = -1;
             //紀錄net更新時要參照commonBoundary的netA或netB的pad 0 -> netA, 1 -> netB
@@ -228,8 +355,9 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                 if((commonBoundary.startPoint.x() == commonBoundary.netA_pad.x()) || (commonBoundary.startPoint.y() == commonBoundary.netA_pad.y())){
                     netID_needUpdate = commonBoundary.netB;
                     referenceNet = 1;
-                    double netB_xOffset = 5e+7 - abs( commonBoundary.netB_pad.x() );
-                    double netB_yOffset = 5e+7 - abs( commonBoundary.netB_pad.y() );
+                    //直接以inner boundary的最大座標值移動
+                    double netB_xOffset = 5e+07 - abs( commonBoundary.netB_pad.x() );
+                    double netB_yOffset = 5e+07 - abs( commonBoundary.netB_pad.y() );
                     //代表net B pad應該往y座標平移至innerBoundary比較近
                     if(netB_xOffset > netB_yOffset){
                         if(commonBoundary.netB_pad.y() < 0){
@@ -248,6 +376,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                 else if (commonBoundary.startPoint.x() == commonBoundary.netB_pad.x() || commonBoundary.startPoint.y() == commonBoundary.netB_pad.y()){
                     netID_needUpdate = commonBoundary.netA;
                     referenceNet = 0;
+                    //直接以inner boundary的最大座標值移動
                     double netA_xOffset = 5e+7 - abs( commonBoundary.netA_pad.x());
                     double netA_yOffset = 5e+7 - abs( commonBoundary.netA_pad.y());
                     if(netA_xOffset > netA_yOffset){
@@ -267,8 +396,6 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                 if(commonBoundary.netA_pad.y() == commonBoundary.netB_pad.y()){
                     commonBoundary.shift_Direction = 0;
                     commonBoundary.shiftMin = 0;
-                    // boundary_move_direction根據shiftAmount的正負來決定要將面積調整至哪個pad的方向
-	                //distance model預設為euclidean model(直線距離)
                     if(commonBoundary.shiftAmount > 0){
                         commonBoundary.shiftMax = bg::distance(commonBoundary.netA_pad,commonBoundary.startPoint);
 		                commonBoundary.boundary_move_direction = 0;
@@ -291,7 +418,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
 		                commonBoundary.boundary_move_direction = 1;
                     }
                 }
-                //更新受影響的net
+                //更新受影響的net: pad,pad_x,pad_y
                 for(auto &net:nets){
                     if(net.netID == netID_needUpdate){
                         if(referenceNet == 0){
@@ -303,13 +430,18 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                             net.pad = commonBoundary.netB_pad;
                             net.pad_x = net.pad.x();
                             net.pad_y = net.pad.y();
-                        }
+                             }
                     }
                 }
             }//end of pad移動
-            /*
+           //移動pad過後再次檢查哪些net是corner net並排除掉那些不是corner的 
+            if((commonBoundary.netA_pad.y() == commonBoundary.netB_pad.y())||(commonBoundary.netA_pad.x() == commonBoundary.netB_pad.x())){
+                commonBoundary.shiftAmount = abs(commonBoundary.shiftAmount);
+                continue;
+            }
             //找出每個corner net的轉角座標
             point_t corner_point;
+            //corner_point
             if(abs(commonBoundary.netA_pad.x()) > abs(commonBoundary.netB_pad.x())){
                 corner_point.x(commonBoundary.netA_pad.x());
             }
@@ -322,76 +454,105 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
             else{
                 corner_point.y(commonBoundary.netB_pad.y());
             }
+            //outter_corner_point
             //若coner net不須轉角則同一般邊界線處理無須額外計算
             //更新corner net的alpha,shift max (起始點到轉角點的距離)
             //代表邊界線要往net A移動
             if(commonBoundary.shiftAmount > 0){
-                if(commonBoundary.startPoint.x() == corner_point.x() && commonBoundary.startPoint.y() == corner_point.y()){
-                    commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
-                    double cornerAmount = cal_corner_area(commonBoundary.boundarySegment,commonBoundary.initialRouteSegment,corner_point);
-                    commonBoundary.shiftAmount = commonBoundary.shiftAmount - cornerAmount;
-                    commonBoundary.boundarySegment = nets[commonBoundary.netA].ExtendedInitialRoute; 
-                }
                 //表示邊界線與目標pad在同一條線上不須考慮轉角 shift_min = 0,shift_max = 目標pad
                 //start point與net A y座標相同, 代表在x座標上平移
-                if(commonBoundary.startPoint.y() == commonBoundary.netA_pad.y()){
+                if((commonBoundary.startPoint.y() == commonBoundary.netA_pad.y()) && 
+                        ((commonBoundary.startPoint.x() != corner_point.x()) && (commonBoundary.startPoint.y() != corner_point.y()))){
                     commonBoundary.shift_Direction = 0;
                     commonBoundary.shiftMin = 0;
                     commonBoundary.shiftMax = commonBoundary.netA_pad.x() - commonBoundary.startPoint.x();
                 }
                 //start point與net A x座標相同, 代表在y座標上平移
-                else if(commonBoundary.startPoint.x() == commonBoundary.netA_pad.x()){
+                else if((commonBoundary.startPoint.x() == commonBoundary.netA_pad.x()) &&
+                        ((commonBoundary.startPoint.x() != corner_point.x()) && (commonBoundary.startPoint.y() != corner_point.y()))){
                     commonBoundary.shift_Direction = 1;
                     commonBoundary.shiftMin = 0;
                     commonBoundary.shiftMax = commonBoundary.netA_pad.y() - commonBoundary.startPoint.y();
                 }
                 //否則要考慮轉角
                 else{
+                    //std::cout<<"BoundaryID: "<<commonBoundary.boundaryID<<std::endl;   
                     commonBoundary.shift_Direction = 2;
+                    line_t corner_line;
+                    if(corner_point.x() > 0 && corner_point.y() < 0){
+                        outter_corner_point.y(0-outter_corner_point.y());
+
+                    }
+                    else if (corner_point.x() < 0 && corner_point.y() > 0){
+                        outter_corner_point.x(0-outter_corner_point.x());
+                    }
+                    else if (corner_point.x() < 0 && corner_point.y() < 0){
+                        outter_corner_point.y(0-outter_corner_point.y());
+                        outter_corner_point.x(0-outter_corner_point.x());
+                    }
+                    corner_line.push_back(corner_point);
+                    corner_line.push_back(outter_corner_point);
                     commonBoundary.shiftMin = bg::distance(commonBoundary.startPoint,corner_point);
                     commonBoundary.shiftMax = bg::distance(corner_point,commonBoundary.netA_pad);
-                    commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
-                    double cornerAmount = cal_corner_area(commonBoundary.boundarySegment,commonBoundary.initialRouteSegment,corner_point);
+                    double original_area = nets[commonBoundary.netA].areaInitial;
+                    auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID - 1)];
+                    //commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
+                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit);
                 }
             }
+            
+            
             //代表邊界線要往net B移動
             else if(commonBoundary.shiftAmount < 0){
-                if(commonBoundary.startPoint.x() == corner_point.x() && commonBoundary.startPoint.y() == corner_point.y()){
-                    commonBoundary.initialRouteSegment = nets[commonBoundary.netB].ExtendedInitialRoute;
-                    double cornerAmount = cal_corner_area(commonBoundary.boundarySegment,commonBoundary.initialRouteSegment,corner_point);
-                    commonBoundary.shiftAmount = commonBoundary.shiftAmount + cornerAmount;
-                    commonBoundary.boundarySegment = nets[commonBoundary.netB].ExtendedInitialRoute;
-                }
                 //表示邊界線與目標pad在同一條線上不須考慮轉角 shift_min = 0,shift_max = 目標pad
-                if(commonBoundary.startPoint.y() == commonBoundary.netB_pad.y()){
+                if((commonBoundary.startPoint.y() == commonBoundary.netB_pad.y())&&
+                        ((commonBoundary.startPoint.x() != corner_point.x() && commonBoundary.startPoint.y() != corner_point.y()))){
                     commonBoundary.shift_Direction = 0;
                     commonBoundary.shiftMin = 0;
                     commonBoundary.shiftMax = commonBoundary.netB_pad.x() - commonBoundary.startPoint.x();
                 }
-                else if(commonBoundary.startPoint.x() == commonBoundary.netB_pad.x()){
+                else if((commonBoundary.startPoint.x() == commonBoundary.netB_pad.x()) &&
+                        ((commonBoundary.startPoint.x() != corner_point.x()) && (commonBoundary.startPoint.y() != corner_point.y()))){
                     commonBoundary.shift_Direction = 1;
                     commonBoundary.shiftMin = 0;
                     commonBoundary.shiftMax = commonBoundary.netB_pad.y() - commonBoundary.startPoint.y();
                 }
                 else{
+                    //std::cout<<"BoundaryID: "<<commonBoundary.boundaryID<<std::endl;   
                     commonBoundary.shift_Direction = 2;
+                    line_t corner_line;
+                    if(corner_point.x() > 0 && corner_point.y() < 0){
+                        outter_corner_point.y(0-outter_corner_point.y());
+
+                    }
+                    else if (corner_point.x() < 0 && corner_point.y() > 0){
+                        outter_corner_point.x(0-outter_corner_point.x());
+                    }
+                    else if (corner_point.x() < 0 && corner_point.y() < 0){
+                        outter_corner_point.y(0-outter_corner_point.y());
+                        outter_corner_point.x(0-outter_corner_point.x());
+                    }
+                    corner_line.push_back(corner_point);
+                    corner_line.push_back(outter_corner_point);
                     commonBoundary.shiftMin = bg::distance(commonBoundary.startPoint,corner_point);
                     commonBoundary.shiftMax = bg::distance(corner_point,commonBoundary.netB_pad);
-                    commonBoundary.initialRouteSegment = nets[commonBoundary.netB].ExtendedInitialRoute;
-                    double cornerAmount = cal_corner_area(commonBoundary.boundarySegment,commonBoundary.initialRouteSegment,corner_point);
+                    auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID + 1)];
+                    //commonBoundary.initialRouteSegment = nets[commonBoundary.netB].ExtendedInitialRoute;
+                    double original_area = nets[commonBoundary.netB].areaInitial;
+                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit);
                 }
             }
-        */    
-        }
+        }//end of shift_Direction = 2
 	//為了後續LP_phase2計算方便,將所有shiftAmount採用絕對值
         commonBoundary.shiftAmount = abs(commonBoundary.shiftAmount);
     }
     //alpha,initial_route_alpha 
     for (auto &commonBoundary:commonBoundaries){
-        commonBoundary.alpha = cal_shifted_area(commonBoundary.boundarySegment,unit,commonBoundary.shift_Direction);
-        /*if(commonBoundary.shift_Direction == 2)
-            commonBoundary.initial_route_alpha = cal_shifted_area(commonBoundary.initialRouteSegment,unit,commonBoundary.shift_Direction);
-        */    
+        //commonBoundary.shift_Direction = 0 or 1
+        if(commonBoundary.shift_Direction == 0 || commonBoundary.shift_Direction == 1){
+            commonBoundary.alpha = cal_shifted_area(commonBoundary.boundarySegment,unit,commonBoundary.shift_Direction);
+            commonBoundary.alpha_corner = 0;
+        }
     }
     //Update netInfo.boundary0ID, boundary1ID
     std::vector<bool> isBoundaryUsed(nets.size(),false);
@@ -431,6 +592,8 @@ void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries){
         outfile<<"NetA_pad: "<<bg::get<0>(commonBoundary.netA_pad)<<" "<<bg::get<1>(commonBoundary.netA_pad)<<std::endl;
         outfile<<"NetB_pad: "<<bg::get<0>(commonBoundary.netB_pad)<<" "<<bg::get<1>(commonBoundary.netB_pad)<<std::endl;
         outfile<<"Alpha: "<<commonBoundary.alpha<<std::endl;
+        outfile<<"Alpha_corner: "<<commonBoundary.alpha_corner<<std::endl;
+        outfile<<"corner_area: "<<commonBoundary.cornerArea<<std::endl;
         outfile<<"InitialRouteAlpha: "<<commonBoundary.initial_route_alpha<<std::endl;
         outfile<<"ShiftDirection: "<<commonBoundary.shift_Direction<<std::endl;
         outfile<<"ShiftMin: "<<commonBoundary.shiftMin<<std::endl;
@@ -872,28 +1035,30 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
     }
 }//end of Phase2UpdateAllInfo_normal_nets
 
-
 /*
 int main(){
 return 0;
 }
 */
 
-/*
+
 int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
     std::vector<double> deltaVector ={7.8292e+06,0,1.00015e+07,3.1842e+06,0,1.21262e+07,0,1.12867e+07,3.23181e+06,0,5.2865e+06,1.49785e+07,9.959515e+06,1.06103e+07,0,2.31958e+07  } ;
     auto nets = parseNetsInfo(file);
     auto commonBoundaries = buildCommonBoundaries(nets);
+    Rectangle innerRect;
+    sortBoundaryClockwise(commonBoundaries,innerRect);
     //同時特例處利Boundary 1
     UpdateCommonBoundaryInfo(commonBoundaries,nets);
-    Phase2UpdateAllInfo_normal_nets(deltaVector,commonBoundaries,nets);
+    //Phase2UpdateAllInfo_normal_nets(deltaVector,commonBoundaries,nets);
+    
     outputNetsInfo(nets);
     outputCommonBoundaries(commonBoundaries);
-    outputCommonBoundaries_drawing(commonBoundaries);
-    outputnetInfo_drawing(nets);
+    //outputCommonBoundaries_drawing(commonBoundaries);
+    //outputNetsInfo_drawing(nets);
     file.close();
     return 0;
 }
-*/
+
 
