@@ -58,6 +58,8 @@ struct commonBoundary{
     double alpha,alpha_corner;
     double initial_route_alpha;
     point_t netA_pad,netB_pad;
+    point_t cornerPoint;
+    line_t cornerLine;
     //shiftMax_corner為corner net獨有的平移上限, normal net皆設為0
     double shiftMin,shiftMax,shiftMax_corner;
     // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
@@ -83,6 +85,9 @@ std::pair<int, double> getNetEdgeKey(const commonBoundary &CB, const Rectangle &
 void sortBoundaryClockwise(std::vector<commonBoundary> &commonBoundaries, const Rectangle &InnerRect);
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount
 void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets, Rectangle &innerRect, Rectangle &outterRect);
+
+void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vector<int> &bVector, 
+        std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets);
 // output CommonBoundaries info to commonBoundary_toFurobi.txt
 void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries);
 // output Nets info to netInfo_toGurobi.txt
@@ -96,5 +101,4 @@ std::vector<commonBoundary> buildCommonBoundaries(std::vector<netInfo> &nets);
 //parse commonBoundary info from xxx_nets_info.txt
 std::vector<netInfo> parseNetsInfo(std::ifstream &file);
 //After phase2 only update normal nets
-void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets);
 #endif

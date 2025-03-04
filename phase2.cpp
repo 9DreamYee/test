@@ -34,7 +34,8 @@ int main(int argc, char* argv[])
     sortBoundaryClockwise(boundaries,innerRect);
     //同時特例處利Boundary 0 
     UpdateCommonBoundaryInfo(boundaries,nets,innerRect,outterRect);
-
+    std::vector<double> deltaVector;
+    std::vector<int> bVector;
     std::vector<double> actualAreaVector;
     std::vector<double> ratioVector;
 
@@ -224,10 +225,26 @@ int main(int argc, char* argv[])
                     b2Val = bVar2[e].get(GRB_DoubleAttr_X);
                     d1Val = delta1[e].get(GRB_DoubleAttr_X);
                     d2Val = delta2[e].get(GRB_DoubleAttr_X);
-                    //std::cout << "  (b1="<<b1Val<<", b2="<<b2Val << ", delta1="<<d1Val<<", delta2="<<d2Val<<")";
-                } else {
+		    double EPS = 1e-4;
+		    if(b1Val == 0) b1Val = 0;
+		    if(b2Val == 0) b2Val = 0;
+		    if(d1Val != 0){
+		    	deltaVector.push_back(d1Val);
+		    }
+		    else if(d2Val != 0){
+		    	deltaVector.push_back(d2Val);
+		    }
+		    if(b2Val == 1){
+		    	bVector.emplace_back(1);
+		    }
+		    else {
+		    	bVector.emplace_back(0);
+		    }
+                } 
+		else {
                     d1Val = delta1[e].get(GRB_DoubleAttr_X);
-                    //std::cout << "  (delta=" << dVal << ")";
+		    deltaVector.push_back(d1Val);
+		    bVector.emplace_back(0);
                 }
                 std::cout<<"Boundary "<<b.boundaryID<<" (shiftDir="<<b.shift_Direction
                          <<"): b1= "<<b1Val<<", b2= "<<b2Val<< ", delta1= "<<d1Val<<", delta2="<<d2Val
@@ -239,10 +256,10 @@ int main(int argc, char* argv[])
                 std::cout << "\n";
             }
 	    //normal net平移後的結果更新到netInfo & commonBoundary
-	    //Phase2UpdateAllInfo_normal_nets(deltaVector, boundaries, nets);
-	    //outputNetsInfo(nets);
+	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets);
+	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);
-	    //outputNetsInfo_drawing(nets);
+	    outputNetsInfo_drawing(nets);
 	    //exportToCSV(boundaries,actualAreaVector,ratioVector);
 
         } else {

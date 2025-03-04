@@ -104,6 +104,8 @@ void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &tem
     line_t temp_line2 = corner_line;
     point_t outter_corner_point = temp_line2.back();
     point_t inner_corner_point = corner_line.front();
+    CB.cornerPoint = inner_corner_point;
+    CB.cornerLine = corner_line;
     //原邊界線 原面積
     /*
     bg::append(poly, inner_corner_point);
@@ -661,7 +663,8 @@ void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries){
         outfile<<"Alpha: "<<commonBoundary.alpha<<std::endl;
         outfile<<"Alpha_corner: "<<commonBoundary.alpha_corner<<std::endl;
         outfile<<"corner_area: "<<commonBoundary.cornerArea<<std::endl;
-        outfile<<"InitialRouteAlpha: "<<commonBoundary.initial_route_alpha<<std::endl;
+        outfile<<"boundary_move_direction: "<<commonBoundary.boundary_move_direction<<std::endl;
+        //outfile<<"InitialRouteAlpha: "<<commonBoundary.initial_route_alpha<<std::endl;
         outfile<<"ShiftDirection: "<<commonBoundary.shift_Direction<<std::endl;
         outfile<<"ShiftMin: "<<commonBoundary.shiftMin<<std::endl;
         outfile<<"ShiftMax: "<<commonBoundary.shiftMax<<std::endl;
@@ -976,8 +979,8 @@ std::vector<netInfo> parseNetsInfo(std::ifstream &file){
     }
     return nets;
 }
-
-void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets){
+void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vector<int> &bVector, 
+        std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets){
     std::vector<bool> isNetChanged(nets.size(),false);
     //更新所有commonBoundaries的boundarySegments, startPoint(邊界線本身)
     for(int i = 0;i < commonBoundaries.size();i++){
@@ -987,6 +990,22 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
         deltaBias_netB_x =  commonBoundaries[i].startPoint.x() - commonBoundaries[i].netB_pad.x();
         deltaBias_netA_y = commonBoundaries[i].startPoint.y() - commonBoundaries[i].netA_pad.y();
         deltaBias_netB_y = commonBoundaries[i].startPoint.y() - commonBoundaries[i].netB_pad.y();
+        if(commonBoundaries[i].shift_Direction == 2){
+           //以原邊界線平移
+            if(bVector[i] == 0){
+                deltaBias_netA_x = commonBoundaries[i].startPoint.x() - commonBoundaries[i].cornerPoint.x();
+                deltaBias_netB_x = commonBoundaries[i].startPoint.x() - commonBoundaries[i].cornerPoint.x();
+                deltaBias_netA_y = commonBoundaries[i].startPoint.y() - commonBoundaries[i].cornerPoint.y();
+                deltaBias_netB_y = commonBoundaries[i].startPoint.y() - commonBoundaries[i].cornerPoint.y();
+            }
+           //以斜線平移
+            else if(bVector[i] == 1){
+                deltaBias_netA_x = commonBoundaries[i].cornerPoint.x() - commonBoundaries[i].netA_pad.x();
+                deltaBias_netB_x = commonBoundaries[i].cornerPoint.x() - commonBoundaries[i].netB_pad.x();
+                deltaBias_netA_y = commonBoundaries[i].cornerPoint.y() - commonBoundaries[i].netA_pad.y();
+                deltaBias_netB_y = commonBoundaries[i].cornerPoint.y() - commonBoundaries[i].netB_pad.y();
+            }
+        }
         //邊界線往netA移動
         if(commonBoundaries[i].boundary_move_direction == 0){
             if(deltaBias_netA_x > 0){
@@ -1019,55 +1038,168 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
                 point.y(point.y() + deltaVector[i]);
             }
         }
+        //corner_net
+        else if (commonBoundaries[i].shift_Direction == 2){
+           //以原邊界線平移
+            if( bVector[i] == 0){
+                //判斷在x/y軸上平移
+                if(commonBoundaries[i].startPoint.x() == commonBoundaries[i].cornerPoint.x()){
+                    //在y軸上平移
+                    commonBoundaries[i].startPoint.y(commonBoundaries[i].startPoint.y() + deltaVector[i]);
+                    for(auto &point:commonBoundaries[i].boundarySegment){
+                        point.y(point.y() + deltaVector[i]);
+                    }
+                }
+                else if(commonBoundaries[i].startPoint.y() == commonBoundaries[i].cornerPoint.y()){
+                    //在x軸上平移
+                    commonBoundaries[i].startPoint.x(commonBoundaries[i].startPoint.x() + deltaVector[i]);
+                    for(auto &point:commonBoundaries[i].boundarySegment){
+                        point.x(point.x() + deltaVector[i]);
+                    }
+                }
+            }//end of bVector == 0
+           //以斜線平移
+            else if(bVector[i] == 1 ){
+                commonBoundaries[i].boundarySegment.clear();
+                bg::append(commonBoundaries[i].boundarySegment,
+                point_t(commonBoundaries[i].cornerLine.front().x(),commonBoundaries[i].cornerLine.front().y()));
+                bg::append(commonBoundaries[i].boundarySegment,
+                point_t(commonBoundaries[i].cornerLine.back().x(),commonBoundaries[i].cornerLine.back().y()));
+                if(commonBoundaries[i].boundary_move_direction == 0){
+                //判斷往netA平移
+                    if(commonBoundaries[i].cornerPoint.x() == commonBoundaries[i].netA_pad.x()){
+                        //在y軸上平移
+                        commonBoundaries[i].startPoint.x(commonBoundaries[i].cornerPoint.x());
+                        commonBoundaries[i].startPoint.y(commonBoundaries[i].cornerPoint.y() + deltaVector[i]);
+                        for(auto &point:commonBoundaries[i].boundarySegment){
+                            point.y(point.y() + deltaVector[i]);
+                        }
+                    }
+                    else if (commonBoundaries[i].cornerPoint.y() == commonBoundaries[i].netA_pad.y()){
+                        //在x軸上平移
+                        commonBoundaries[i].startPoint.x(commonBoundaries[i].cornerPoint.x() + deltaVector[i]);
+                        commonBoundaries[i].startPoint.y(commonBoundaries[i].cornerPoint.y());
+                        for(auto &point:commonBoundaries[i].boundarySegment){
+                            point.x(point.x() + deltaVector[i]);
+                        }
+                    }
+                }
+                else if(commonBoundaries[i].boundary_move_direction == 1){
+                    if(commonBoundaries[i].cornerPoint.x() == commonBoundaries[i].netB_pad.x()){
+                        //在y軸上平移
+                        commonBoundaries[i].startPoint.x(commonBoundaries[i].cornerPoint.x());
+                        commonBoundaries[i].startPoint.y(commonBoundaries[i].cornerPoint.y() + deltaVector[i]);
+                        for(auto &point:commonBoundaries[i].boundarySegment){
+                            point.y(point.y() + deltaVector[i]);
+                        }
+                    }
+                    else if (commonBoundaries[i].cornerPoint.y() == commonBoundaries[i].netB_pad.y()){
+                        //在x軸上平移
+                        commonBoundaries[i].startPoint.x(commonBoundaries[i].cornerPoint.x() + deltaVector[i]);
+                        commonBoundaries[i].startPoint.y(commonBoundaries[i].cornerPoint.y());
+                        for(auto &point:commonBoundaries[i].boundarySegment){
+                            point.x(point.x() + deltaVector[i]);
+                        }
+                    }
+                }
+            }
+        }
     //更新netInfo內容 1.startPoint 2.boundarySegments 3. innerBoundarySegment 4. outterBoundarySegment 5. arae initial
         for(int j = 0;j < nets.size(); j++){
             if(commonBoundaries[i].boundaryID == nets[j].boundary0ID){
                 //start Point
                 nets[j].startPoint0 = commonBoundaries[i].startPoint; 
                 //boundarySegments
+		nets[j].boundarySegments[0].clear();
                 nets[j].boundarySegments[0] = commonBoundaries[i].boundarySegment;
                 isNetChanged[j] = true;
             }
             else if (commonBoundaries[i].boundaryID == nets[j].boundary1ID){
-               nets[j].startPoint1 = commonBoundaries[i].startPoint; 
+               nets[j].startPoint1 = commonBoundaries[i].startPoint;
+	       nets[j].boundarySegments[1].clear(); 
                nets[j].boundarySegments[1] = commonBoundaries[i].boundarySegment;
                 isNetChanged[j] = true;
             }
             //inner & outterBoundarySegment
             if(isNetChanged[j]){
-                //innerBoundarySegment
-                if(nets[j].innerBoundarySegments.size() == 1){
-                    nets[j].innerBoundarySegments[0].clear();
-                    bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint0.x(),nets[j].startPoint0.y()));
-                    bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint1.x(),nets[j].startPoint1.y()));
+                //corner net以斜線更新至兩條相關的net
+                if(commonBoundaries[i].shift_Direction == 2 && bVector[i] == 1){
+                    line_t tempLine;
+                    if(nets[j].innerBoundarySegments.size() == 2){
+                        nets[j].innerBoundarySegments.pop_back();
+                    }
+                    if(nets[j].outterBoundarySegments.size() == 2){
+                        nets[j].outterBoundarySegments.pop_back();
+                    }
+		    //改用斜線後 兩條邊界線在不同軸
+                    if((nets[j].startPoint0.x() != nets[j].startPoint1.x()) && (nets[j].startPoint0.y() != nets[j].startPoint1.y())){
+                        //innerBoundarySegment
+                        nets[j].innerBoundarySegments[0].clear();
+                        bg::append(tempLine, point_t(commonBoundaries[i].cornerPoint.x(), commonBoundaries[i].cornerPoint.y()));
+                        bg::append(tempLine, point_t(nets[j].startPoint1.x(), nets[j].startPoint1.y()));
+
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint0.x(),nets[j].startPoint0.y()));
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(commonBoundaries[i].cornerPoint.x(), commonBoundaries[i].cornerPoint.y()));
+                        nets[j].innerBoundarySegments.emplace_back(tempLine);
+                        //outterBoundarySegment
+                        nets[j].outterBoundarySegments[0].clear();
+                        bg::append(tempLine, point_t(commonBoundaries[i].cornerLine.back().x(), commonBoundaries[i].cornerLine.back().y()));
+                        bg::append(tempLine, point_t(nets[j].boundarySegments[1].back().x(), nets[j].boundarySegments[1].back().y()));
+
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[0].back().x(),nets[j].boundarySegments[0].back().y()));
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(commonBoundaries[i].cornerLine.back().x(), 
+                                    commonBoundaries[i].cornerLine.back().y())); 
+                        nets[j].outterBoundarySegments.emplace_back(tempLine);
+                    }
+		    //改用斜線後兩條邊界線在同軸
+		    else{
+		   	//innerBoundarySegment
+			nets[j].innerBoundarySegments[0].clear();
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint0.x(),nets[j].startPoint0.y()));
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint1.x(),nets[j].startPoint1.y()));
+			//outterBoundarySegment 
+			nets[j].outterBoundarySegments[0].clear();
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[0].back().x(),nets[j].boundarySegments[0].back().y()));
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[1].back().x(),nets[j].boundarySegments[1].back().y()));
+
+		    }
                 }
-                else if(nets[j].innerBoundarySegments.size() == 2){
-                    point_t inner_CornerPoint(nets[j].innerBoundarySegments[0].back().x(),nets[j].innerBoundarySegments[0].back().y());
-                    nets[j].innerBoundarySegments[0].clear();
-                    nets[j].innerBoundarySegments[1].clear();
-                    //innerSegments[0]
-                    bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint0.x(),nets[j].startPoint0.y()));
-                    bg::append(nets[j].innerBoundarySegments[0],inner_CornerPoint);
-                    //innerBoundarySegment[1]
-                    bg::append(nets[j].innerBoundarySegments[1],inner_CornerPoint);
-                    bg::append(nets[j].innerBoundarySegments[1],point_t(nets[j].startPoint1.x(),nets[j].startPoint1.y()));
-                }
-                //outterBoundarySegment
-                if(nets[j].outterBoundarySegments.size() ==1){
-                    nets[j].outterBoundarySegments[0].clear();
-                    bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[0].back().x(),nets[j].boundarySegments[0].back().y()));
-                    bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[1].back().x(),nets[j].boundarySegments[1].back().y()));
-                }
-                else if(nets[j].outterBoundarySegments.size() == 2){
-                    point_t outter_CornerPoint(nets[j].outterBoundarySegments[0].back().x(),nets[j].outterBoundarySegments[0].back().y());
-                    nets[j].outterBoundarySegments[0].clear();
-                    nets[j].outterBoundarySegments[1].clear();
-                    //outterBoundarySegment[0]
-                    bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[0].back().x(),nets[j].boundarySegments[0].back().y()));
-                    bg::append(nets[j].outterBoundarySegments[0],outter_CornerPoint);
-                    //outterBoundarySegment[1]
-                    bg::append(nets[j].outterBoundarySegments[1],outter_CornerPoint);
-                    bg::append(nets[j].outterBoundarySegments[1],point_t(nets[j].boundarySegments[1].back().x(),nets[j].boundarySegments[1].back().y()));
+                //以normal net處理
+                else{
+                    //innerBoundarySegment
+                    if(nets[j].innerBoundarySegments.size() == 1){
+                        nets[j].innerBoundarySegments[0].clear();
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint0.x(),nets[j].startPoint0.y()));
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint1.x(),nets[j].startPoint1.y()));
+                    }
+		    else if(nets[j].innerBoundarySegments.size() == 2){
+                        point_t inner_CornerPoint(nets[j].innerBoundarySegments[0].back().x(),nets[j].innerBoundarySegments[0].back().y());
+                        nets[j].innerBoundarySegments[0].clear();
+                        nets[j].innerBoundarySegments[1].clear();
+                        //innerSegments[0]
+                        bg::append(nets[j].innerBoundarySegments[0],point_t(nets[j].startPoint0.x(),nets[j].startPoint0.y()));
+                        bg::append(nets[j].innerBoundarySegments[0],inner_CornerPoint);
+                        //innerBoundarySegment[1]
+                        bg::append(nets[j].innerBoundarySegments[1],inner_CornerPoint);
+                        bg::append(nets[j].innerBoundarySegments[1],point_t(nets[j].startPoint1.x(),nets[j].startPoint1.y()));
+                    }
+                    //outterBoundarySegment
+                    if(nets[j].outterBoundarySegments.size() ==1){
+                        nets[j].outterBoundarySegments[0].clear();
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[0].back().x(),nets[j].boundarySegments[0].back().y()));
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[1].back().x(),nets[j].boundarySegments[1].back().y()));
+                    }
+                    else if(nets[j].outterBoundarySegments.size() == 2){
+                        point_t outter_CornerPoint(nets[j].outterBoundarySegments[0].back().x(),nets[j].outterBoundarySegments[0].back().y());
+                        nets[j].outterBoundarySegments[0].clear();
+                        nets[j].outterBoundarySegments[1].clear();
+                        //outterBoundarySegment[0]
+                        bg::append(nets[j].outterBoundarySegments[0],point_t(nets[j].boundarySegments[0].back().x(),nets[j].boundarySegments[0].back().y()));
+                        bg::append(nets[j].outterBoundarySegments[0],outter_CornerPoint);
+                        //outterBoundarySegment[1]
+                        bg::append(nets[j].outterBoundarySegments[1],outter_CornerPoint);
+                        bg::append(nets[j].outterBoundarySegments[1],point_t(nets[j].boundarySegments[1].back().x(),nets[j].boundarySegments[1].back().y()));
+                    }
                 }
             isNetChanged[j] = false;
             }
