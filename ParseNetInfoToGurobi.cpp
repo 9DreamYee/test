@@ -133,15 +133,17 @@ void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &tem
     }
     bg::unique(slash_poly);
     bg::correct(slash_poly);
+    /*
     std::cout<<"slash_poly WKT: "<<bg::wkt(slash_poly)<<std::endl;
     if (!bg::is_valid(slash_poly, reason)) {
         std::cout << "Slash_Polygon is invalid: " << reason << std::endl;
     }
+    */
     //計算面積
     //original_area = bg::area(poly)*1e-08;
     slash_area = bg::area(slash_poly)*1e-08;
     CB.cornerArea = original_area - slash_area;
-    std::cout<<"BoundaryID: "<<CB.boundaryID<<" original_area: "<<original_area<<" slash_area: "<<slash_area<<" cornerArea: "<<CB.cornerArea<<std::endl;
+    //std::cout<<"BoundaryID: "<<CB.boundaryID<<" original_area: "<<original_area<<" slash_area: "<<slash_area<<" cornerArea: "<<CB.cornerArea<<std::endl;
    /* 
     if(line1.back().x() != line2.back().x() && line1.back().y() != line2.back().y()){
         point_t outterPoint(0.0,0.0),temp_point(0.0,0.0),temp_point2(0.0,0.0);
@@ -234,14 +236,14 @@ double cal_shifted_area(const line_t &line,const double &unit,const int &shifted
     }
     bg::unique(poly);
     bg::correct(poly);
-    
+    /*
     std::string reason;
     if (!bg::is_valid(poly, reason)) {
         //std::cout << "Polygon is valid" << std::endl;
         std::cout<<"Poly WKT: "<<bg::wkt(poly)<<std::endl;
         std::cout << "Polygon is invalid: " << reason << std::endl;
     }
-    
+    */
     area = bg::area(poly)*1e-08;
     return area;
 
@@ -562,7 +564,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                     double original_area = nets[commonBoundary.netA].areaInitial;
                     auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID - 1)];
                     //commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
-                    cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit,innerRect,outterRect);
+;                  cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit,innerRect,outterRect);
                 }
             }
             
@@ -1106,7 +1108,7 @@ return 0;
 }
 */
 
-
+/*
 int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
     std::vector<double> deltaVector ={7.8292e+06,0,1.00015e+07,3.1842e+06,0,1.21262e+07,0,1.12867e+07,3.23181e+06,0,5.2865e+06,1.49785e+07,9.959515e+06,1.06103e+07,0,2.31958e+07  } ;
@@ -1126,5 +1128,5 @@ int main(int argc, char* argv[]){
     file.close();
     return 0;
 }
-
+*/
 

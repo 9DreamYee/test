@@ -72,14 +72,17 @@ struct commonBoundary{
 };
 //函式宣告
 
-void cal_corner_area(commonBoundary &commonBoundary, line_t &corner_line, point_t &outter_corner_point, const double &unit);
+//協助判斷特例處理邊界線起點與終點, 不在同個方向上平移的狀況
+bool getCornerBoundaryDirection(const commonBoundary &CB, const Rectangle &r, const Rectangle &outterRect);
+void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &temp_CB, const double &original_area, const double &unit,
+       const Rectangle &innerRect, const Rectangle &outterRect );
 // 計算單位面積線性影響係數ˋ
 double cal_shifted_area(const line_t &line,const double &unit,const int &shifted_direction);
+//重新排序Boundary
+std::pair<int, double> getNetEdgeKey(const commonBoundary &CB, const Rectangle &r);
+void sortBoundaryClockwise(std::vector<commonBoundary> &commonBoundaries, const Rectangle &InnerRect);
 //Update CommonBounary info: alpha,shift_Direction,shiftAmount
-//特例處理 commonBoundary Boundary ID 1
-//void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries);
-//Update CommonBounary info: alpha,shift_Direction,shiftAmount
-void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets);
+void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets, Rectangle &innerRect, Rectangle &outterRect);
 // output CommonBoundaries info to commonBoundary_toFurobi.txt
 void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries);
 // output Nets info to netInfo_toGurobi.txt
