@@ -1,0 +1,146 @@
+Set parameter Username
+Set parameter LogFile to value "phase2_cornerMILP.log"
+Academic license - for non-commercial use only - expires 2025-11-27
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (linux64 - "CentOS Linux 7 (Core)")
+
+CPU model: Intel(R) Xeon(R) Silver 4110 CPU @ 2.10GHz, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 16 physical cores, 32 logical processors, using up to 32 threads
+
+Optimize a model with 150 rows, 124 columns and 306 nonzeros
+Model fingerprint: 0xd8a51694
+Variable types: 116 continuous, 8 integer (8 binary)
+Coefficient statistics:
+  Matrix range     [9e-01, 2e+07]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 9e+06]
+  RHS range        [1e+00, 2e+07]
+Found heuristic solution: objective 3.814132e+08
+Presolve removed 146 rows and 120 columns
+Presolve time: 0.01s
+Presolved: 4 rows, 4 columns, 12 nonzeros
+Found heuristic solution: objective 2.295599e+08
+Variable types: 3 continuous, 1 integer (1 binary)
+
+Root relaxation: objective 2.228101e+08, 1 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+*    0     0               0    2.228101e+08 2.2281e+08  0.00%     -    0s
+
+Explored 1 nodes (1 simplex iterations) in 0.03 seconds (0.00 work units)
+Thread count was 32 (of 32 available processors)
+
+Solution count 3: 2.2281e+08 2.2956e+08 3.81413e+08 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.228100981042e+08, best bound 2.228100981042e+08, gap 0.0000%
+Optimal solution found.
+ObjVal = 2.2281e+08
+Number of Variables: 124
+Number of Constraints: 150
+Solve time from Gurobi: 0.0330808
+Boundary 0 (shiftDir=2): b1= 0, b2= 1, delta1= 0, delta2=0, shiftAmt=11648289, actualArea=1.77823e+07, ratio=1.5266, u=6.13403e+06
+
+Boundary 1 (shiftDir=0): b1= 0, b2= 0, delta1= 4.1979e+06, delta2=0, shiftAmt=12341841, actualArea=3.77811e+06, ratio=0.306122, u=8.56373e+06
+
+Boundary 2 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5732e+06, delta2=0, shiftAmt=6182073, actualArea=3.21588e+06, ratio=0.520194, u=2.96619e+06
+
+Boundary 3 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5159e+06, delta2=0, shiftAmt=6709425, actualArea=3.16431e+06, ratio=0.471622, u=3.54512e+06
+
+Boundary 4 (shiftDir=0): b1= 0, b2= 0, delta1= 318169, delta2=0, shiftAmt=286352, actualArea=286352, ratio=1, u=0
+
+Boundary 5 (shiftDir=0): b1= 0, b2= 0, delta1= 3.4958e+06, delta2=0, shiftAmt=5018230, actualArea=3.14622e+06, ratio=0.626958, u=1.87201e+06
+
+Boundary 6 (shiftDir=0): b1= 0, b2= 0, delta1= 3.17925e+06, delta2=0, shiftAmt=9551721, actualArea=2.86132e+06, ratio=0.299561, u=6.6904e+06
+
+Boundary 7 (shiftDir=0): b1= 0, b2= 0, delta1= 3.1842e+06, delta2=0, shiftAmt=4738493, actualArea=2.86578e+06, ratio=0.604787, u=1.87271e+06
+
+Boundary 8 (shiftDir=0): b1= 0, b2= 0, delta1= 8426.67, delta2=0, shiftAmt=7584, actualArea=7584, ratio=1, u=0
+
+Boundary 9 (shiftDir=0): b1= 0, b2= 0, delta1= 3.3227e+06, delta2=0, shiftAmt=4567283, actualArea=2.99043e+06, ratio=0.65475, u=1.57685e+06
+
+Boundary 10 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5302e+06, delta2=0, shiftAmt=9140981, actualArea=3.17718e+06, ratio=0.347575, u=5.9638e+06
+
+Boundary 11 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5928e+06, delta2=0, shiftAmt=11123929, actualArea=3.23352e+06, ratio=0.290681, u=7.89041e+06
+
+Boundary 12 (shiftDir=0): b1= 0, b2= 0, delta1= 5.0032e+06, delta2=0, shiftAmt=16541377, actualArea=4.50288e+06, ratio=0.272219, u=1.20385e+07
+
+Boundary 13 (shiftDir=2): b1= 0, b2= 1, delta1= 0, delta2=0, shiftAmt=8710174, actualArea=1.48442e+07, ratio=1.70423, u=6.134e+06
+
+Boundary 14 (shiftDir=1): b1= 0, b2= 0, delta1= 2.8711e+06, delta2=0, shiftAmt=16011626, actualArea=2.58399e+06, ratio=0.161382, u=1.34276e+07
+
+Boundary 15 (shiftDir=1): b1= 0, b2= 0, delta1= 3.777e+06, delta2=0, shiftAmt=8841068, actualArea=3.3993e+06, ratio=0.38449, u=5.44177e+06
+
+Boundary 16 (shiftDir=1): b1= 0, b2= 0, delta1= 3.6834e+06, delta2=0, shiftAmt=4133250, actualArea=3.31506e+06, ratio=0.802047, u=818190
+
+Boundary 17 (shiftDir=1): b1= 0, b2= 0, delta1= 440947, delta2=0, shiftAmt=396852, actualArea=396852, ratio=1, u=0
+
+Boundary 18 (shiftDir=1): b1= 0, b2= 0, delta1= 3.3042e+06, delta2=0, shiftAmt=5189175, actualArea=2.97378e+06, ratio=0.573074, u=2.2154e+06
+
+Boundary 19 (shiftDir=1): b1= 0, b2= 0, delta1= 3.1991e+06, delta2=0, shiftAmt=9467576, actualArea=2.87919e+06, ratio=0.304111, u=6.58839e+06
+
+Boundary 20 (shiftDir=1): b1= 0, b2= 0, delta1= 3.17325e+06, delta2=0, shiftAmt=4690818, actualArea=2.85592e+06, ratio=0.608833, u=1.83489e+06
+
+Boundary 21 (shiftDir=1): b1= 0, b2= 0, delta1= 0, delta2=0, shiftAmt=0, actualArea=0, ratio=0, u=0
+
+Boundary 22 (shiftDir=1): b1= 0, b2= 0, delta1= 3.2584e+06, delta2=0, shiftAmt=4564218, actualArea=2.93256e+06, ratio=0.642511, u=1.63166e+06
+
+Boundary 23 (shiftDir=1): b1= 0, b2= 0, delta1= 3.3999e+06, delta2=0, shiftAmt=9075746, actualArea=3.05991e+06, ratio=0.337152, u=6.01584e+06
+
+Boundary 24 (shiftDir=1): b1= 0, b2= 0, delta1= 4.1238e+06, delta2=0, shiftAmt=15458264, actualArea=3.71142e+06, ratio=0.240093, u=1.17468e+07
+
+Boundary 25 (shiftDir=1): b1= 0, b2= 0, delta1= 7.6458e+06, delta2=0, shiftAmt=10004912, actualArea=6.88122e+06, ratio=0.687784, u=3.12369e+06
+
+Boundary 26 (shiftDir=2): b1= 0, b2= 1, delta1= 0, delta2=0, shiftAmt=12883739, actualArea=1.90177e+07, ratio=1.4761, u=6.13398e+06
+
+Boundary 27 (shiftDir=0): b1= 0, b2= 0, delta1= 2.9963e+06, delta2=0, shiftAmt=4816961, actualArea=2.69667e+06, ratio=0.559828, u=2.12029e+06
+
+Boundary 28 (shiftDir=0): b1= 0, b2= 0, delta1= 4.848e+06, delta2=0, shiftAmt=9748113, actualArea=4.3632e+06, ratio=0.447594, u=5.38491e+06
+
+Boundary 29 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5217e+06, delta2=0, shiftAmt=4344495, actualArea=3.16953e+06, ratio=0.729551, u=1.17496e+06
+
+Boundary 30 (shiftDir=0): b1= 0, b2= 0, delta1= 619980, delta2=0, shiftAmt=557982, actualArea=557982, ratio=1, u=0
+
+Boundary 31 (shiftDir=0): b1= 0, b2= 0, delta1= 3.2593e+06, delta2=0, shiftAmt=5558890, actualArea=2.93337e+06, ratio=0.52769, u=2.62552e+06
+
+Boundary 32 (shiftDir=0): b1= 0, b2= 0, delta1= 3.19585e+06, delta2=0, shiftAmt=9196461, actualArea=2.87626e+06, ratio=0.312758, u=6.3202e+06
+
+Boundary 33 (shiftDir=0): b1= 0, b2= 0, delta1= 3.1719e+06, delta2=0, shiftAmt=4470903, actualArea=2.85471e+06, ratio=0.638509, u=1.61619e+06
+
+Boundary 34 (shiftDir=0): b1= 0, b2= 0, delta1= 200549, delta2=0, shiftAmt=180494, actualArea=180494, ratio=1, u=0
+
+Boundary 35 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5447e+06, delta2=0, shiftAmt=4893433, actualArea=3.19023e+06, ratio=0.651941, u=1.7032e+06
+
+Boundary 36 (shiftDir=0): b1= 0, b2= 0, delta1= 3.4766e+06, delta2=0, shiftAmt=9181571, actualArea=3.12894e+06, ratio=0.340785, u=6.05263e+06
+
+Boundary 37 (shiftDir=0): b1= 0, b2= 0, delta1= 3.5889e+06, delta2=0, shiftAmt=12550019, actualArea=3.23001e+06, ratio=0.257371, u=9.32001e+06
+
+Boundary 38 (shiftDir=0): b1= 0, b2= 0, delta1= 4.6457e+06, delta2=0, shiftAmt=18292727, actualArea=4.18113e+06, ratio=0.228568, u=1.41116e+07
+
+Boundary 39 (shiftDir=2): b1= 0, b2= 1, delta1= 0, delta2=0, shiftAmt=11581624, actualArea=1.77156e+07, ratio=1.52963, u=6.13402e+06
+
+Boundary 40 (shiftDir=1): b1= 0, b2= 0, delta1= 5.4185e+06, delta2=0, shiftAmt=6909106, actualArea=4.87665e+06, ratio=0.705829, u=2.03246e+06
+
+Boundary 41 (shiftDir=1): b1= 0, b2= 0, delta1= 3.6266e+06, delta2=0, shiftAmt=9173458, actualArea=3.26394e+06, ratio=0.355803, u=5.90952e+06
+
+Boundary 42 (shiftDir=1): b1= 0, b2= 0, delta1= 3.5669e+06, delta2=0, shiftAmt=4511820, actualArea=3.21021e+06, ratio=0.711511, u=1.30161e+06
+
+Boundary 43 (shiftDir=1): b1= 0, b2= 0, delta1= 882497, delta2=0, shiftAmt=794247, actualArea=794247, ratio=1, u=0
+
+Boundary 44 (shiftDir=1): b1= 0, b2= 0, delta1= 3.9473e+06, delta2=0, shiftAmt=4967075, actualArea=3.55257e+06, ratio=0.715224, u=1.4145e+06
+
+Boundary 45 (shiftDir=1): b1= 0, b2= 0, delta1= 3.1883e+06, delta2=0, shiftAmt=9436976, actualArea=2.86947e+06, ratio=0.304067, u=6.56751e+06
+
+Boundary 46 (shiftDir=1): b1= 0, b2= 0, delta1= 3.1752e+06, delta2=0, shiftAmt=4656938, actualArea=2.85768e+06, ratio=0.613639, u=1.79926e+06
+
+Boundary 47 (shiftDir=1): b1= 0, b2= 0, delta1= 49121.1, delta2=0, shiftAmt=44209, actualArea=44209, ratio=1, u=0
+
+Boundary 48 (shiftDir=1): b1= 0, b2= 0, delta1= 3.2826e+06, delta2=0, shiftAmt=4594478, actualArea=2.95434e+06, ratio=0.64302, u=1.64014e+06
+
+Boundary 49 (shiftDir=1): b1= 0, b2= 0, delta1= 3.4601e+06, delta2=0, shiftAmt=9128616, actualArea=3.11409e+06, ratio=0.341135, u=6.01453e+06
+
+Boundary 50 (shiftDir=1): b1= 0, b2= 0, delta1= 6.0263e+06, delta2=0, shiftAmt=13744614, actualArea=5.42367e+06, ratio=0.394603, u=8.32094e+06
+
+Boundary 51 (shiftDir=1): b1= 0, b2= 0, delta1= 4.1921e+06, delta2=0, shiftAmt=10792962, actualArea=3.77289e+06, ratio=0.349569, u=7.02007e+06
+

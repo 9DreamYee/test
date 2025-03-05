@@ -1,0 +1,272 @@
+NetID: 0
+Pad Location: -3.58114e+07 5e+07
+Ball Location: -6e+07 9e+07
+ExtendedInitialRoute: -3.58114e+07 5e+07 -3.58114e+07 6.58114e+07 -3.58114e+07 6.58114e+07 -6e+07 9e+07 -6e+07 9e+07 -6e+07 1.4e+08 
+boundary0ID: 1
+boundary1ID: 0
+boundarySegment.size() = 2
+startPoint0:-3.58114e+07 5e+07
+startPoint1:-5e+07 2.56208e+07
+innerBoundarySegment.size() = 2
+innerBoundarySegment: -3.58114e+07 5e+07 -5e+07 5e+07 -5e+07 5e+07 -5e+07 2.56208e+07 
+outterBoundarySegment.size() = 2
+outterBoundarySegment: -6e+07 1.4e+08 -1.4e+08 1.4e+08 -1.4e+08 1.4e+08 -1.4e+08 1.15621e+08 
+Area Initial: 1.9816e+07
+Area: 6.01913e+07
+actualArea: -4.03753e+07
+
+NetID: 1
+Pad Location: -2.01531e+07 5e+07
+Ball Location: -4e+07 9e+07
+ExtendedInitialRoute: -2.01531e+07 5e+07 -2.01531e+07 7.01531e+07 -2.01531e+07 7.01531e+07 -4e+07 9e+07 -4e+07 9e+07 -4e+07 1.4e+08 
+boundary0ID: 1
+boundary1ID: 2
+boundarySegment.size() = 2
+startPoint0:-3.58114e+07 5e+07
+startPoint1:-2.01531e+07 5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -3.58114e+07 5e+07 -2.01531e+07 5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: -6e+07 1.4e+08 -3000 1.4e+08 
+Area Initial: 4.31725e+07
+Area: 4.12174e+07
+actualArea: 1.95511e+06
+
+NetID: 2
+Pad Location: -150100 5e+07
+Ball Location: 2e+07 9e+07
+ExtendedInitialRoute: -150100 5e+07 -150100 6.98499e+07 -150100 6.98499e+07 2e+07 9e+07 2e+07 9e+07 2e+07 1.4e+08 
+boundary0ID: 3
+boundary1ID: 2
+boundarySegment.size() = 2
+startPoint0:-150100 5e+07
+startPoint1:-2.01531e+07 5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -150100 5e+07 -2.01531e+07 5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 2.36316e+07 1.4e+08 -3000 1.4e+08 
+Area Initial: 1.44806e+07
+Area: 2.06162e+07
+actualArea: -6.13561e+06
+
+NetID: 3
+Pad Location: 6.2183e+06 5e+07
+Ball Location: 3e+07 9e+07
+ExtendedInitialRoute: 6.2183e+06 5e+07 6.2183e+06 6.62183e+07 6.2183e+06 6.62183e+07 3e+07 9e+07 3e+07 9e+07 3e+07 1.4e+08 
+boundary0ID: 3
+boundary1ID: 4
+boundarySegment.size() = 2
+startPoint0:-150100 5e+07
+startPoint1:1.28088e+07 5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -150100 5e+07 1.28088e+07 5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 2.36316e+07 1.4e+08 4.34095e+07 1.4e+08 
+Area Initial: 1.40609e+07
+Area: 1.69267e+07
+actualArea: -2.86578e+06
+
+NetID: 4
+Pad Location: 1.93993e+07 5e+07
+Ball Location: 5e+07 9e+07
+ExtendedInitialRoute: 1.93993e+07 5e+07 1.93993e+07 5.93993e+07 1.93993e+07 5.93993e+07 5e+07 9e+07 5e+07 9e+07 5e+07 1.4e+08 
+boundary0ID: 4
+boundary1ID: 5
+boundarySegment.size() = 2
+startPoint0:1.28088e+07 5e+07
+startPoint1:4.36516e+07 5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: 1.28088e+07 5e+07 4.36516e+07 5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 4.34095e+07 1.4e+08 7.42523e+07 1.4e+08 
+Area Initial: 1.68449e+07
+Area: 2.77585e+07
+actualArea: -1.09136e+07
+
+NetID: 5
+Pad Location: 4.36516e+07 5e+07
+Ball Location: 9e+07 9e+07
+ExtendedInitialRoute: 4.36516e+07 5e+07 8.36516e+07 9e+07 8.36516e+07 9e+07 9e+07 9e+07 9e+07 9e+07 1.4e+08 9e+07 
+boundary0ID: 5
+boundary1ID: 6
+boundarySegment.size() = 2
+startPoint0:4.36516e+07 5e+07
+startPoint1:5e+07 4.89833e+07
+innerBoundarySegment.size() = 2
+innerBoundarySegment: 4.36516e+07 5e+07 5e+07 5e+07 5e+07 5e+07 5e+07 4.89833e+07 
+outterBoundarySegment.size() = 2
+outterBoundarySegment: 7.42523e+07 1.4e+08 1.4e+08 1.4e+08 1.4e+08 1.4e+08 1.4e+08 6.59231e+07 
+Area Initial: 7.91898e+07
+Area: 5.77415e+07
+actualArea: 2.14483e+07
+
+NetID: 6
+Pad Location: 5e+07 2.30602e+07
+Ball Location: 9e+07 4e+07
+ExtendedInitialRoute: 5e+07 2.30602e+07 7.30602e+07 2.30602e+07 7.30602e+07 2.30602e+07 9e+07 4e+07 9e+07 4e+07 1.4e+08 4e+07 
+boundary0ID: 7
+boundary1ID: 6
+boundarySegment.size() = 2
+startPoint0:5e+07 2.30602e+07
+startPoint1:5e+07 4.89833e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: 5e+07 2.30602e+07 5e+07 4.89833e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 1.4e+08 2.5734e+06 1.4e+08 6.59231e+07 
+Area Initial: 4.52008e+07
+Area: 4.55775e+07
+actualArea: -376651
+
+NetID: 7
+Pad Location: 5e+07 486800
+Ball Location: 9e+07 -2e+07
+ExtendedInitialRoute: 5e+07 486800 6.95132e+07 486800 6.95132e+07 486800 9e+07 -2e+07 9e+07 -2e+07 1.4e+08 -2e+07 
+boundary0ID: 7
+boundary1ID: 8
+boundarySegment.size() = 2
+startPoint0:5e+07 2.30602e+07
+startPoint1:5e+07 -9.32319e+06
+innerBoundarySegment.size() = 1
+innerBoundarySegment: 5e+07 2.30602e+07 5e+07 -9.32319e+06 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 1.4e+08 2.5734e+06 1.4e+08 -4.37263e+07 
+Area Initial: 3.26731e+07
+Area: 3.99225e+07
+actualArea: -7.24943e+06
+
+NetID: 8
+Pad Location: 5e+07 -2.55969e+07
+Ball Location: 9e+07 -6e+07
+ExtendedInitialRoute: 5e+07 -2.55969e+07 5.55969e+07 -2.55969e+07 5.55969e+07 -2.55969e+07 9e+07 -6e+07 9e+07 -6e+07 1.4e+08 -6e+07 
+boundary0ID: 9
+boundary1ID: 8
+boundarySegment.size() = 2
+startPoint0:5e+07 -5e+07
+startPoint1:5e+07 -9.32319e+06
+innerBoundarySegment.size() = 1
+innerBoundarySegment: 5e+07 -5e+07 5e+07 -9.32319e+06 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 1.4e+08 -9e+07 1.4e+08 -4.37263e+07 
+Area Initial: 2.75996e+07
+Area: 4.14897e+07
+actualArea: -1.38901e+07
+
+NetID: 9
+Pad Location: 4.88672e+07 -5e+07
+Ball Location: 9e+07 -9e+07
+ExtendedInitialRoute: 4.88672e+07 -5e+07 5e+07 -5e+07 5e+07 -5e+07 9e+07 -9e+07 9e+07 -9e+07 1.4e+08 -9e+07 
+boundary0ID: 10
+boundary1ID: 9
+boundarySegment.size() = 2
+startPoint0:3.82942e+07 -5e+07
+startPoint1:5e+07 -5e+07
+innerBoundarySegment.size() = 2
+innerBoundarySegment: 3.82942e+07 -5e+07 5e+07 -5e+07 5e+07 -5e+07 5e+07 -5e+07 
+outterBoundarySegment.size() = 2
+outterBoundarySegment: 7.82942e+07 -1.4e+08 1.4e+08 -1.4e+08 1.4e+08 -1.4e+08 1.4e+08 -9e+07 
+Area Initial: 4.17588e+07
+Area: 3.55352e+07
+actualArea: 6.22358e+06
+
+NetID: 10
+Pad Location: 3.82942e+07 -5e+07
+Ball Location: 6e+07 -9e+07
+ExtendedInitialRoute: 3.82942e+07 -5e+07 3.82942e+07 -6.82942e+07 3.82942e+07 -6.82942e+07 6e+07 -9e+07 6e+07 -9e+07 6e+07 -1.4e+08 
+boundary0ID: 10
+boundary1ID: 11
+boundarySegment.size() = 2
+startPoint0:3.82942e+07 -5e+07
+startPoint1:8.3373e+06 -5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: 3.82942e+07 -5e+07 8.3373e+06 -5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: 7.82942e+07 -1.4e+08 3.00431e+07 -1.4e+08 
+Area Initial: 3.30298e+07
+Area: 4.17526e+07
+actualArea: -8.7228e+06
+
+NetID: 11
+Pad Location: 8.3373e+06 -5e+07
+Ball Location: 2e+07 -9e+07
+ExtendedInitialRoute: 8.3373e+06 -5e+07 8.3373e+06 -7.83373e+07 8.3373e+06 -7.83373e+07 2e+07 -9e+07 2e+07 -9e+07 2e+07 -1.4e+08 
+boundary0ID: 12
+boundary1ID: 11
+boundarySegment.size() = 2
+startPoint0:-1.0853e+07 -5e+07
+startPoint1:8.3373e+06 -5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -1.0853e+07 -5e+07 8.3373e+06 -5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: -4e+07 -1.4e+08 3.00431e+07 -1.4e+08 
+Area Initial: 5.41461e+07
+Area: 4.93011e+07
+actualArea: 4.84498e+06
+
+NetID: 12
+Pad Location: -1.0853e+07 -5e+07
+Ball Location: -4e+07 -9e+07
+ExtendedInitialRoute: -1.0853e+07 -5e+07 -1.0853e+07 -6.0853e+07 -1.0853e+07 -6.0853e+07 -4e+07 -9e+07 -4e+07 -9e+07 -4e+07 -1.4e+08 
+boundary0ID: 12
+boundary1ID: 13
+boundarySegment.size() = 2
+startPoint0:-1.0853e+07 -5e+07
+startPoint1:-3.20735e+07 -5e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -1.0853e+07 -5e+07 -3.20735e+07 -5e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: -4e+07 -1.4e+08 -7.10273e+07 -1.4e+08 
+Area Initial: 2.64275e+07
+Area: 2.73411e+07
+actualArea: -913605
+
+NetID: 13
+Pad Location: -3.20735e+07 -5e+07
+Ball Location: -8e+07 -9e+07
+ExtendedInitialRoute: -3.20735e+07 -5e+07 -3.20735e+07 -5.10462e+07 -3.20735e+07 -5.10462e+07 -7.10273e+07 -9e+07 -7.10273e+07 -9e+07 -8e+07 -9e+07 -8e+07 -9e+07 -8e+07 -1.4e+08 
+boundary0ID: 13
+boundary1ID: 14
+boundarySegment.size() = 2
+startPoint0:-3.20735e+07 -5e+07
+startPoint1:-5e+07 -2.07707e+07
+innerBoundarySegment.size() = 2
+innerBoundarySegment: -3.20735e+07 -5e+07 -5e+07 -5e+07 -5e+07 -5e+07 -5e+07 -2.07707e+07 
+outterBoundarySegment.size() = 2
+outterBoundarySegment: -7.10273e+07 -1.4e+08 -1.4e+08 -1.4e+08 -5e+07 -5e+07 -5e+07 -2.07707e+07 -1.4e+08 -1.4e+08 -1.4e+08 -1.10771e+08 
+Area Initial: 5.12062e+07
+Area: 4.27231e+07
+actualArea: 8.48306e+06
+
+NetID: 14
+Pad Location: -5e+07 -2.07707e+07
+Ball Location: -9e+07 -4e+07
+ExtendedInitialRoute: -5e+07 -2.07707e+07 -7.07707e+07 -2.07707e+07 -7.07707e+07 -2.07707e+07 -9e+07 -4e+07 -9e+07 -4e+07 -1.4e+08 -4e+07 
+boundary0ID: 14
+boundary1ID: 15
+boundarySegment.size() = 2
+startPoint0:-5e+07 -2.07707e+07
+startPoint1:-5e+07 -2.07707e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -5e+07 -2.07707e+07 -5e+07 -2.07707e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: -1.4e+08 -1.10771e+08 -1.4e+08 1.36085e+07 
+Area Initial: 9.86948e+07
+Area: 6.35992e+07
+actualArea: 3.50956e+07
+
+NetID: 15
+Pad Location: -5e+07 2.56208e+07
+Ball Location: -9e+07 6e+07
+ExtendedInitialRoute: -5e+07 2.56208e+07 -5.56208e+07 2.56208e+07 -5.56208e+07 2.56208e+07 -9e+07 6e+07 -9e+07 6e+07 -1.4e+08 6e+07 
+boundary0ID: 0
+boundary1ID: 15
+boundarySegment.size() = 2
+startPoint0:-5e+07 2.56208e+07
+startPoint1:-5e+07 -2.07707e+07
+innerBoundarySegment.size() = 1
+innerBoundarySegment: -5e+07 2.56208e+07 -5e+07 -2.07707e+07 
+outterBoundarySegment.size() = 1
+outterBoundarySegment: -1.4e+08 1.15621e+08 -1.4e+08 1.36085e+07 
+Area Initial: 8.56985e+07
+Area: 5.91531e+07
+actualArea: 2.65454e+07
+

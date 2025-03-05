@@ -1,0 +1,272 @@
+BoundaryID: 0
+NetA: 15
+NetB: 0
+StartPoint: -5e+07 2.56208e+07
+BoundarySegment: -5e+07 2.56208e+07 -1.4e+08 1.15621e+08 
+InitialRouteSegment: 
+NetA_pad: -5e+07 2.56208e+07
+NetB_pad: -3.58114e+07 5e+07
+Alpha: 0
+Alpha_corner: 0.9
+corner_area: 2.54803e+07
+boundary_move_direction: 0
+ShiftDirection: 2
+ShiftMin: 0
+ShiftMax: 2.43792e+07
+ShiftAmount: 79469975
+
+BoundaryID: 1
+NetA: 0
+NetB: 1
+StartPoint: -3.58114e+07 5e+07
+BoundarySegment: -3.58114e+07 5e+07 -3.58114e+07 6.58114e+07 -3.58114e+07 6.58114e+07 -6e+07 9e+07 -6e+07 9e+07 -6e+07 1.4e+08 
+InitialRouteSegment: 
+NetA_pad: -3.58114e+07 5e+07
+NetB_pad: -2.01531e+07 5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 0
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 7.8292e+06
+ShiftAmount: 56535981
+
+BoundaryID: 2
+NetA: 1
+NetB: 2
+StartPoint: -2.01531e+07 5e+07
+BoundarySegment: -2.01531e+07 5e+07 -2.01531e+07 6.98499e+07 -2.01531e+07 6.98499e+07 -3000 9e+07 -3000 9e+07 -3000 1.4e+08 
+InitialRouteSegment: 
+NetA_pad: -2.01531e+07 5e+07
+NetB_pad: -150100 5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 0
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 1.00015e+07
+ShiftAmount: 56958487
+
+BoundaryID: 3
+NetA: 2
+NetB: 3
+StartPoint: -150100 5e+07
+BoundarySegment: -150100 5e+07 -150100 6.62183e+07 -150100 6.62183e+07 2.36316e+07 9e+07 2.36316e+07 9e+07 2.36316e+07 1.4e+08 
+InitialRouteSegment: 
+NetA_pad: -150100 5e+07
+NetB_pad: 6.2183e+06 5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 0
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 3.1842e+06
+ShiftAmount: 28689093
+
+BoundaryID: 4
+NetA: 3
+NetB: 4
+StartPoint: 1.28088e+07 5e+07
+BoundarySegment: 1.28088e+07 5e+07 1.28088e+07 5.93993e+07 1.28088e+07 5.93993e+07 4.34095e+07 9e+07 4.34095e+07 9e+07 4.34095e+07 1.4e+08 
+InitialRouteSegment: 
+NetA_pad: 6.2183e+06 5e+07
+NetB_pad: 1.93993e+07 5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 1
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 6.5905e+06
+ShiftAmount: 0
+
+BoundaryID: 5
+NetA: 4
+NetB: 5
+StartPoint: 4.36516e+07 5e+07
+BoundarySegment: 4.36516e+07 5e+07 4.36516e+07 5.93993e+07 4.36516e+07 5.93993e+07 7.42523e+07 9e+07 7.42523e+07 9e+07 7.42523e+07 1.4e+08 
+InitialRouteSegment: 
+NetA_pad: 1.93993e+07 5e+07
+NetB_pad: 4.36516e+07 5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 1
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 1.21262e+07
+ShiftAmount: 25905093
+
+BoundaryID: 6
+NetA: 5
+NetB: 6
+StartPoint: 5e+07 4.89833e+07
+BoundarySegment: 5e+07 4.89833e+07 7.30602e+07 4.89833e+07 7.30602e+07 4.89833e+07 9e+07 6.59231e+07 9e+07 6.59231e+07 1.4e+08 6.59231e+07 
+InitialRouteSegment: 
+NetA_pad: 4.36516e+07 5e+07
+NetB_pad: 5e+07 2.30602e+07
+Alpha: 0.9
+Alpha_corner: 0.9
+corner_area: 4.2045e+07
+boundary_move_direction: 0
+ShiftDirection: 2
+ShiftMin: 1.27219e+07
+ShiftMax: 6.3484e+06
+ShiftAmount: 10534712
+
+BoundaryID: 7
+NetA: 6
+NetB: 7
+StartPoint: 5e+07 2.30602e+07
+BoundarySegment: 5e+07 2.30602e+07 6.95132e+07 2.30602e+07 6.95132e+07 2.30602e+07 9e+07 2.5734e+06 9e+07 2.5734e+06 1.4e+08 2.5734e+06 
+InitialRouteSegment: 
+NetA_pad: 5e+07 2.30602e+07
+NetB_pad: 5e+07 486800
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 0
+ShiftDirection: 1
+ShiftMin: 0
+ShiftMax: 1.12867e+07
+ShiftAmount: 12985518
+
+BoundaryID: 8
+NetA: 7
+NetB: 8
+StartPoint: 5e+07 -9.32319e+06
+BoundarySegment: 5e+07 -9.32319e+06 5.55969e+07 -9.32319e+06 5.55969e+07 -9.32319e+06 9e+07 -4.37263e+07 9e+07 -4.37263e+07 1.4e+08 -4.37263e+07 
+InitialRouteSegment: 
+NetA_pad: 5e+07 486800
+NetB_pad: 5e+07 -2.55969e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 0
+ShiftDirection: 1
+ShiftMin: 0
+ShiftMax: 1.30418e+07
+ShiftAmount: 2908625
+
+BoundaryID: 9
+NetA: 8
+NetB: 9
+StartPoint: 5e+07 -5e+07
+BoundarySegment: 5e+07 -5e+07 5e+07 -5e+07 5e+07 -5e+07 9e+07 -9e+07 9e+07 -9e+07 1.4e+08 -9e+07 
+InitialRouteSegment: 
+NetA_pad: 5e+07 -2.55969e+07
+NetB_pad: 4.88672e+07 -5e+07
+Alpha: 0.9
+Alpha_corner: 0.9
+corner_area: 2.34814e+07
+boundary_move_direction: 1
+ShiftDirection: 2
+ShiftMin: 1.22016e+07
+ShiftMax: 1.1328e+06
+ShiftAmount: 12241768
+
+BoundaryID: 10
+NetA: 9
+NetB: 10
+StartPoint: 3.82942e+07 -5e+07
+BoundarySegment: 3.82942e+07 -5e+07 3.82942e+07 -5e+07 3.82942e+07 -5e+07 7.82942e+07 -9e+07 7.82942e+07 -9e+07 7.82942e+07 -1.4e+08 
+InitialRouteSegment: 
+NetA_pad: 4.88672e+07 -5e+07
+NetB_pad: 3.82942e+07 -5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 1
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 5.2865e+06
+ShiftAmount: 13232962
+
+BoundaryID: 11
+NetA: 10
+NetB: 11
+StartPoint: 8.3373e+06 -5e+07
+BoundarySegment: 8.3373e+06 -5e+07 8.3373e+06 -6.82942e+07 8.3373e+06 -6.82942e+07 3.00431e+07 -9e+07 3.00431e+07 -9e+07 3.00431e+07 -1.4e+08 
+InitialRouteSegment: 
+NetA_pad: 3.82942e+07 -5e+07
+NetB_pad: 8.3373e+06 -5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 1
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 1.49785e+07
+ShiftAmount: 22953156
+
+BoundaryID: 12
+NetA: 11
+NetB: 12
+StartPoint: -1.0853e+07 -5e+07
+BoundarySegment: -1.0853e+07 -5e+07 -1.0853e+07 -6.0853e+07 -1.0853e+07 -6.0853e+07 -4e+07 -9e+07 -4e+07 -9e+07 -4e+07 -1.4e+08 
+InitialRouteSegment: 
+NetA_pad: 8.3373e+06 -5e+07
+NetB_pad: -1.0853e+07 -5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 1
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 9.59515e+06
+ShiftAmount: 11557050
+
+BoundaryID: 13
+NetA: 12
+NetB: 13
+StartPoint: -3.20735e+07 -5e+07
+BoundarySegment: -3.20735e+07 -5e+07 -3.20735e+07 -5.10462e+07 -3.20735e+07 -5.10462e+07 -7.10273e+07 -9e+07 -7.10273e+07 -9e+07 -7.10273e+07 -1.4e+08 
+InitialRouteSegment: 
+NetA_pad: -1.0853e+07 -5e+07
+NetB_pad: -3.20735e+07 -5e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 1
+ShiftDirection: 0
+ShiftMin: 0
+ShiftMax: 1.06103e+07
+ShiftAmount: 27879543
+
+BoundaryID: 14
+NetA: 13
+NetB: 14
+StartPoint: -5e+07 -2.07707e+07
+BoundarySegment: -5e+07 -2.07707e+07 -1.4e+08 -1.10771e+08 
+InitialRouteSegment: 
+NetA_pad: -3.20735e+07 -5e+07
+NetB_pad: -5e+07 -2.07707e+07
+Alpha: 0
+Alpha_corner: 0.9
+corner_area: -1.2087e+07
+boundary_move_direction: 1
+ShiftDirection: 2
+ShiftMin: 0
+ShiftMax: 2.92293e+07
+ShiftAmount: 19423337
+
+BoundaryID: 15
+NetA: 14
+NetB: 15
+StartPoint: -5e+07 -2.07707e+07
+BoundarySegment: -5e+07 -2.07707e+07 -5.56208e+07 -2.07707e+07 -5.56208e+07 -2.07707e+07 -9e+07 1.36085e+07 -9e+07 1.36085e+07 -1.4e+08 1.36085e+07 
+InitialRouteSegment: 
+NetA_pad: -5e+07 -2.07707e+07
+NetB_pad: -5e+07 2.56208e+07
+Alpha: 0.9
+Alpha_corner: 0
+corner_area: 0
+boundary_move_direction: 0
+ShiftDirection: 1
+ShiftMin: 0
+ShiftMax: 2.31958e+07
+ShiftAmount: 36521468
+
