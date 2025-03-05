@@ -219,6 +219,8 @@ int main(int argc, char* argv[])
                 double aArea  = actualAreaExpr[e].getValue(); // getValue() => evaluate
                 double ratio  = (std::fabs(b.shiftAmount)>1e-9)? (aArea/b.shiftAmount) : 0.0;
 		double b1Val = 0.0, b2Val = 0.0, d1Val = 0.0, d2Val = 0.0;
+		actualAreaVector.emplace_back(aArea);
+		ratioVector.emplace_back(ratio);
                 if(b.shift_Direction == 2){
                     // corner net => check bVar1, bVar2
                     b1Val = bVar1[e].get(GRB_DoubleAttr_X);
@@ -228,17 +230,14 @@ int main(int argc, char* argv[])
 		    double EPS = 1e-4;
 		    if(b1Val == 0) b1Val = 0;
 		    if(b2Val == 0) b2Val = 0;
-		    if(d1Val != 0){
-		    	deltaVector.push_back(d1Val);
-		    }
-		    else if(d2Val != 0){
-		    	deltaVector.push_back(d2Val);
-		    }
+		//corner net決定以斜線替代原邊界線 -> bVector = 1
 		    if(b2Val == 1){
 		    	bVector.emplace_back(1);
+			deltaVector.emplace_back(d2Val);
 		    }
 		    else {
 		    	bVector.emplace_back(0);
+			deltaVector.emplace_back(d1Val);
 		    }
                 } 
 		else {
@@ -255,12 +254,23 @@ int main(int argc, char* argv[])
 
                 std::cout << "\n";
             }
+	    //std::cout<<"dVector.size() = "<<deltaVector.size()<<std::endl;
 	    //normal net平移後的結果更新到netInfo & commonBoundary
+	    /*
+	    for(auto x:deltaVector)
+		std::cout<<x<<",";
+	    std::cout<<std::endl;
+	    */
 	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets);
 	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);
-	    outputNetsInfo_drawing(nets);
-	    //exportToCSV(boundaries,actualAreaVector,ratioVector);
+	    /*
+	    for(auto x:bVector)
+		std::cout<<x<<",";
+	    std::cout<<std::endl;
+	    */
+	    //outputNetsInfo_drawing(nets);
+	    exportToCSV(boundaries,actualAreaVector,ratioVector);
 
         } else {
             std::cout<<"No optimal solution. status="<<status<<"\n";
