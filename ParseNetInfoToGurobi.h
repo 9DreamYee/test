@@ -94,6 +94,8 @@ void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries);
 void outputNetsInfo(std::vector<netInfo> &nets);
 //output CommonBoundaries info to drawing
 void outputCommonBoundaries_drawing(std::vector<commonBoundary> &commonBoundaries);
+//output 每條net的邊界線與pad & ball資訊給柏丞
+void outputPolyInfo(std::vector<netInfo> &nets);
 //output Nets info to drawing
 void outputNetsInfo_drawing(std::vector<netInfo> &nets);
 // build commonBoundaries from nets info

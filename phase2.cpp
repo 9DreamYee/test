@@ -34,6 +34,8 @@ int main(int argc, char* argv[])
     sortBoundaryClockwise(boundaries,innerRect);
     //同時特例處利Boundary 0 
     UpdateCommonBoundaryInfo(boundaries,nets,innerRect,outterRect);
+    outputPolyInfo(nets);
+
     std::vector<double> deltaVector;
     std::vector<int> bVector;
     std::vector<double> actualAreaVector;

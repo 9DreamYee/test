@@ -738,6 +738,50 @@ void outputNetsInfo(std::vector<netInfo> &nets){
     outfile<<"totalAreaInitial: "<<totalAreaInitial<<std::endl;
     outfile<<"totalArea: "<<totalArea<<std::endl;
 }
+void outputPolyInfo(std::vector<netInfo> &nets){
+    std::ofstream outfile("polyInfo_toBro.txt");
+    std::ofstream outfile1("padandball_toBro.txt");
+    //更新所有nets的area
+    for(int i = 0; i < nets.size(); i++){
+        polygon_t poly;
+        //boundary 0
+        for(auto &point:nets[i].boundarySegments[0])
+            bg::append(poly,point);
+        //outter boundary
+        if(nets[i].outterBoundarySegments.size() == 2){
+            for(auto &point:nets[i].outterBoundarySegments[0]){
+                bg::append(poly,point);
+            }
+            for(auto &point:nets[i].outterBoundarySegments[1]){
+                bg::append(poly,point);
+            }
+        }
+        else if(nets[i].outterBoundarySegments.size() == 1){
+            for(auto &point:nets[i].outterBoundarySegments[0]){
+                bg::append(poly,point);
+            }
+        }
+        //boundary 1
+        for(auto it = nets[i].boundarySegments[1].rbegin(); it != nets[i].boundarySegments[1].rend(); it++)
+            bg::append(poly,*it);
+        //inner boundary
+        if(nets[i].innerBoundarySegments.size() == 2){
+            for(auto it = nets[i].innerBoundarySegments[1].rbegin(); it != nets[i].innerBoundarySegments[1].rend(); it++)
+                bg::append(poly,*it);
+            for(auto it = nets[i].innerBoundarySegments[0].rbegin(); it != nets[i].innerBoundarySegments[0].rend(); it++)
+                bg::append(poly,*it);
+        }
+        else if (nets[i].innerBoundarySegments.size() == 1 ){
+            for(auto it = nets[i].innerBoundarySegments[0].rbegin(); it != nets[i].innerBoundarySegments[0].rend(); it++)
+                bg::append(poly,*it);
+        }
+        bg::unique(poly);
+        bg::correct(poly);
+        outfile<<"Net "<<i<<": \n"<<boost::geometry::dsv(poly)<<std::endl;
+        outfile1<<"("<<nets[i].pad_x<<", "<<nets[i].pad_y<<")"<<std::endl;
+        outfile1<<"("<<nets[i].ball_x<<", "<<nets[i].ball_y<<")"<<std::endl;
+    }
+}
 void outputCommonBoundaries_drawing(std::vector<commonBoundary> &commonBoundaries){
     for(auto &boundary:commonBoundaries){
             
@@ -1284,6 +1328,7 @@ int main(int argc, char* argv[]){
  } ;
     std::vector<int> bVector = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0};
     auto nets = parseNetsInfo(file);
+    outputPolyInfo(nets);
     auto commonBoundaries = buildCommonBoundaries(nets);
     Rectangle innerRect;
     Rectangle outterRect =Rectangle(-1.4e+08,-1.4e+08,2.8e+08,2.8e+08);
@@ -1299,3 +1344,4 @@ int main(int argc, char* argv[]){
     return 0;
 }
 */
+
