@@ -7,11 +7,29 @@
 #include "gurobi_c++.h"
 #include "ParseNetInfoToGurobi.h"
 
-void exportToCSV(std::vector<commonBoundary> &boundaries,
+void exportToCSV(std::vector<netInfo> &nets, std::vector<commonBoundary> &boundaries,
                  const std::vector<double> &actualAreaVector,
                  const std::vector<double> &ratioVector)
 {
+    double totalArea = 0.0, goldenArea = 0.0;
+    for(auto net:nets){
+        totalArea += net.areaInitial;
+    }
+    goldenArea = totalArea / nets.size();
     std::ofstream csvFile("net_area_data.csv");
+    //以net為單位輸出資訊
+    csvFile << "NetID,TargetArea,InitialArea,ActualArea,Ratio,InitialRatio\n";
+    for(size_t i = 0; i < nets.size(); i++){
+    	csvFile << nets[i].netID << ","
+		<< goldenArea << ","
+		<< nets[i].areaInitial<< ","
+		<< nets[i].area<< ","
+		<< nets[i].area / goldenArea <<","
+		<< nets[i].areaInitial / goldenArea
+		<< "\n";
+    }
+    //以boundary為單位輸出資訊
+    /*
     csvFile << "BoundayID,ShiftAmount,ActualArea,Ratio\n";
     for(size_t i = 0; i < boundaries.size(); i++){
         csvFile << boundaries[i].boundaryID << ","
@@ -20,6 +38,7 @@ void exportToCSV(std::vector<commonBoundary> &boundaries,
                 << (ratioVector[i] >= 0 ? ratioVector[i] : 0)
                 << "\n";
     }
+    */
     csvFile.close();
 }
 
@@ -271,8 +290,8 @@ int main(int argc, char* argv[])
 		std::cout<<x<<",";
 	    std::cout<<std::endl;
 	    */
-	    //outputNetsInfo_drawing(nets);
-	    exportToCSV(boundaries,actualAreaVector,ratioVector);
+	    outputNetsInfo_drawing(nets);
+	    exportToCSV(nets,boundaries,actualAreaVector,ratioVector);
 
         } else {
             std::cout<<"No optimal solution. status="<<status<<"\n";

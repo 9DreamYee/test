@@ -17,7 +17,7 @@ commonBoundary::commonBoundary():
     netA(-1),netB(-1),
     alpha(0.0),alpha_corner(0.0),boundary_move_direction(-1),
     initial_route_alpha(0.0),
-    shiftAmount(0),shiftMin(0),shiftMax(0),shiftMax_corner(0),cornerArea(0.0)
+    shiftAmount(0),shiftMin(0),shiftMax(0),shiftMax_corner(0),cornerArea(0.0),isSlash(0)
     {}
 //協助判斷特例處理邊界線起點與終點, 不在同個方向上平移的狀況
 bool getCornerBoundaryDirection(const commonBoundary &CB, const Rectangle &r, const Rectangle &outterRect) {
@@ -79,26 +79,8 @@ bool getCornerBoundaryDirection(const commonBoundary &CB, const Rectangle &r, co
 }
 void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &temp_CB, const double &original_area, const double &unit,
        const Rectangle &innerRect, const Rectangle &outterRect ){
-    /*
-    //處理initial route要平移到corner net狀況
-    double offset = 0.0;
-    if(corner_point.x() == temp_line2.front().x()){
-        offset = corner_point.y() - temp_line2.front().y();
-        std::cout<<"offset = "<<offset<<std::endl;
-        for(auto &point : temp_line2){
-            point.y(point.y() + offset);
-        }
-
-    }
-    else if(corner_point.y() == temp_line2.front().y()){
-        offset = corner_point.x() - temp_line2.front().x();
-        std::cout<<"offset = "<<offset<<std::endl;
-        for(auto &point : temp_line2){
-            point.x(point.x() + offset);
-        }
-    }
-    */
-    double  slash_area = 0;
+    //處理initial route要平移到corner point狀況
+    double  slash_area = 0, ExtendedInitialRoute_area = 0;
     polygon_t poly, slash_poly;
     std::string reason;
     line_t temp_line2 = corner_line;
@@ -106,6 +88,55 @@ void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &tem
     point_t inner_corner_point = corner_line.front();
     CB.cornerPoint = inner_corner_point;
     CB.cornerLine = corner_line;
+    //將ExtendedInitialRoute平移到corner point
+    double offset = 0.0;
+    if(inner_corner_point.x() == CB.initialRouteSegment.front().x()){
+        offset = abs(inner_corner_point.y()) - abs(CB.initialRouteSegment.front().y());
+        for(auto &point : CB.initialRouteSegment){
+            if(inner_corner_point.y() < CB.initialRouteSegment.front().y()){
+                offset = 0 - offset;
+            }
+            if(abs(point.y() + offset) > abs(outter_corner_point.y())){
+                point.y(outter_corner_point.y());
+            }
+            else{
+                point.y(point.y() + offset);
+            }
+        }
+    }
+    else if(inner_corner_point.y() == CB.initialRouteSegment.front().y()){
+        offset = abs(inner_corner_point.x()) - abs(CB.initialRouteSegment.front().x());
+        for(auto &point : CB.initialRouteSegment){
+            if(inner_corner_point.x() < CB.initialRouteSegment.front().x()){
+                offset = 0 - offset;
+            }
+            if(abs(point.x() + offset) > abs(outter_corner_point.x())){
+                point.x(outter_corner_point.x());
+            }
+            else{
+                point.x(point.x() + offset);
+            }
+        }
+    }
+    //計算ExtendedInitialRoute所形成的面積
+    //
+    bg::append(poly.outer(),inner_corner_point);
+    for(const auto &point : temp_CB.boundarySegment){
+        bg::append(poly.outer(), point);
+    }
+    //bg::append(poly.outer(),outter_corner_point);
+    for(auto it = CB.initialRouteSegment.rbegin(); it != CB.initialRouteSegment.rend(); it++){
+        bg::append(poly.outer(), *it);
+    }
+    bg::unique(poly);
+    bg::correct(poly);
+    /*
+    std::cout<<"poly WKT: "<<bg::wkt(poly)<<std::endl;
+    if (!bg::is_valid(poly, reason)) {
+        std::cout << "Original_Polygon is invalid .: " << reason << std::endl;
+    }
+    */
+    ExtendedInitialRoute_area = bg::area(poly)*1e-08;
     //原邊界線 原面積
     /*
     bg::append(poly, inner_corner_point);
@@ -144,33 +175,24 @@ void cal_corner_area(commonBoundary &CB, line_t &corner_line,commonBoundary &tem
     //計算面積
     //original_area = bg::area(poly)*1e-08;
     slash_area = bg::area(slash_poly)*1e-08;
-    CB.cornerArea = original_area - slash_area;
-    //std::cout<<"BoundaryID: "<<CB.boundaryID<<" original_area: "<<original_area<<" slash_area: "<<slash_area<<" cornerArea: "<<CB.cornerArea<<std::endl;
-   /* 
-    if(line1.back().x() != line2.back().x() && line1.back().y() != line2.back().y()){
-        point_t outterPoint(0.0,0.0),temp_point(0.0,0.0),temp_point2(0.0,0.0);
-        temp_point = line1.back();
-        temp_point2 = line2.back();
-        if(abs(temp_point.x()) > abs(temp_point2.x())){
-            outterPoint.x(temp_point.x());
-        }
-        else{
-            outterPoint.x(temp_point2.x());
-        }
-        if(abs(temp_point.y()) > abs(temp_point2.y())){
-            outterPoint.y(temp_point.y());
-        }
-        else{
-            outterPoint.y(temp_point2.y());
-        }
-        bg::append(poly, outterPoint);
+    //選擇最能接近shiftAmount的邊界線(斜線/ExtendedInitialRoute)
+    
+    double slash_cornerArea = original_area - slash_area;
+    double ExtendedInitialRoute_cornerArea = original_area - ExtendedInitialRoute_area;
+    double slash_shiftAmount = abs(CB.shiftAmount) - slash_cornerArea;
+    double ExtendedInitialRoute_shiftAmount = abs(CB.shiftAmount) - ExtendedInitialRoute_cornerArea;
+    if(abs(slash_shiftAmount) < abs(ExtendedInitialRoute_shiftAmount)){
+        CB.cornerArea = original_area - slash_area;
+        CB.isSlash = true;
     }
-    //corner_line
-    for(auto it = temp_line2.rbegin(); it != temp_line2.rend(); it++){
-        bg::append(poly, *it);
+    else{
+        CB.boundarySegment = CB.initialRouteSegment;
+        //CB.cornerLine = CB.initialRouteSegment;
+        corner_line = CB.initialRouteSegment;
+        CB.cornerArea = original_area - ExtendedInitialRoute_area;
+        CB.isSlash = false;
     }
-    bg::correct(poly);
-    */
+    //CB.cornerArea = original_area - slash_area;
 
     //alpha
     //特例處理邊界線起點與終點, 不在同個方向上平移的狀況
@@ -575,7 +597,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                     commonBoundary.shiftMax = bg::distance(corner_point,commonBoundary.netA_pad);
                     double original_area = nets[commonBoundary.netA].areaInitial;
                     auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID - 1)];
-                    //commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
+                    commonBoundary.initialRouteSegment = nets[commonBoundary.netA].ExtendedInitialRoute;
 ;                  cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit,innerRect,outterRect);
                 }
             }
@@ -616,7 +638,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
                     commonBoundary.shiftMin = bg::distance(commonBoundary.startPoint,corner_point);
                     commonBoundary.shiftMax = bg::distance(corner_point,commonBoundary.netB_pad);
                     auto temp_CB = commonBoundaries[modIdx(commonBoundary.boundaryID + 1)];
-                    //commonBoundary.initialRouteSegment = nets[commonBoundary.netB].ExtendedInitialRoute;
+                    commonBoundary.initialRouteSegment = nets[commonBoundary.netB].ExtendedInitialRoute;
                     double original_area = nets[commonBoundary.netB].areaInitial;
                     cal_corner_area(commonBoundary,corner_line,temp_CB,original_area,unit,innerRect,outterRect);
                 }
@@ -1120,11 +1142,13 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
             }//end of bVector == 0
            //以斜線平移
             else if(bVector[i] == 1 ){
-                commonBoundaries[i].boundarySegment.clear();
-                bg::append(commonBoundaries[i].boundarySegment,
-                point_t(commonBoundaries[i].cornerLine.front().x(),commonBoundaries[i].cornerLine.front().y()));
-                bg::append(commonBoundaries[i].boundarySegment,
-                point_t(commonBoundaries[i].cornerLine.back().x(),commonBoundaries[i].cornerLine.back().y()));
+                if(commonBoundaries[i].isSlash){
+                    commonBoundaries[i].boundarySegment.clear();
+                    bg::append(commonBoundaries[i].boundarySegment,
+                    point_t(commonBoundaries[i].cornerLine.front().x(),commonBoundaries[i].cornerLine.front().y()));
+                    bg::append(commonBoundaries[i].boundarySegment,
+                    point_t(commonBoundaries[i].cornerLine.back().x(),commonBoundaries[i].cornerLine.back().y()));
+                }
                 if(commonBoundaries[i].boundary_move_direction == 0){
                 //判斷往netA平移
                     if(commonBoundaries[i].cornerPoint.x() == commonBoundaries[i].netA_pad.x()){
@@ -1288,7 +1312,7 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
             }
         }
         //boundary 1
-        for(auto it = nets[i].boundarySegments[1].rbegin(); it != nets[i].boundarySegments[1].rend(); it++)
+            for(auto it = nets[i].boundarySegments[1].rbegin(); it != nets[i].boundarySegments[1].rend(); it++)
             bg::append(poly,*it);
         //inner boundary
         if(nets[i].innerBoundarySegments.size() == 2){
@@ -1320,7 +1344,6 @@ int main(){
 return 0;
 }
 */
-/*
 int main(int argc, char* argv[]){
     std::ifstream file(argv[1]);
     std::vector<double> deltaVector ={
@@ -1333,15 +1356,14 @@ int main(int argc, char* argv[]){
     Rectangle innerRect;
     Rectangle outterRect =Rectangle(-1.4e+08,-1.4e+08,2.8e+08,2.8e+08);
     sortBoundaryClockwise(commonBoundaries,innerRect);
-    //同時特例處利Boundary 1
+    //同時特例處利Boundary 0
     UpdateCommonBoundaryInfo(commonBoundaries,nets,innerRect,outterRect);
     Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, commonBoundaries, nets);
     outputNetsInfo(nets);
     outputCommonBoundaries(commonBoundaries);
-    outputCommonBoundaries_drawing(commonBoundaries);
-    //outputNetsInfo_drawing(nets);
+    //outputCommonBoundaries_drawing(commonBoundaries);
+    outputNetsInfo_drawing(nets);
     file.close();
     return 0;
 }
-*/
 

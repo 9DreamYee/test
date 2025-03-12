@@ -65,6 +65,7 @@ struct commonBoundary{
     // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
     int shift_Direction;
     int shiftAmount;
+    bool isSlash;
     //協助計算phase2_delta
     // boundary_move_direction根據shiftAmount的正負來決定要將面積調整至哪個pad的方向 0代表往netA 1代表往netB
     int boundary_move_direction;
