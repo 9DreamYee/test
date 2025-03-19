@@ -266,6 +266,15 @@ int main(int argc, char* argv[])
 		    deltaVector.push_back(d1Val);
 		    bVector.emplace_back(0);
                 }
+		//更新phase2平移後與目標面積值的誤差到每條邊界線
+		b.phase2_deviation = uVal;
+		//corner 若切換成斜線後,面積反而給出得太多,則boundary_move_direction需要調換返還面積
+		if(b.shiftAmount - aArea < 0){
+		    if(b.boundary_move_direction == 0)
+	 	        b.boundary_move_direction = 1;
+		    else if(b.boundary_move_direction == 1)
+		        b.boundary_move_direction = 0;
+		}
                 std::cout<<"Boundary "<<b.boundaryID<<" (shiftDir="<<b.shift_Direction
                          <<"): b1= "<<b1Val<<", b2= "<<b2Val<< ", delta1= "<<d1Val<<", delta2="<<d2Val
                          <<", shiftAmt="<<b.shiftAmount
@@ -282,7 +291,8 @@ int main(int argc, char* argv[])
 		std::cout<<x<<",";
 	    std::cout<<std::endl;
 	    */
-	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets);
+	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets, innerRect);
+	    Phase3(boundaries,nets,deltaVector,bVector);
 	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);
 	    /*
@@ -290,8 +300,8 @@ int main(int argc, char* argv[])
 		std::cout<<x<<",";
 	    std::cout<<std::endl;
 	    */
-	    outputNetsInfo_drawing(nets);
-	    exportToCSV(nets,boundaries,actualAreaVector,ratioVector);
+	    //outputNetsInfo_drawing(nets);
+	    //exportToCSV(nets,boundaries,actualAreaVector,ratioVector);
 
         } else {
             std::cout<<"No optimal solution. status="<<status<<"\n";
