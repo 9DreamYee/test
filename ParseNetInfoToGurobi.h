@@ -76,6 +76,9 @@ struct commonBoundary{
     int boundary_move_direction;
     //判斷邊界位在哪個方位
     int startPointDirection;
+    //phase3 stage_3協助判斷temp_line2_downto_outterRect需要從哪裡開始預留pitch高度
+    bool is_Intersect,in_Stage3;
+    line_t Temp_line2_downto_outterRect;
     //corner_area為corner net獨有的面積,切換成corner line需要扣除的面積值
     double cornerArea;
     commonBoundary();
