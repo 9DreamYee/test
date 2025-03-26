@@ -102,8 +102,6 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
  //計算從bendingPoint轉角的面積值
 double cal_bendingPoint_area(line_t &temp_line, line_t &last_line, line_t &cornerLine);
 bool isIntersect(const line_t &temp_line2,const commonBoundary &CB, const commonBoundary &adjacent_boundary, const std::vector<netInfo> &nets, std::vector<point_t> &intersectionPoints, point_t &ball);
-//從bendingPoint轉角90度
-void rotate_90degree(line_t &line,line_t &last_line);
  //從bendingPoint轉角45度
 void rotate_45degree(line_t &line, line_t &last_line, long double &x_bias, long double &y_bias);
 //Phase3 改變邊界線角度來達到目標面積值

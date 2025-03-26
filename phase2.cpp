@@ -295,6 +295,7 @@ int main(int argc, char* argv[])
 	    Phase3(boundaries,nets,deltaVector,bVector);
 	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);
+     	    //outputCommonBoundaries_drawing(boundaries);
 	    /*
 	    for(auto x:bVector)
 		std::cout<<x<<",";
