@@ -293,6 +293,7 @@ int main(int argc, char* argv[])
 	    */
 	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets, innerRect);
 	    Phase3(boundaries,nets,deltaVector,bVector);
+            Phase3UpdateAllInfo(boundaries, nets);
 	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);
      	    //outputCommonBoundaries_drawing(boundaries);
@@ -301,8 +302,8 @@ int main(int argc, char* argv[])
 		std::cout<<x<<",";
 	    std::cout<<std::endl;
 	    */
-	    //outputNetsInfo_drawing(nets);
-	    //exportToCSV(nets,boundaries,actualAreaVector,ratioVector);
+	    outputNetsInfo_drawing(nets);
+	    exportToCSV(nets,boundaries,actualAreaVector,ratioVector);
 
         } else {
             std::cout<<"No optimal solution. status="<<status<<"\n";

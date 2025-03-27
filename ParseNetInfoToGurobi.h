@@ -106,6 +106,7 @@ bool isIntersect(const line_t &temp_line2,const commonBoundary &CB, const common
 void rotate_45degree(line_t &line, line_t &last_line, long double &x_bias, long double &y_bias);
 //Phase3 改變邊界線角度來達到目標面積值
 void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets, std::vector<double> &deltaVector,std::vector<int> &bVector);
+void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets);
 // output CommonBoundaries info to commonBoundary_toFurobi.txt
 void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries);
 // output Nets info to netInfo_toGurobi.txt
