@@ -237,6 +237,7 @@ int main(int argc, char* argv[])
             for(int e=0; e<E; e++){
                 auto &b = boundaries[e];
                 double uVal   = uVars[e].get(GRB_DoubleAttr_X);
+		//aArea: 實際位移的面積值
                 double aArea  = actualAreaExpr[e].getValue(); // getValue() => evaluate
                 double ratio  = (std::fabs(b.shiftAmount)>1e-9)? (aArea/b.shiftAmount) : 0.0;
 		double b1Val = 0.0, b2Val = 0.0, d1Val = 0.0, d2Val = 0.0;
@@ -268,7 +269,7 @@ int main(int argc, char* argv[])
                 }
 		//更新phase2平移後與目標面積值的誤差到每條邊界線
 		b.phase2_deviation = uVal;
-		//corner 若切換成斜線後,面積反而給出得太多,則boundary_move_direction需要調換返還面積
+		//corner 若切換成斜線後,面積反而給出得太多,則boundary_move_direction需要反轉並返還面積
 		if(b.shiftAmount - aArea < 0){
 		    if(b.boundary_move_direction == 0)
 	 	        b.boundary_move_direction = 1;
@@ -291,6 +292,7 @@ int main(int argc, char* argv[])
 		std::cout<<x<<",";
 	    std::cout<<std::endl;
 	    */
+	    //在Phase2UpdateAllInfo更新了deltaVector
 	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets, innerRect);
 	    Phase3(boundaries,nets,deltaVector,bVector);
             Phase3UpdateAllInfo(boundaries, nets);

@@ -680,6 +680,7 @@ void UpdateCommonBoundaryInfo(std::vector<commonBoundary> &commonBoundaries, std
 }
 void outputCommonBoundaries(std::vector<commonBoundary> &commonBoundaries){
     std::ofstream outfile("commonBoundary_toGurobi.txt");
+    outfile<<std::fixed<<std::setprecision(0);
     for(auto commonBoundary:commonBoundaries){
         outfile<<"BoundaryID: "<<commonBoundary.boundaryID<<std::endl;
         outfile<<"NetA: "<<commonBoundary.netA<<std::endl;
@@ -1437,8 +1438,10 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
     }
     ordering_CB.insert(ordering_CB.begin(), ordering_CB.end() - count, ordering_CB.end());
     ordering_CB.erase(ordering_CB.end() - count, ordering_CB.end());
+    /*
     for(auto &CB:ordering_CB)
 	    std::cout<<"ID: "<<CB.boundaryID<<std::endl;
+    */
     int index = 0;
     for(auto &CB:ordering_CB){
 	std::cout<<"\nCB.ID: "<<CB.boundaryID<<", CB.direction: "<<CB.startPointDirection<<std::endl;
@@ -1462,9 +1465,61 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         if(lastPoint.y() == bendingPoint.y()){
             isHorizontal = true;
         }
-        //若是corner net是斜線則調整角度另外處理 
+	//stage_0
+        //若是corner net是斜線則調整角度另外處理 找新的轉彎點 
         if(bVector[index] == 1 && CB.isSlash){
+	    auto projectPoint = [] (const point_t &A, const point_t &P1, const point_t &P2) -> point_t{
+	        double vx = P2.x() - P1.x();
+		double vy = P2.y() - P1.y();
+		double apx = A.x() - P1.x();
+		double apy = A.y() - P1.y();
+		double dot = apx * vx + apy * vy;
+		double len_sq = vx * vx + vy * vy;
+		double t = dot / len_sq;
 
+		return point_t(P1.x() + t * vx, P1.y() + t * vy);
+	    };
+	    point_t adjacent_boundary_bendingPoint, adjacent_boundary_lastPoint;
+	    //斜線的起點
+	    point_t slash_front = CB.boundarySegment[0];
+	    //斜線的終點
+	    point_t slash_back = CB.boundarySegment[1];
+	    point_t temp_lastPoint;
+            commonBoundary adjacent_boundary;
+	    if(CB.boundary_move_direction == 0){
+	    	adjacent_boundary = commonBoundaries[CB.netA];
+		if(CB.netA == CB.boundaryID ){
+	    	    adjacent_boundary = commonBoundaries[modIdx(index-1)];
+		}
+	    }else if(CB.boundary_move_direction == 1){
+	    	adjacent_boundary = commonBoundaries[CB.netB];
+		if(CB.netB == CB.boundaryID){
+	    	    adjacent_boundary = commonBoundaries[modIdx(index+1)];
+		}
+	    }
+	    adjacent_boundary_bendingPoint = adjacent_boundary.boundarySegment[adjacent_boundary.boundarySegment.size() - 2];
+	    adjacent_boundary_lastPoint = adjacent_boundary.boundarySegment[adjacent_boundary.boundarySegment.size() - 1];
+	    bendingPoint = projectPoint(adjacent_boundary_bendingPoint, slash_front, slash_back);
+            if(adjacent_boundary_lastPoint.y() == adjacent_boundary_bendingPoint.y()){
+                isHorizontal = true;
+            }
+	    //double offset = bg::distance(bendingPoint,adjacent_boundary_bendingPoint);
+	    temp_lastPoint = bendingPoint;
+	    if(isHorizontal){
+	        temp_lastPoint.x(adjacent_boundary_lastPoint.x());
+	    }else if(!isHorizontal){
+	        temp_lastPoint.y(adjacent_boundary_lastPoint.y());
+	    }
+	    bg::append(temp_line, bendingPoint);
+	    bg::append(temp_line, temp_lastPoint);
+  	    last_line.clear();
+	    bg::append(last_line, bendingPoint);
+            bg::append(last_line, lastPoint);
+	    for(auto point:temp_line){
+	        std::cout<<"temp_line: "<<point.x()<<" "<<point.y()<<std::endl;
+	    }
+	    std::cout<<"bendingPoint: "<<bendingPoint.x()<<" "<<bendingPoint.y()<<", lastPoint: "<<lastPoint.x()<<" "<<lastPoint.y()<<", isHorizontal: "<<isHorizontal<<std::endl;
+	    //continue;
         }
 	//stage_1
         //邊界線的最後一段是水平線
@@ -1492,17 +1547,27 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	        return std::sqrt(2*area);
 	    };
 	    double target_length = calculateTargetLength(CB.phase2_deviation * 1e+08);
+	    double height = std::sqrt(CB.phase2_deviation * 1e+08);
 	    double stage_1_Area = 0.0;
 	    std::cout<<"stage_1_target_length: "<<target_length<<std::endl;
 	    line_t target_45degree_line, new_last_line;
 	    point_t new_bendingPoint = bendingPoint;
+	    point_t new_lastPoint = lastPoint;
 	    double x_bias = 0.0, y_bias = 0.0;
   	    double EPS = 1e-08;
-            if((isHorizontal)){
+            if(bVector[index] == 1 && CB.isSlash){
+		lastPoint.x() > 0 ? x_bias = 0 - abs(target_length) : x_bias = abs(target_length);
+		lastPoint.y() > 0 ? y_bias = 0 - abs(target_length) : y_bias = abs(target_length);
+	        new_bendingPoint.x(lastPoint.x() + x_bias);
+	        new_bendingPoint.y(lastPoint.y() + y_bias);
+	        isHorizontal ? new_lastPoint.y(lastPoint.y() + y_bias) : new_lastPoint.x(lastPoint.x() + x_bias);
+	        std::cout<<"new_bendingPoint: "<<new_bendingPoint.x()<<" "<<new_bendingPoint.y()<<", new_lastPoint: "<<new_lastPoint.x()<<" "<<new_lastPoint.y()<<std::endl;	
+	    }else if((isHorizontal)){
                 x_bias = abs(target_length);
                 y_bias = 0.0;
 		CB.startPointDirection == 1 ? new_bendingPoint.x(lastPoint.x() - x_bias) : 
 			new_bendingPoint.x(lastPoint.x() + x_bias);
+		std::cout<<"lastPoint.x(): "<<lastPoint.x()<<", sum: "<<new_bendingPoint.x()<<std::endl;
 	    	deltaVector[index] < 0 ? x_bias = 0 - x_bias : x_bias = x_bias;
             }else if (!isHorizontal){
 	    	x_bias = 0.0;
@@ -1513,7 +1578,9 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    }
             bg::append(target_45degree_line, point_t(new_bendingPoint.x(), new_bendingPoint.y()));
 	    //轉45度
-	    if(x_bias != 0.0){
+	    if(bVector[index] == 1 && CB.isSlash){
+	        bg::append(target_45degree_line, new_lastPoint);
+	    }else if(x_bias != 0.0){
         	bg::append(target_45degree_line, point_t(lastPoint.x(), x_bias + lastPoint.y()));
     	    }else if(y_bias != 0.0){
         	bg::append(target_45degree_line, point_t(y_bias + lastPoint.x(),lastPoint.y()));
@@ -1522,7 +1589,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    new_last_line.front().x(target_45degree_line.front().x());
 	    new_last_line.front().y(target_45degree_line.front().y());
             stage_1_Area = cal_bendingPoint_area(target_45degree_line, new_last_line, CB.cornerLine);
-	    
+	    std::cout<<"stage_1_Area: "<<stage_1_Area<<std::endl;
 	    CB.boundarySegment.pop_back();
 	    CB.boundarySegment.emplace_back(target_45degree_line.front());
   	    for(auto &point : target_45degree_line){
@@ -1885,6 +1952,45 @@ void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vec
 	    abs(net.boundarySegments[1].back().x()) > abs(net.boundarySegments[1].back().y()) ? temp_b1 = net.boundarySegments[1].back().x() :
 		    temp_b1 = net.boundarySegments[1].back().y();
 	    point_t corner_point;
+	    point_t cp0(0 - abs(temp_b0), abs(temp_b1));
+	    point_t cp1(abs(temp_b0), abs(temp_b1));
+	    point_t cp2(abs(temp_b0), 0 - abs(temp_b1));
+	    point_t cp3(0 - abs(temp_b0), 0 - abs(temp_b1));
+	    std::vector<point_t> cpVector;
+	    std::vector<double> distVector;
+	    cpVector.emplace_back(cp0);
+	    cpVector.emplace_back(cp1);
+	    cpVector.emplace_back(cp2);
+	    cpVector.emplace_back(cp3);
+	    for(auto point: cpVector){
+	        double distance = bg::distance(net.boundarySegments[0].back(), point);
+		distVector.emplace_back(distance);
+	    }
+            int index = -1;
+	    double min_val = std::numeric_limits<double>::max();
+	    for(int i = 0; i < distVector.size();i++){
+	        if(distVector[i] < min_val){
+		    min_val = distVector[i];
+		    index = i;
+		}
+	    }
+	    corner_point = cpVector[index];
+	    /*
+	    for(auto CB:commonBoundaries){
+	        if(net.boundary0ID == CB.boundaryID){
+		    if(!CB.cornerLine.empty()){
+		        corner_point.x(CB.cornerLine.back().x());
+			corner_point.y(CB.cornerLine.back().y());
+		    }
+		}else if(net.boundary1ID == CB.boundaryID){
+		    if(!CB.cornerLine.empty()){
+		        corner_point.x(CB.cornerLine.back().x());
+			corner_point.y(CB.cornerLine.back().y());
+		    }
+		}
+	    }
+	    */
+	    /*
 	    if(net.boundary0ID > net.boundary1ID){
 	        corner_point.x(temp_b1);
 		corner_point.y(temp_b0);
@@ -1892,6 +1998,7 @@ void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vec
 	        corner_point.x(temp_b0);
 	        corner_point.y(temp_b1);
 	    }
+	    */
 	    bg::append(temp_line, net.boundarySegments[0].back());
 	    bg::append(temp_line, corner_point);
 	    bg::append(temp_line2, corner_point);
