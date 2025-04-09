@@ -79,7 +79,8 @@ int main(int argc, char* argv[])
 
         for(int e=0; e<E; e++){
             auto &b = boundaries[e];
-
+	    //使邊界線平移後避免完全重疊
+	    b.shiftMax = b.shiftMax - 500000; 
             // 誤差變數
             std::string uName = "u_"+std::to_string(b.boundaryID);
             uVars[e] = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, uName);
@@ -94,6 +95,7 @@ int main(int argc, char* argv[])
 
                 // define delta1, delta2
                 // 這裡以 b.shiftMax 為上下界, 也可使用 corner_area / alpha 之類
+		//b.shiftMax == 0 ? b.shiftMax = b.shiftMax : b.shiftMax -= 1000000;
                 double M1 = b.shiftMin;
                 double M2 = b.shiftMax;
                 // alpha=0 => 原邊界線不可用 => M1=0

@@ -62,7 +62,8 @@ struct commonBoundary{
     point_t cornerPoint;
     //corner net的斜線
     line_t cornerLine;
-    //shiftMax_corner為corner net獨有的平移上限, normal net皆設為0
+    //shiftMin為corner net獨有的平移上限, normal net皆設為0
+    //對於corner net來說 shiftMin初始邊界線平移到inner Rect cornerPoint的上限 shiftMax轉成slash/原邊界線從inner Rect cornerPoint可平移的上限
     double shiftMin,shiftMax,shiftMax_corner;
     // 0 -> x, 1 -> y , 2 -> corner net需特例MILP處理
     int shift_Direction;

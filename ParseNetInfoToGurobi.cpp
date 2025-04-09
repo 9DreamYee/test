@@ -855,6 +855,13 @@ void outputNetsInfo_drawing(std::vector<netInfo> &nets){
             }
         }
     }
+    //pad & ball
+    /*
+    for(auto net:nets){
+        std::cout<<"_view.drawArc("<<net.pad.x()<<","<<net.pad.y()<<",1000000);\n";
+        std::cout<<"_view.drawArc("<<net.ball.x()<<","<<net.ball.y()<<",1000000);\n";	
+    }
+    */
 }
 /*
 bool isSameBoundary(const point_t p, const point_t q){
@@ -1394,7 +1401,7 @@ bool isIntersect(const line_t &temp_line2,const commonBoundary &CB, const common
 	    }
         }
     }
-    //判斷是否與其他邊界線/ball相交和相交的點座標
+    //判斷是否與其他邊界線相交和相交的點座標
     if(bg::intersects(temp_line2, adjacent_boundary.boundarySegment)){
         bg::intersection(temp_line2, adjacent_boundary.boundarySegment, intersectionPoints);
         is_intersect = true;
@@ -1421,6 +1428,53 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         return (idx+rows) % rows;
     };
     std::vector<commonBoundary> ordering_CB = commonBoundaries;
+    std::vector<std::pair<int, point_t>> illegal_boundaryID;
+    //stage_0 check every net legalization
+    for(int i = 0; i < nets.size(); i++){
+        polygon_t poly;
+        //boundary 0
+        for(auto &point:nets[i].boundarySegments[0])
+            bg::append(poly,point);
+        //outter boundary
+        if(nets[i].outterBoundarySegments.size() == 2){
+            for(auto &point:nets[i].outterBoundarySegments[0]){
+                bg::append(poly,point);
+            }
+            for(auto &point:nets[i].outterBoundarySegments[1]){
+                bg::append(poly,point);
+            }
+        }
+        else if(nets[i].outterBoundarySegments.size() == 1){
+            for(auto &point:nets[i].outterBoundarySegments[0]){
+                bg::append(poly,point);
+            }
+        }
+        //boundary 1
+        for(auto it = nets[i].boundarySegments[1].rbegin(); it != nets[i].boundarySegments[1].rend(); it++)
+            bg::append(poly,*it);
+        //inner boundary
+        if(nets[i].innerBoundarySegments.size() == 2){
+            for(auto it = nets[i].innerBoundarySegments[1].rbegin(); it != nets[i].innerBoundarySegments[1].rend(); it++)
+                bg::append(poly,*it);
+            for(auto it = nets[i].innerBoundarySegments[0].rbegin(); it != nets[i].innerBoundarySegments[0].rend(); it++)
+                bg::append(poly,*it);
+        }
+        else if (nets[i].innerBoundarySegments.size() == 1 ){
+            for(auto it = nets[i].innerBoundarySegments[0].rbegin(); it != nets[i].innerBoundarySegments[0].rend(); it++)
+                bg::append(poly,*it);
+        }
+        bg::unique(poly);
+        bg::correct(poly);
+	point_t ball = nets[i].ball;
+	if(!bg::covered_by(ball, poly)){
+	    double distance_b0 = bg::distance(nets[i].boundarySegments[0], nets[i].ball);
+	    double distance_b1 = bg::distance(nets[i].boundarySegments[1], nets[i].ball);
+	    std::cout<<"NetID: "<<nets[i].netID<<", distance bo: "<<distance_b0<<", distance_b1: "<<distance_b1<<std::endl;
+
+	    distance_b0 < distance_b1 ? illegal_boundaryID.emplace_back(nets[i].boundary0ID, ball) :
+		    illegal_boundaryID.emplace_back(nets[i].boundary1ID, ball);
+	}
+    }
     //依照phase2_deviation排序 誤差越大者優先處理
     /*
     std::sort(ordering_CB.begin(),ordering_CB.end(),[](const commonBoundary &a, const commonBoundary &b){
@@ -1466,6 +1520,34 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
             isHorizontal = true;
         }
 	//stage_0
+	for(auto i: illegal_boundaryID){
+	    if(CB.boundaryID == i.first){
+		std::cout<<"boundaryID: "<<CB.boundaryID<<std::endl;
+		point_t ball = i.second;
+		point_t new_bendingPoint = bendingPoint;
+		point_t new_lastPoint = lastPoint;
+                double distance = bg::distance(bendingPoint, ball);
+		if(bendingPoint.x() == ball.x()){
+		    bendingPoint.y() < ball.y() ? distance = distance : distance = 0 - distance;
+		    new_bendingPoint.y(new_bendingPoint.y() + distance);
+		    new_lastPoint.y(new_lastPoint.y() + distance);
+		}else if(bendingPoint.y() == ball.y()){
+		    bendingPoint.x() < ball.x() ? distance = distance : distance = 0 - distance;
+		    new_bendingPoint.x(new_bendingPoint.x() + distance);
+		    new_lastPoint.x(new_lastPoint.x() + distance);
+		}
+		CB.boundarySegment.pop_back();
+		CB.boundarySegment.emplace_back(new_bendingPoint);
+		CB.boundarySegment.emplace_back(new_bendingPoint);
+		CB.boundarySegment.emplace_back(new_lastPoint);
+		lastPoint = new_lastPoint;
+		bendingPoint = new_bendingPoint;
+		last_line.clear();
+		bg::append(last_line, bendingPoint);
+		bg::append(last_line,lastPoint);
+	    }
+	}
+	//stage_1
         //若是corner net是斜線則調整角度另外處理 找新的轉彎點 
         if(bVector[index] == 1 && CB.isSlash){
 	    auto projectPoint = [] (const point_t &A, const point_t &P1, const point_t &P2) -> point_t{
@@ -1539,8 +1621,8 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         }
         //試算從bendingPoint轉45度後的面積
         bendingPoint_area = cal_bendingPoint_area(temp_line,last_line,CB.cornerLine);
+	double stage_1_max_area = bendingPoint_area;
 	std::cout<<"45 degree: \n"<<"Boundary ID: "<<CB.boundaryID<<", deltaVector: "<<deltaVector[index]<<", Initial deviation: "<<CB.phase2_deviation<<", After stage_1 area: "<<CB.phase2_deviation - bendingPoint_area<<std::endl;
-        //若面積剛好滿足或分出去太多則二分逼近找精確點, 不足則從bendPoint轉90度
         if(CB.phase2_deviation <= bendingPoint_area){
             //找精確座標值
 	    auto calculateTargetLength = [](double area) -> double{
@@ -1603,7 +1685,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         }
 	//stage_2
         //從bendingPoint轉90度 或檢查從第二個折線形變的可能(ball在多邊形內部很遠的位置
-        else if(CB.phase2_deviation > bendingPoint_area){
+        else if(CB.phase2_deviation > stage_1_max_area){
             //先檢查轉90度是否會與其他邊界線相交 找出相交的點並設定平移bendingPoint極限值
             line_t temp_line2, shifted_45degree_line, temp_line2_downto_outterRect;
             commonBoundary adjacent_boundary;
@@ -1668,6 +1750,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    //stage_2-2
             //情況1./2. 更新temp_line2 使90度轉彎邊界線合法
             if(is_intersect){
+		std::cout<<"stage_2-2 ID:"<<CB.boundaryID<<std::endl;
                 intersectionPoint = intersectionPoints.front();
 		/*
 		for(auto point:intersectionPoints){
@@ -1698,6 +1781,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
             }
 	    //確認是否能在stage_2解決
 	    double stage_2_max_area = bendingPoint_area + shifted_bendingPoint_area ;
+	    std::cout<<"stage_2_max_area: "<<stage_2_max_area<<std::endl;
 	    double stage_3_Area = 0.0;
 	    double stage_3_max_area = 0.0;
 	    if(stage_2_max_area >= CB.phase2_deviation){
@@ -1758,7 +1842,9 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		std::cout<<"adjacent_boundary.in_Stage3: "<<adjacent_boundary.in_Stage3<<std::endl;
 		//先判斷是否碰到外邊界線面積仍不夠情況 情況3
 		//仍不夠面積, 基於temp_line2再轉45度
+		//stage3-0
 		if(!is_intersect){
+		    std::cout<<"stage_3-0 ID: "<<CB.boundaryID<<std::endl;
 	    	    auto calculateTargetLength = [](double area) -> double{
 	        	return std::sqrt(2*area);
 	    	    };
@@ -1805,14 +1891,16 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		    }
 		    std::cout<<"stage_3_Area: "<<stage_3_Area<<std::endl;
 	            if(std::fabs(stage_3_Area - (CB.phase2_deviation - stage_2_max_area)) < EPS ){
-	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3 solved!\n";
+	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3-0 solved!\n";
 	            }
 		}
 		//基於bendingPoint平移 + 平移temp_line的組合, 延伸出temp_line3(與temp_line平行)
+		//在temp_line上轉90度往outter Rect連接
 		else{
+		    std::cout<<"stage_3-1 ID:"<<CB.boundaryID<<std::endl;
 		    double pitch = 1e+06;
 		    double d_pitch = 2 * pitch;
-  	    	    double EPS = 1e-08;
+  	    	    double EPS = 1e-04;
 	    	    point_t new_bendingPoint = bendingPoint;
 		    point_t shifted_lastPoint = temp_line2_downto_outterRect.back();
 		    line_t new_last_line;
@@ -1899,7 +1987,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		    //stage_3_Area = cal_bendingPoint_area(temp_line3, new_last_line, adjacent_boundary.cornerLine);
 		    std::cout<<"stage_3_Area: "<<stage_3_Area<<std::endl;
 	            if(std::fabs(stage_3_Area - (CB.phase2_deviation)) < EPS ){
-	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3 solved!\n";
+	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3-1 solved!\n";
 	            }
 		    CB.Temp_line2_downto_outterRect = temp_line2_downto_outterRect;
 		}
