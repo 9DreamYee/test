@@ -79,8 +79,9 @@ int main(int argc, char* argv[])
 
         for(int e=0; e<E; e++){
             auto &b = boundaries[e];
+	    double pitch = 500000 * std::sqrt(2.05);
 	    //使邊界線平移後避免完全重疊
-	    b.shiftMax = b.shiftMax - 500000; 
+	    b.shiftMax = b.shiftMax - pitch; 
             // 誤差變數
             std::string uName = "u_"+std::to_string(b.boundaryID);
             uVars[e] = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, uName);
@@ -297,6 +298,7 @@ int main(int argc, char* argv[])
 	    //在Phase2UpdateAllInfo更新了deltaVector
 	    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, boundaries, nets, innerRect);
 	    Phase3(boundaries,nets,deltaVector,bVector);
+	    //inner boundary在phase3Update須更新
             Phase3UpdateAllInfo(boundaries, nets);
 	    outputNetsInfo(nets);
 	    outputCommonBoundaries(boundaries);

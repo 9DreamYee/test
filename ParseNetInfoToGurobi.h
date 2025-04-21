@@ -74,6 +74,7 @@ struct commonBoundary{
     double phase2_deviation;
     //協助計算phase2_delta
     // boundary_move_direction根據shiftAmount的正負來決定要將面積調整至哪個pad的方向 0代表往netA 1代表往netB
+    // 0 邊界線往netA移動 1 邊界線往netB移動
     int boundary_move_direction;
     //判斷邊界位在哪個方位
     int startPointDirection;
@@ -102,9 +103,11 @@ void Phase2UpdateAllInfo_normal_nets(std::vector<double> &deltaVector,std::vecto
         std::vector<commonBoundary> &commonBoundaries,std::vector<netInfo> &nets, const Rectangle &InnerRect);
  //計算從bendingPoint轉角的面積值
 double cal_bendingPoint_area(line_t &temp_line, line_t &last_line, line_t &cornerLine);
-bool isIntersect(const line_t &temp_line2,const commonBoundary &CB, const commonBoundary &adjacent_boundary, const std::vector<netInfo> &nets, std::vector<point_t> &intersectionPoints, point_t &ball);
+bool isIntersect_with_otherBoundary(const line_t &temp_line2,const commonBoundary &CB, const commonBoundary &adjacent_boundary, const std::vector<netInfo> &nets, std::vector<point_t> &intersectionPoints, point_t &ball);
  //從bendingPoint轉角45度
 void rotate_45degree(line_t &line, line_t &last_line, long double &x_bias, long double &y_bias);
+//二分逼近stage1_1的面積
+line_t binary_search_trapezoid(const double &target_area, const line_t &last_line, const double &x_offset, const double &y_offset, bool isHorizontal);
 //Phase3 改變邊界線角度來達到目標面積值
 void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets, std::vector<double> &deltaVector,std::vector<int> &bVector);
 void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets);
