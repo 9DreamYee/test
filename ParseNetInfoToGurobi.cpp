@@ -1418,24 +1418,6 @@ bool isIntersect_with_otherBoundary(const line_t &temp_line2,const commonBoundar
         if((net.boundary0ID == CB.boundaryID) && (net.boundary1ID == adjacent_boundary.boundaryID) ||
         (net.boundary1ID == CB.boundaryID) && (net.boundary0ID == adjacent_boundary.boundaryID)){
 	    ball = net.ball;
-            //ball_isCoveredby = bg::covered_by(temp_poly, ball);
-	    /*if(ball_isCoveredby){
-	        
-	    }
-	    */
-            //排除ball 已經在邊界上的狀況(同時是該邊界線的轉角點)
-	    double dist = bg::distance(CB.boundarySegment,net.ball);
-            if(!dist){
-                is_intersect = false;
-		break;
-            }
-	    dist = bg::distance(temp_line2,net.ball);
-	    if(!dist){
-	    	intersectionPoints.emplace_back(net.ball);
-                is_intersect = true;
-                break;
-	    }
-	    
         }
     }
     //判斷是否與其他邊界線相交和相交的點座標
@@ -1718,7 +1700,6 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    }
 	}
 	// preprocessing illegal boundary
-	// 移動後面積增減尚未計算
 	for(auto i: illegal_boundaryID){
 	    if(CB.boundaryID == i.first){
 		std::cout<<"illegal boundaryID!!!!: "<<CB.boundaryID<<std::endl;
@@ -1769,8 +1750,10 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		bg::append(temp_poly, last_line.front());
 		bg::append(temp_poly, new_bendingPoint2);
                   
+   	 	std::cout<<"adjusted illegal polyWKT: "<<bg::wkt(temp_poly)<<std::endl;
 		bg::unique(temp_poly);
 		bg::correct(temp_poly);
+
 		std::string reason;
     		if (!bg::is_valid(temp_poly, reason)) {
         	    std::cout << "Updated illegal boundary Polygon is invalid: " << reason << std::endl;
@@ -2136,6 +2119,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         else if(CB.phase2_deviation > stage_1_max_area){
             //先檢查轉90度是否會與其他邊界線相交 找出相交的點並設定平移bendingPoint極限值
             line_t temp_line2, shifted_45degree_line, temp_line2_downto_outterRect;
+	    line_t t_line, t_45degree_line;
             //commonBoundary adjacent_boundary;
             std::vector<point_t> intersectionPoints;
             point_t intersectionPoint, ball;
@@ -2183,7 +2167,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
             }
             else if(!isHorizontal){
 		bendingPoint.y() - lastPoint.y() > 0 ? shifted_offset = 0 - shifted_offset : shifted_offset = shifted_offset;
-		shifted_bendingPoint - point_t(bendingPoint.x(), bendingPoint.y() + shifted_offset);
+		shifted_bendingPoint = point_t(bendingPoint.x(), bendingPoint.y() + shifted_offset);
 	        bg::append(temp_line2_downto_outterRect, shifted_bendingPoint);
                 if(deltaVector[index] > 0){
                     bg::append(temp_line2_downto_outterRect, point_t(abs(lastPoint.y()), shifted_bendingPoint.y()));
@@ -2191,113 +2175,133 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
                     bg::append(temp_line2_downto_outterRect, point_t(0 - abs(lastPoint.y()), shifted_bendingPoint.y()));
                 }
             }
-	    //std::cout<<"adjacent_boundaryID: "<<adjacent_boundary.boundaryID<<std::endl;
             //判斷是否與其他邊界線/ball相交, 並找出相交的點座標
-            //intersect 三種情況: 1.碰到ball 2.碰到其他邊界線 3.碰到外邊界線,
+            //intersect 三種情況: true: 碰到ball碰到其他邊界線, false:碰到外邊界線
             //根據回傳的交點決定bendingPoint可以平移的範圍
             is_intersect = isIntersect_with_otherBoundary(temp_line2_downto_outterRect, CB, adjacent_boundary, nets, intersectionPoints, ball);
 	    CB.is_Intersect = is_intersect;
-	    //stage_2-1 暫且先不處理
-	    /*
-	    //ball不在boundary上
-	    if(!bg::distance(CB.boundarySegment,ball)){
-	       point_t bendingPoint2 =  CB.boundarySegment[CB.boundarySegment.size()- 4];
-	       double temp_line_slope =(temp_line.back().y() - temp_line.back().y()) / 
-		       (temp_line.back().x() - temp_line.front().x());
-	       double bendingPoint2_line_slope = (bendingPoint.y() - bendingPoint2.y()) / 
-		       (bendingPoint.x() - bendingPoint2.x());
-	       //若兩者斜率不同則45度折線有超過bendingPoint繼續平移的可能
-	       if(temp_line_slope != bendingPoint2_line_slope){
-	            
-	       }
-
-	    }
-	    */
-	    //stage_2-2
-	    
-            //情況1./2. 更新temp_line2 使90度轉彎邊界線合法
+	    std::cout<<"ID: "<<CB.boundaryID<<" ,is_intersect: "<<is_intersect<<std::endl;
+	    //stage_2
             if(is_intersect){
-		std::cout<<"stage_2-2 ID:"<<CB.boundaryID<<std::endl;
-                intersectionPoint = intersectionPoints.front();
-		
+		std::cout<<"stage_2 is intersect  ID:"<<CB.boundaryID<<std::endl;
+                intersectionPoint = intersectionPoints[0];
+		/*
 		for(auto point:intersectionPoints){
 			std::cout<<"intersectionPoint: "<<point.x()<<", "<<point.y()<<std::endl;
 		}
-		
+		*/
                 temp_line2.clear();
-                bg::append(temp_line2, point_t(bendingPoint.x(), bendingPoint.y()));
+                bg::append(temp_line2, shifted_bendingPoint);
                 bg::append(temp_line2, intersectionPoint);
+
+		bg::append(t_line, shifted_bendingPoint);
+		bg::append(t_line, lastPoint);
                 //在平移後bendingPoint平移的45度線
                 if(isHorizontal){
-                   double shifted_offset = abs(abs(intersectionPoint.y()) - abs(bendingPoint.y()));
-                   deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
+		   long double x_bias = bg::distance(lastPoint, shifted_bendingPoint);
+		   long double y_bias = 0.0;
+		   deltaVector[index] < 0 ? x_bias = 0 - x_bias : x_bias = x_bias;
+		   rotate_45degree(t_45degree_line, t_line, x_bias, y_bias);
+                   
+                   double shifted_offset = abs(abs(intersectionPoint.y()) - abs(shifted_bendingPoint.y()));
+		   deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
                    bg::append(shifted_45degree_line, intersectionPoint);
                    bg::append(shifted_45degree_line, point_t(temp_line.back().x(), temp_line.back().y() + shifted_offset));
                 }else if(!isHorizontal){
-                    double shifted_offset = abs(abs(intersectionPoint.x())- abs(bendingPoint.x()));
+                    long double x_bias = 0; 
+                    long double y_bias = bg::distance(lastPoint, shifted_bendingPoint);
+		    deltaVector[index] < 0 ? y_bias = 0 - y_bias : y_bias = y_bias;
+		    rotate_45degree(t_45degree_line, t_line, x_bias, y_bias);
+
+                    double shifted_offset = abs(abs(intersectionPoint.x())- abs(shifted_bendingPoint.x()));
                     deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
                     bg::append(shifted_45degree_line, intersectionPoint);
                     bg::append(shifted_45degree_line, point_t(temp_line.back().x() + shifted_offset, temp_line.back().y()));
                 }
                 bg::append(temp_line2, shifted_45degree_line.front());
                 bg::append(temp_line2, shifted_45degree_line.back());
-                shifted_bendingPoint_area = cal_bendingPoint_area(temp_line2,temp_line, adjacent_boundary.cornerLine);
+		//協助計算stage_2_max_area
+                shifted_bendingPoint_area = cal_bendingPoint_area(temp_line2, t_line, adjacent_boundary.cornerLine);
             }
-	    //丟到stage_3處理
+	    //丟到stage_3處理 temp_line2_downto_outterRect沒有碰到其他邊界線而是直接碰到外邊界
 	    else {
                 //情況3. 碰到外邊界線
-                shifted_bendingPoint_area = cal_bendingPoint_area(temp_line2, temp_line,adjacent_boundary.cornerLine);
+                //shifted_bendingPoint_area = cal_bendingPoint_area(temp_line2, temp_line,adjacent_boundary.cornerLine);
             }
 	    
 	    //確認是否能在stage_2解決
-	    double stage_2_max_area = bendingPoint_area + shifted_bendingPoint_area ;
+	    double stage_2_max_area;
+	    is_intersect ? stage_2_max_area = shifted_bendingPoint_area : stage_2_max_area = -1 ;
 	    std::cout<<"stage_2_max_area: "<<stage_2_max_area<<std::endl;
-	    double stage_3_Area = 0.0;
-	    double stage_3_max_area = 0.0;
 	    if(stage_2_max_area >= CB.phase2_deviation){
-		double stage_2_TargetArea = (CB.phase2_deviation - bendingPoint_area) * 1e+08;
+		polygon_t t_poly;
+	        bg::append(t_poly, t_45degree_line.back());
+	        bg::append(t_poly, t_45degree_line.front());
+	        bg::append(t_poly, t_line.back());
+		bg::append(t_poly, t_45degree_line.back());
+	        bg::correct(t_poly);
+	        double t_poly_area = bg::area(t_poly) * 1e-08;
+		double stage_2_TargetArea = (CB.phase2_deviation - t_poly_area)* 1e+08;
+		//double stage_2_TargetArea = (CB.phase2_deviation - bendingPoint_area) * 1e+08;
 		double stage_2_Area = 0.0;
 		//sin 45 情況1/2
 		if(is_intersect){
+		    //計算平行四邊形的短邊
 		    auto calShortEdge45 = [](double TargetArea, double L){
-		        return (std::sqrt(2)* TargetArea) / L;
+		        return (TargetArea) / L;
+		        //return (std::sqrt(2) * TargetArea) / L;
 		    };
 		    //長邊
-		    double temp_line_length = bg::distance(temp_line.front(), temp_line.back()); 
+		    double t_line_length = bg::distance(t_line.front(), t_line.back()); 
 		    //短邊
-		    double shifted_offset = calShortEdge45(stage_2_TargetArea, temp_line_length);
-		    line_t stage_2_line;
+		    double shifted_offset = calShortEdge45(stage_2_TargetArea, t_line_length);
+		    std::cout<<"TargetArea: "<<stage_2_TargetArea<<", t_line_length: "<< t_line_length<<std::endl;
+		std::cout<<"CB.dev: "<<CB.phase2_deviation<<", t_poly_area: "<<t_poly_area<<", shifted_offset: "<<shifted_offset<<std::endl;
 		    shifted_45degree_line.clear();
+		    //組合平行四邊形
                     if(isHorizontal){
                         deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
-		        bg::append(shifted_45degree_line, point_t(temp_line.front().x(), temp_line.front().y()));
-			bg::append(shifted_45degree_line, point_t(temp_line.front().x(), temp_line.front().y() + shifted_offset));
+		std::cout<<"CB.dev: "<<CB.phase2_deviation<<", t_poly_area: "<<t_poly_area<<", shifted_offset: "<<shifted_offset<<std::endl;
+		        bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y()));
+			bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y() + shifted_offset));
                         
-			bg::append(shifted_45degree_line, point_t(temp_line.front().x(), temp_line.front().y() + shifted_offset));
-                        bg::append(shifted_45degree_line, point_t(temp_line.back().x(), temp_line.back().y() + shifted_offset));
+			bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y() + shifted_offset));
+                        bg::append(shifted_45degree_line, point_t(t_45degree_line.back().x(), t_45degree_line.back().y() + shifted_offset));
                     }else if(!isHorizontal){
                         deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
-		        bg::append(shifted_45degree_line, point_t(temp_line.front().x(), temp_line.front().y()));
-		        bg::append(shifted_45degree_line, point_t(temp_line.front().x() + shifted_offset,temp_line.front().y()));
+		std::cout<<"CB.dev: "<<CB.phase2_deviation<<", t_poly_area: "<<t_poly_area<<", shifted_offset: "<<shifted_offset<<std::endl;
+		        bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y()));
+		        bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x() + shifted_offset,t_45degree_line.front().y()));
                         
-			bg::append(shifted_45degree_line, point_t(temp_line.front().x() + shifted_offset, temp_line.front().y()));
-                        bg::append(shifted_45degree_line, point_t(temp_line.back().x() + shifted_offset, temp_line.back().y()));
+			bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x() + shifted_offset, t_45degree_line.front().y()));
+                        bg::append(shifted_45degree_line, point_t(t_45degree_line.back().x() + shifted_offset, t_45degree_line.back().y()));
                     }
-                    stage_2_Area = cal_bendingPoint_area(shifted_45degree_line, temp_line, adjacent_boundary.cornerLine);
-		    if(stage_2_Area == (stage_2_TargetArea*1e-08)){
+		    //計算平行四邊形面積
+                    stage_2_Area = cal_bendingPoint_area(shifted_45degree_line, t_line, adjacent_boundary.cornerLine);
+		    std::cout<<"stage_2_Area: " << stage_2_Area<<std::endl;
+		    //檢查該面積是否符合
+		    if(std::fabs(stage_2_Area - CB.phase2_deviation) < EPS){
+		    	std::cout<<"boundary ID: "<<CB.boundaryID<<" at stage_2 solved!\n";
+		        CB.boundarySegment.pop_back();
+			bg::append(CB.boundarySegment, shifted_bendingPoint);
+
+		        for(auto &point : shifted_45degree_line){
+		    	    bg::append(CB.boundarySegment,point_t(point));
+		        }
+		        isUpdated = true;
+			continue;
+		    }
+		    /*
+		    if(stage_2_Area == (stage_2_TargetArea * 1e-08)){
 		    	std::cout<<"boundary ID: "<<CB.boundaryID<<" at stage_2 solved!\n";
 		    }
-		    CB.boundarySegment.pop_back();
-		    CB.boundarySegment.pop_back();
-		    for(auto &point : shifted_45degree_line){
-		    	bg::append(CB.boundarySegment,point_t(point));
-		    }
-		    isUpdated = true;
-		}
-		//sin 90 情況3 //待處理
-	    }
+		    */
+		}// end of is_intersect in stage_2
+	    } // end of stage_2
 	    //無法在stage_2解決 到stage_3
 	    else if(stage_2_max_area < CB.phase2_deviation){
+	        double stage_3_Area = 0.0;
+	        double stage_3_max_area = 0.0;
 	        //bendingPoint平移 + 平移temp_line的組合面積解決不了
 		for(auto &temp_CB:ordering_CB){
 		    if(temp_CB.boundaryID == adjacent_boundary.boundaryID){
@@ -2474,6 +2478,8 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
     }//end of for loop of ordering_CB
     commonBoundaries = ordering_CB;
 }//end of Phase3
+
+
 void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets){
     //需考慮到slash平移後 nets的innerboundary也需要更新
     //更新netInfo boundarySegment, outterboundary
