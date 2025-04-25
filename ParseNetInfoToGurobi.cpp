@@ -1505,12 +1505,15 @@ line_t binary_search_trapezoid(const double &target_area, const line_t &last_lin
 }
 
 void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> &nets, std::vector<double> &deltaVector, std::vector<int> &bVector){
+    
     int rows = commonBoundaries.size();
     int count = 0; 
     auto modIdx = [&] (int idx){
         return (idx+rows) % rows;
     };
+
     double pitch = 1e+06;
+
     std::vector<commonBoundary> ordering_CB = commonBoundaries;
     std::vector<std::pair<int, point_t>> illegal_boundaryID;
     //preprocessing: check every net legalization
@@ -1551,14 +1554,67 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         bg::unique(poly);
         bg::correct(poly);
 	point_t ball = nets[i].ball;
+	double distance_b0 = bg::distance(nets[i].boundarySegments[0], nets[i].ball);
+	double distance_b1 = bg::distance(nets[i].boundarySegments[1], nets[i].ball);
+	//對於沒有covered_by的邊界線進行處理
 	if(!bg::covered_by(ball, poly)){
-	    double distance_b0 = bg::distance(nets[i].boundarySegments[0], nets[i].ball);
-	    double distance_b1 = bg::distance(nets[i].boundarySegments[1], nets[i].ball);
-	    std::cout<<"NetID: "<<nets[i].netID<<", distance bo: "<<distance_b0<<", distance_b1: "<<distance_b1<<std::endl;
+	    std::cout<<"!covered_by NetID: "<<nets[i].netID<<", distance bo: "<<distance_b0<<", distance_b1: "<<distance_b1<<std::endl;
 
 	    distance_b0 < distance_b1 ? illegal_boundaryID.emplace_back(nets[i].boundary0ID, ball) :
 		    illegal_boundaryID.emplace_back(nets[i].boundary1ID, ball);
 	}
+       //對於有covered_by但是within的邊界線進行平移(ball 剛好壓在邊界線上), 經Phase2邊界線跟ball距離不夠者尚未考慮
+       if(bg::covered_by(ball, poly) && !bg::within(ball, poly) ){
+           int index = -1;
+	   double offset = 0.5 * pitch;
+	   bool isHorizontal = false;
+	   line_t original_CB;
+	   polygon_t temp_poly;
+	   if(distance_b0 < distance_b1){
+	       index = nets[i].boundary0ID;
+	   }
+	   else {
+	       index = nets[i].boundary1ID;
+	   }
+	   deltaVector[index] < 0 ? offset = offset : offset = 0 - offset;
+
+           distance_b0 < distance_b1 ? index = nets[i].boundary0ID : index = nets[i].boundary1ID;
+	   point_t bendingPoint = commonBoundaries[index].boundarySegment[commonBoundaries[index].boundarySegment.size() - 2];
+	   point_t lastPoint = commonBoundaries[index].boundarySegment[commonBoundaries[index].boundarySegment.size() - 1];
+	   original_CB = commonBoundaries[index].boundarySegment;
+	   //若採用斜線改到後續處理 這邊先pass
+	   if(commonBoundaries[index].isSlash){
+	       continue;
+	   }
+           if(lastPoint.y() == bendingPoint.y()){
+               isHorizontal = true;
+           }
+	   if(isHorizontal){
+	       for(auto &point: commonBoundaries[index].boundarySegment){
+	           point.y(point.y() + offset);
+	       }
+	   }
+	   else if(!isHorizontal){
+	       for(auto &point: commonBoundaries[index].boundarySegment){
+	           point.x(point.x() + offset);
+	       }
+	   }
+	   for(auto point: original_CB){
+	       bg::append(temp_poly, point);
+	   }
+	   for(auto it = commonBoundaries[index].boundarySegment.rbegin(); it != commonBoundaries[index].boundarySegment.rend(); it++){
+	       bg::append(temp_poly, *it);
+	   }
+	   bg::unique(temp_poly);
+	   bg::correct(temp_poly);
+	   double shifted_area = bg::area(temp_poly) * 1e-08;
+
+	   offset > 0 ? commonBoundaries[index].phase2_deviation += shifted_area : commonBoundaries[index].phase2_deviation -= shifted_area;
+
+	   std::cout<<"within ID: "<<commonBoundaries[index].boundaryID<<", dev: "<<commonBoundaries[index].phase2_deviation<<", dist_b0: "<<distance_b0
+		   <<", dist_b1: "<<distance_b1<<std::endl;
+           ordering_CB = commonBoundaries;
+       } 
     }
     //依照phase2_deviation排序 誤差越大者優先處理
     /*
@@ -1608,6 +1664,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
         double left = 0.0, right = 0.0;
 	bool isProjected;
 	point_t projectedPoint;
+	point_t shifted_bendingPoint;	    
 	point_t net_ball;
 	point_t C, D;
         //轉角度後的最後一條線段與原邊界線的最後一條線段
@@ -1696,9 +1753,9 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    if((CB.boundaryID == nets[i].boundary0ID && adjacent_boundary.boundaryID == nets[i].boundary1ID) || 
 			    (adjacent_boundary.boundaryID == nets[i].boundary0ID && CB.boundaryID == nets[i].boundary1ID)){
 	        net_ball = nets[i].ball;
-		//std::cout<<"net's ID: "<<nets[i].netID<<std::endl;
 	    }
 	}
+	std::cout<<"before adjusted & ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl;
 	// preprocessing illegal boundary
 	for(auto i: illegal_boundaryID){
 	    if(CB.boundaryID == i.first){
@@ -1923,8 +1980,9 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    std::cout<<"bendingPoint: "<<bendingPoint.x()<<" "<<bendingPoint.y()<<", lastPoint: "<<lastPoint.x()<<" "<<lastPoint.y()<<", ball: "<<net_ball.x()<<" "<<net_ball.y()<<", isHorizontal: "<<isHorizontal<<std::endl;
 	    //continue;
         }
+
 	//是否投影成功到last_line2上
-	//stage 1-1, 1-2
+	//stage 0 / stage 1
         //邊界線的最後一段是水平線
 	else if((isHorizontal)){
 	    auto result = check_horizontal_projection(net_ball, last_line2);
@@ -1946,12 +2004,12 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		    bg::correct(temp_poly);
     		    std::string reason;
     		    if (!bg::is_valid(temp_poly, reason)) {
-        	        std::cout << "stage 1-1 Polygon is invalid: " << reason << std::endl;
+        	        std::cout << "stage_0 Polygon is invalid: " << reason << std::endl;
     		    }
-		    double stage_1_1_max_area = bg::area(temp_poly) * 1e-08;
+		    double stage_0_max_area = bg::area(temp_poly) * 1e-08;
 		    std::cout<<bg::wkt(temp_poly)<<std::endl;
-		    std::cout<<"stage_1_1_max_area: "<<stage_1_1_max_area<<std::endl;
-		    if(CB.phase2_deviation <= stage_1_1_max_area){
+		    std::cout<<"stage_0_max_area: "<<stage_0_max_area<<std::endl;
+		    if(CB.phase2_deviation <= stage_0_max_area){
 			double x_offset = bendingPoint2.x() - bendingPoint.x();
 			double y_offset = bendingPoint2.y() - bendingPoint.y();
 			shifted_last_line = binary_search_trapezoid(CB.phase2_deviation, last_line, x_offset, y_offset, isHorizontal);
@@ -1964,16 +2022,17 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		        
 			bg::unique(temp_poly);
 		        bg::correct(temp_poly);
-		        double stage_1_1_Area = bg::area(temp_poly) * 1e-08;
-			if(std::fabs(stage_1_1_Area - CB.phase2_deviation) < EPS){
+		        double stage_0_Area = bg::area(temp_poly) * 1e-08;
+			if(std::fabs(stage_0_Area - CB.phase2_deviation) < EPS){
 			    CB.boundarySegment.pop_back();
 			    CB.boundarySegment.pop_back();
 			    CB.boundarySegment.pop_back();
 			    CB.boundarySegment.emplace_back(shifted_last_line.front());
 			    CB.boundarySegment.emplace_back(shifted_last_line.front());
 			    CB.boundarySegment.emplace_back(shifted_last_line.back());
-		            std::cout<<"stage_1_1_Area: "<<stage_1_1_Area<<std::endl;
-			    std::cout<<"Boundary ID: "<<CB.boundaryID<<"at stage_1_1 solved!\n"; 
+		            std::cout<<"stage_0_Area: "<<stage_0_Area<<std::endl;
+			    std::cout<<"Boundary ID: "<<CB.boundaryID<<"at stage_0 solved!\n";
+			    std::cout<<"& ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl; 
 			    continue;
 			}
 		    }
@@ -2008,10 +2067,10 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
     		    if (!bg::is_valid(temp_poly, reason)) {
         	        std::cout << "stage 1-1 Polygon is invalid: " << reason << std::endl;
     		    }
-		    double stage_1_1_max_area = bg::area(temp_poly) * 1e-08;
+		    double stage_0_max_area = bg::area(temp_poly) * 1e-08;
 		    std::cout<<bg::wkt(temp_poly)<<std::endl;
-		    std::cout<<"stage_1_1_max_area: "<<stage_1_1_max_area<<std::endl;
-		    if(CB.phase2_deviation <= stage_1_1_max_area){
+		    std::cout<<"stage_0_max_area: "<<stage_0_max_area<<std::endl;
+		    if(CB.phase2_deviation <= stage_0_max_area){
 			double x_offset = bendingPoint2.x() - bendingPoint.x();
 			double y_offset = bendingPoint2.y() - bendingPoint.y();
 			double sign_of_x_offset, sign_of_y_offset;
@@ -2027,16 +2086,17 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		        
 			bg::unique(temp_poly);
 		        bg::correct(temp_poly);
-		        double stage_1_1_Area = bg::area(temp_poly) * 1e-08;
-			if(std::fabs(stage_1_1_Area - CB.phase2_deviation) < EPS){
+		        double stage_0_Area = bg::area(temp_poly) * 1e-08;
+			if(std::fabs(stage_0_Area - CB.phase2_deviation) < EPS){
 			    CB.boundarySegment.pop_back();
 			    CB.boundarySegment.pop_back();
 			    CB.boundarySegment.pop_back();
 			    CB.boundarySegment.emplace_back(shifted_last_line.front());
 			    CB.boundarySegment.emplace_back(shifted_last_line.front());
 			    CB.boundarySegment.emplace_back(shifted_last_line.back());
-		            std::cout<<"stage_1_1_Area: "<<stage_1_1_Area<<std::endl;
-			    std::cout<<"Boundary ID: "<<CB.boundaryID<<"at stage_1_1 solved!\n";
+		            std::cout<<"stage_0_Area: "<<stage_0_Area<<std::endl;
+			    std::cout<<"Boundary ID: "<<CB.boundaryID<<"at stage_0 solved!\n";
+			    std::cout<<"& ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl; 
 			    continue;
 			}
 		    }
@@ -2110,6 +2170,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 	    }
 	    if(std::fabs(stage_1_Area - CB.phase2_deviation) < EPS ){
 	    	std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_1 solved!\n";
+	        std::cout<<"& ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl; 
 	    }
 	    isUpdated = true;
             continue;
@@ -2123,7 +2184,6 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
             //commonBoundary adjacent_boundary;
             std::vector<point_t> intersectionPoints;
             point_t intersectionPoint, ball;
-	    point_t shifted_bendingPoint;	    
             double shifted_bendingPoint_area = 0.0;
 	    double shifted_offset = 0.5 * pitch;
             bool is_intersect = false;
@@ -2261,7 +2321,6 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		    //組合平行四邊形
                     if(isHorizontal){
                         deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
-		std::cout<<"CB.dev: "<<CB.phase2_deviation<<", t_poly_area: "<<t_poly_area<<", shifted_offset: "<<shifted_offset<<std::endl;
 		        bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y()));
 			bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y() + shifted_offset));
                         
@@ -2269,7 +2328,6 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
                         bg::append(shifted_45degree_line, point_t(t_45degree_line.back().x(), t_45degree_line.back().y() + shifted_offset));
                     }else if(!isHorizontal){
                         deltaVector[index] > 0 ? shifted_offset = shifted_offset : shifted_offset = 0 - shifted_offset;
-		std::cout<<"CB.dev: "<<CB.phase2_deviation<<", t_poly_area: "<<t_poly_area<<", shifted_offset: "<<shifted_offset<<std::endl;
 		        bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x(), t_45degree_line.front().y()));
 		        bg::append(shifted_45degree_line, point_t(t_45degree_line.front().x() + shifted_offset,t_45degree_line.front().y()));
                         
@@ -2289,6 +2347,7 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		    	    bg::append(CB.boundarySegment,point_t(point));
 		        }
 		        isUpdated = true;
+	                std::cout<<"& ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl; 
 			continue;
 		    }
 		    /*
@@ -2299,37 +2358,151 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
 		}// end of is_intersect in stage_2
 	    } // end of stage_2
 	    //無法在stage_2解決 到stage_3
-	    else if(stage_2_max_area < CB.phase2_deviation){
+	    else if(stage_2_max_area < CB.phase2_deviation || !is_intersect){
 	        double stage_3_Area = 0.0;
 	        double stage_3_max_area = 0.0;
+		bool ball_out_of_boundary = false;
+		
+		line_t new_last_line;
+		line_t temp_line3;
+	    	point_t new_bendingPoint = shifted_bendingPoint;
+		point_t shifted_lastPoint = temp_line2_downto_outterRect.back();
+		//替ball out of boundary準備
+                point_t t_shifted_lastPoint = temp_line2_downto_outterRect.back();
+		line_t t_line2_downto_outterRect = temp_line2_downto_outterRect;
+		double bendingPoint_lastPoint_dist = bg::distance(shifted_bendingPoint, lastPoint);
+
+		std::cout<<"stage_3 ID:"<<CB.boundaryID<<std::endl;
+		
+		auto calShortEdge90 = [](double TargetArea, double L){
+		    return TargetArea / L;
+		};
+		double L = bg::length(temp_line2_downto_outterRect);
+		double target_length = calShortEdge90(CB.phase2_deviation * 1e+08, L);
+		if(isHorizontal){
+	            if(CB.startPointDirection == 1){
+			t_shifted_lastPoint.x(temp_line2_downto_outterRect.back().x() + bendingPoint_lastPoint_dist);
+		        new_bendingPoint.x(lastPoint.x() - target_length);
+			for(auto &point : temp_line2_downto_outterRect){
+			    point.x(lastPoint.x() - target_length);
+			}
+			shifted_lastPoint.x(temp_line2_downto_outterRect.back().x() + target_length);
+		    }
+		    else{
+			t_shifted_lastPoint.x(temp_line2_downto_outterRect.back().x() - bendingPoint_lastPoint_dist);
+			new_bendingPoint.x(lastPoint.x() + target_length);
+			for(auto &point : temp_line2_downto_outterRect){
+			    point.x(lastPoint.x() + target_length);
+			}
+			shifted_lastPoint.x(temp_line2_downto_outterRect.back().x() - target_length);
+		    }
+		}
+		else if(!isHorizontal){
+		    if(CB.startPointDirection == 0){
+			t_shifted_lastPoint.y(temp_line2_downto_outterRect.back().y() + bendingPoint_lastPoint_dist);
+		        new_bendingPoint.y(lastPoint.y() - target_length);
+			for(auto &point : temp_line2_downto_outterRect){
+			    point.y(lastPoint.y() - target_length);
+			}
+			shifted_lastPoint.y(temp_line2_downto_outterRect.back().y() + target_length);
+		    }
+		    else{
+			t_shifted_lastPoint.y(temp_line2_downto_outterRect.back().y() - bendingPoint_lastPoint_dist);
+		        new_bendingPoint.y(lastPoint.y() + target_length);
+		        for(auto &point : temp_line2_downto_outterRect){
+		            point.y(lastPoint.y() + target_length);
+		        }
+		        shifted_lastPoint.y(temp_line2_downto_outterRect.back().y() - target_length);
+		    }
+		}
+		bg::append(new_last_line, new_bendingPoint);
+		bg::append(new_last_line, last_line.back());
+		temp_line3 = temp_line2_downto_outterRect;
+		bg::append(temp_line3, shifted_lastPoint);
+		//calculate stage_3_Area
+		polygon_t temp_poly;
+		for(auto &point : temp_line3){
+		    bg::append(temp_poly.outer(), point);
+		}
+		for(auto it = new_last_line.rbegin(); it != new_last_line.rend(); it++){
+        	    bg::append(temp_poly.outer(),*it);
+		}
+                bg::unique(temp_poly);
+    		bg::correct(temp_poly);
+   	 	std::cout<<"polyWKT: "<<bg::wkt(temp_poly)<<std::endl;
+    		std::string reason;
+    		if (!bg::is_valid(temp_poly, reason)) {
+        	    std::cout << "Polygon is invalid: " << reason << std::endl;
+    		}
+		//若temp_poly中, 有ball則代表ball在邊界外
+		if(bg::within(net_ball, temp_poly)){
+	            std::cout<<"ball out of boundary ID!!!!!!: "<<CB.boundaryID<<std::endl;
+	            ball_out_of_boundary = true;	    
+		}
+		else {
+    		    stage_3_Area = bg::area(temp_poly)*1e-08;
+		    CB.boundarySegment.pop_back();
+		    CB.boundarySegment.emplace_back(temp_line2_downto_outterRect.front());
+		    for(auto &point : temp_line2_downto_outterRect){
+		        CB.boundarySegment.emplace_back(point);
+		    }
+		    //stage_3_Area = cal_bendingPoint_area(temp_line3, new_last_line, adjacent_boundary.cornerLine);
+		    std::cout<<"stage_3_Area: "<<stage_3_Area<<std::endl;
+	            if(std::fabs(stage_3_Area - (CB.phase2_deviation)) < EPS && (!ball_out_of_boundary)){
+	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3 solved!\n";
+	                std::cout<<"& ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl; 
+		        continue;
+	            }
+		}
+		//CB.Temp_line2_downto_outterRect = temp_line2_downto_outterRect;
+
 	        //bendingPoint平移 + 平移temp_line的組合面積解決不了
+		/*
 		for(auto &temp_CB:ordering_CB){
 		    if(temp_CB.boundaryID == adjacent_boundary.boundaryID){
 		        adjacent_boundary = temp_CB;
 		    }
 		}
-		line_t temp_line3;
 		CB.in_Stage3 = true;
 		CB.Temp_line2_downto_outterRect = temp_line2_downto_outterRect;
 		adjacent_boundaryID = adjacent_boundary.boundaryID;
 	        std::cout<<"adjacent_boundaryID: "<<adjacent_boundary.boundaryID<<std::endl;
 		std::cout<<"adjacent_boundary.in_Stage3: "<<adjacent_boundary.in_Stage3<<std::endl;
-		//先判斷是否碰到外邊界線面積仍不夠情況 情況3
-		//仍不夠面積, 基於temp_line2再轉45度
-		//stage3-0
-		if(!is_intersect){
-		    std::cout<<"stage_3-0 ID: "<<CB.boundaryID<<std::endl;
+		*/
+		//stage_4-> stage_3仍不夠面積 or ball out of boundary, 基於temp_line2再轉45度
+		//stage_4
+		if(ball_out_of_boundary){
+		    std::cout<<"stage_4 ID: "<<CB.boundaryID<<std::endl;
+		    polygon_t temp_poly;
+		    bg::append(temp_poly, lastPoint);
+		    bg::append(temp_poly, t_shifted_lastPoint);
+		    bg::append(temp_poly, t_line2_downto_outterRect.back());
+		    bg::append(temp_poly, t_line2_downto_outterRect.front());
+		    bg::append(temp_poly, lastPoint);
+		    bg::unique(temp_poly);
+		    bg::correct(temp_poly);
+    		    
+		    std::string reason;
+    		    if (!bg::is_valid(temp_poly, reason)) {
+        	        std::cout << "Polygon is invalid: " << reason << std::endl;
+    	  	    }
+		    double temp_line2_downto_outterRect_area = bg::area(temp_poly) * 1e-08;
 	    	    auto calculateTargetLength = [](double area) -> double{
 	        	return std::sqrt(2*area);
 	    	    };
-	            double target_length = calculateTargetLength((CB.phase2_deviation - stage_2_max_area) * 1e+08);
-		    std::cout<<"stage_3_target area: "<<CB.phase2_deviation - stage_2_max_area<<std::endl;
-		    std::cout<<"target_length: "<<target_length<<std::endl;
+	            double target_length = calculateTargetLength((CB.phase2_deviation - temp_line2_downto_outterRect_area) * 1e+08);
+                    std::cout<<"t2dtor area: "<< temp_line2_downto_outterRect_area <<std::endl; 
 	            line_t target_45degree_line, new_last_line;
-	    	    point_t new_bendingPoint = bendingPoint;
-  	    	    double EPS = 1e-08;
+	    	    point_t new_bendingPoint = shifted_bendingPoint;
             	    double x_bias = 0.0;
             	    double y_bias = 0.0;
+		    double stage_4_Area = 0.0;
+
+		    temp_line2 = t_line2_downto_outterRect;
+		    std::cout<<"new_bendingPoint: "<<new_bendingPoint.x()<<" "<<new_bendingPoint.y()<<std::endl;
+		    for(auto point: temp_line2){
+		        std::cout<<"temp_line2: "<<point.x()<<" "<<point.y()<<std::endl;
+		    }
 		    //若原邊界線最後一段是水平,則到這裡temp_line2必然會成為垂直
 		    if(isHorizontal){
             	        x_bias = abs(target_length);
@@ -2353,118 +2526,33 @@ void Phase3(std::vector<commonBoundary> &commonBoundaries, std::vector<netInfo> 
     	    	    }else if(y_bias != 0.0){
         		bg::append(target_45degree_line, point_t(temp_line2.back().x(), y_bias + temp_line2.back().y()));
     	            }
+		    new_last_line.clear();
 	    	    new_last_line = temp_line2;
 	    	    new_last_line.front().x(target_45degree_line.front().x());
 	   	    new_last_line.front().y(target_45degree_line.front().y());
-		    stage_3_Area = cal_bendingPoint_area(target_45degree_line, new_last_line, adjacent_boundary.cornerLine);
+		    for(auto point: new_last_line){
+		        std::cout<<"new_last_line_line: "<<point.x()<<" "<<point.y()<<std::endl;
+		    }
+		    stage_4_Area = cal_bendingPoint_area(target_45degree_line, new_last_line, adjacent_boundary.cornerLine);
 
 		    CB.boundarySegment.pop_back();
+		    CB.boundarySegment.emplace_back(shifted_bendingPoint);
+		    
+		    CB.boundarySegment.emplace_back(shifted_bendingPoint);
 		    CB.boundarySegment.push_back(target_45degree_line.front());
 		    for(auto &point:target_45degree_line){
 		        CB.boundarySegment.push_back(point);
 		    }
-		    std::cout<<"stage_3_Area: "<<stage_3_Area<<std::endl;
-	            if(std::fabs(stage_3_Area - (CB.phase2_deviation - stage_2_max_area)) < EPS ){
-	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3-0 solved!\n";
+		    std::cout<<"stage_4_Area: "<<stage_4_Area<<std::endl;
+	            if(std::fabs(stage_4_Area - (CB.phase2_deviation - temp_line2_downto_outterRect_area)) < EPS ){
+	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_4 solved!\n";
+			std::cout<<" & ball dist: "<<bg::distance(net_ball,CB.boundarySegment)<<std::endl;
+			continue;
 	            }
 		}
 		//基於bendingPoint平移 + 平移temp_line的組合, 延伸出temp_line3(與temp_line平行)
 		//在temp_line上轉90度往outter Rect連接
-		else{
-		    std::cout<<"stage_3-1 ID:"<<CB.boundaryID<<std::endl;
-		    double d_pitch = 2 * pitch;
-  	    	    double EPS = 1e-04;
-	    	    point_t new_bendingPoint = bendingPoint;
-		    point_t shifted_lastPoint = temp_line2_downto_outterRect.back();
-		    line_t new_last_line;
-		    auto calShortEdge90 = [](double TargetArea, double L){
-		        return TargetArea / L;
-		    };
-		    double L = bg::length(temp_line2_downto_outterRect);
-		    double target_length = calShortEdge90(CB.phase2_deviation * 1e+08, L);
-		    std::cout<<"L: "<<L<<", target_length: "<<target_length<<std::endl;
-		    //前一條邊界線也轉90度 需調高pitch
-		    /*
-		    if(adjacent_boundary.in_Stage3){
-		        if(isHorizontal){
-			    (lastPoint.x() - bendingPoint.x()) > 0 ? pitch = pitch : pitch = 0 - pitch; 
-			    for(auto &point: temp_line2_downto_outterRect){
-			        point.x(adjacent_boundary.Temp_line2_downto_outterRect.front().x() + 2 * pitch); 
-			    }
-			}else if(!isHorizontal){
-			    (lastPoint.y() - bendingPoint.y()) > 0 ? pitch = pitch : pitch = 0 - pitch;
-			    double adjacent_boundary_TLDO_y = adjacent_boundary.Temp_line2_downto_outterRect.front().y();
-			    adjacent_boundary_TLDO_y += d_pitch;
-			    for(auto &point: temp_line2_downto_outterRect){
-			    	point.y(adjacent_boundary_TLDO_y);
-			    }
-			}    
-		    }
-		    */
-		    if(isHorizontal){
-                        if(CB.startPointDirection == 1){
-			    if(CB.startPointDirection == 1){
-			        new_bendingPoint.x(lastPoint.x() - target_length);
-				for(auto &point : temp_line2_downto_outterRect){
-				    point.x(lastPoint.x() - target_length);
-				}
-				shifted_lastPoint.x(temp_line2_downto_outterRect.back().x() + target_length);
-			    }else {
-			        new_bendingPoint.x(lastPoint.x() + target_length);
-				for(auto &point : temp_line2_downto_outterRect){
-				    point.x(lastPoint.x() + target_length);
-				}
-				shifted_lastPoint.x(temp_line2_downto_outterRect.back().x() - target_length);
-			    }
-			}
-		    }else if(!isHorizontal){
-			if(CB.startPointDirection == 0){
-			    new_bendingPoint.y(lastPoint.y() - target_length);
-			    for(auto &point : temp_line2_downto_outterRect){
-			        point.y(lastPoint.y() - target_length);
-			    }
-			    shifted_lastPoint.y(temp_line2_downto_outterRect.back().y() + target_length);
-			}else{
-			    new_bendingPoint.y(lastPoint.y() + target_length);
-			    for(auto &point : temp_line2_downto_outterRect){
-			        point.y(lastPoint.y() + target_length);
-			    }
-			    shifted_lastPoint.y(temp_line2_downto_outterRect.back().y() - target_length);
-			}
-		    }
-		    bg::append(new_last_line, new_bendingPoint);
-		    bg::append(new_last_line, last_line.back());
-		    line_t temp_line3 = temp_line2_downto_outterRect;
-		    bg::append(temp_line3, shifted_lastPoint);
-		    //calculate stage_3_Area
-		    polygon_t temp_poly;
-		    for(auto &point : temp_line3){
-		        bg::append(temp_poly.outer(), point);
-		    }
-		    for(auto it = new_last_line.rbegin(); it != new_last_line.rend(); it++){
-        		bg::append(temp_poly.outer(),*it);
-		    }
-                    bg::unique(temp_poly);
-    		    bg::correct(temp_poly);
-   	 	    std::cout<<"polyWKT: "<<bg::wkt(temp_poly)<<std::endl;
-    		    std::string reason;
-    		    if (!bg::is_valid(temp_poly, reason)) {
-        	        std::cout << "Polygon is invalid: " << reason << std::endl;
-    		    }
-    		    stage_3_Area = bg::area(temp_poly)*1e-08;
-		    CB.boundarySegment.pop_back();
-		    CB.boundarySegment.emplace_back(temp_line2_downto_outterRect.front());
-		    for(auto &point : temp_line2_downto_outterRect){
-		        CB.boundarySegment.emplace_back(point);
-		    }
-		    //stage_3_Area = cal_bendingPoint_area(temp_line3, new_last_line, adjacent_boundary.cornerLine);
-		    std::cout<<"stage_3_Area: "<<stage_3_Area<<std::endl;
-	            if(std::fabs(stage_3_Area - (CB.phase2_deviation)) < EPS ){
-	    	        std::cout<<"Boundary ID: "<<CB.boundaryID<<" at stage_3-1 solved!\n";
-	            }
-		    CB.Temp_line2_downto_outterRect = temp_line2_downto_outterRect;
-		}
-	    } // end of stage 3
+	    } // end of stage 4
 	    
 	    std::cout<<"temp_line: \n";
 	    for(auto point:temp_line){
@@ -2505,7 +2593,7 @@ void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vec
 		bg::append(temp_line, point_t(net.boundarySegments[0].back().x(), net.boundarySegments[0].back().y()));
 		bg::append(temp_line, point_t(net.boundarySegments[1].back().x(), net.boundarySegments[1].back().y()));
 		net.outterBoundarySegments.emplace_back(temp_line);
-	}
+        }
 	//兩條邊界線在不同軸上
 	else{
 	    double temp_b0 = 0.0, temp_b1 = 0.0;
@@ -2568,7 +2656,57 @@ void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vec
 	    bg::append(temp_line2, net.boundarySegments[1].back());
 	    net.outterBoundarySegments.emplace_back(temp_line);
 	    net.outterBoundarySegments.emplace_back(temp_line2);
-	    std::cout<<"ID: "<<net.netID<<"corner_point: "<<corner_point.x()<<", "<<corner_point.y()<<std::endl;
+	    std::cout<<"ID: "<<net.netID<<"outter_corner_point: "<<corner_point.x()<<", "<<corner_point.y()<<std::endl;
+	}
+
+	//inner boundary
+	temp_line.clear();
+	net.innerBoundarySegments.clear();
+	//兩條邊界線在同軸上
+	if(net.boundarySegments[0].front().x() == net.boundarySegments[1].front().x() || net.boundarySegments[0].front().y() == net.boundarySegments[1].front().y()){
+		bg::append(temp_line, net.boundarySegments[0].front());
+		bg::append(temp_line, net.boundarySegments[1].front());
+		net.innerBoundarySegments.emplace_back(temp_line);
+        }
+	//兩條邊界線在不同軸上
+	else{
+	    double temp_b0 = 0.0, temp_b1 = 0.0;
+	    line_t temp_line2;
+	    abs(net.boundarySegments[0].front().x()) > abs(net.boundarySegments[0].front().y()) ? temp_b0 = net.boundarySegments[0].front().x() : 
+		    temp_b0 = net.boundarySegments[0].front().y();
+	    abs(net.boundarySegments[1].front().x()) > abs(net.boundarySegments[1].front().y()) ? temp_b1 = net.boundarySegments[1].front().x() :
+		    temp_b1 = net.boundarySegments[1].front().y();
+	    point_t corner_point;
+	    point_t cp0(0 - abs(temp_b0), abs(temp_b1));
+	    point_t cp1(abs(temp_b0), abs(temp_b1));
+	    point_t cp2(abs(temp_b0), 0 - abs(temp_b1));
+	    point_t cp3(0 - abs(temp_b0), 0 - abs(temp_b1));
+	    std::vector<point_t> cpVector;
+	    std::vector<double> distVector;
+	    cpVector.emplace_back(cp0);
+	    cpVector.emplace_back(cp1);
+	    cpVector.emplace_back(cp2);
+	    cpVector.emplace_back(cp3);
+	    for(auto point: cpVector){
+	        double distance = bg::distance(net.boundarySegments[0].front(), point);
+		distVector.emplace_back(distance);
+	    }
+            int index = -1;
+	    double min_val = std::numeric_limits<double>::max();
+	    for(int i = 0; i < distVector.size();i++){
+	        if(distVector[i] < min_val){
+		    min_val = distVector[i];
+		    index = i;
+		}
+	    }
+	    corner_point = cpVector[index];
+	    bg::append(temp_line, net.boundarySegments[0].front());
+	    bg::append(temp_line, corner_point);
+	    bg::append(temp_line2, corner_point);
+	    bg::append(temp_line2, net.boundarySegments[1].front());
+	    net.innerBoundarySegments.emplace_back(temp_line);
+	    net.innerBoundarySegments.emplace_back(temp_line2);
+	    std::cout<<"ID: "<<net.netID<<"inner_corner_point: "<<corner_point.x()<<", "<<corner_point.y()<<std::endl;
 	}
     }
     //更新所有nets的area
@@ -2592,7 +2730,7 @@ void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vec
             }
         }
         //boundary 1
-            for(auto it = nets[i].boundarySegments[1].rbegin(); it != nets[i].boundarySegments[1].rend(); it++)
+        for(auto it = nets[i].boundarySegments[1].rbegin(); it != nets[i].boundarySegments[1].rend(); it++)
             bg::append(poly,*it);
         //inner boundary
         if(nets[i].innerBoundarySegments.size() == 2){
@@ -2605,47 +2743,4 @@ void Phase3UpdateAllInfo(std::vector<commonBoundary> &commonBoundaries, std::vec
             for(auto it = nets[i].innerBoundarySegments[0].rbegin(); it != nets[i].innerBoundarySegments[0].rend(); it++)
                 bg::append(poly,*it);
         }
-        bg::unique(poly);
-        bg::correct(poly);
-        std::string reason;
-        if (!bg::is_valid(poly, reason)) {
-            std::cout<<"NetID: "<<nets[i].netID<<std::endl;
-            std::cout<<"Poly WKT: "<<bg::wkt(poly)<<std::endl;
-            std::cout << "Polygon is invalid: " << reason << std::endl;
-        }
-        nets[i].area = bg::area(poly)*1e-08;
-        std::cout<<std::setprecision(6);
-	std::cout<<"Net ID: "<<nets[i].netID<<", final area: "<<nets[i].area<<std::endl;
-    }
-}//end of Phase3UpdateAllInfo
-
-/*
-int main(){
-return 0;
-}
-*/
-/*
-int main(int argc, char* argv[]){
-    std::ifstream file(argv[1]);
-    std::vector<double> deltaVector ={
-2.43792e+07,7.8292e+06,1.00015e+07,3.1842e+06,0,1.21262e+07,1.17052e+07,1.12867e+07,3.23181e+06,1.22016e+07,5.2865e+06,1.49785e+07,9.59515e+06,1.06103e+07,2.92293e+07,2.31958e+07
- } ;
-    std::vector<int> bVector = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0};
-    auto nets = parseNetsInfo(file);
-    outputPolyInfo(nets);
-    auto commonBoundaries = buildCommonBoundaries(nets);
-    Rectangle innerRect;
-    Rectangle outterRect =Rectangle(-1.4e+08,-1.4e+08,2.8e+08,2.8e+08);
-    sortBoundaryClockwise(commonBoundaries,innerRect);
-    //同時特例處利Boundary 0
-    UpdateCommonBoundaryInfo(commonBoundaries,nets,innerRect,outterRect);
-    Phase2UpdateAllInfo_normal_nets(deltaVector, bVector, commonBoundaries, nets);
-    Phase3(commonBoundaries,nets,deltaVector);
-    outputNetsInfo(nets);
-    outputCommonBoundaries(commonBoundaries);
-    //outputCommonBoundaries_drawing(commonBoundaries);
-    outputNetsInfo_drawing(nets);
-    file.close();
-    return 0;
-}
-*/
+        bg::unique(

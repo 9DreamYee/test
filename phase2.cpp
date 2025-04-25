@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
 		}
                 std::cout<<"Boundary "<<b.boundaryID<<" (shiftDir="<<b.shift_Direction
                          <<"): b1= "<<b1Val<<", b2= "<<b2Val<< ", delta1= "<<d1Val<<", delta2="<<d2Val
-                         <<", shiftAmt="<<b.shiftAmount
+                         <<", targetArea="<<b.shiftAmount
                          <<", actualArea="<<aArea
                          <<", ratio="<<ratio
                          <<", u="<<uVal<<"\n";
