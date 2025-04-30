@@ -44,6 +44,7 @@ struct netInfo{
     std::vector<line_t> outterBoundarySegments;
     line_t InitialRoute;
     line_t ExtendedInitialRoute;
+    polygon_t netPolygon;
     netInfo();
 };
 struct commonBoundary{

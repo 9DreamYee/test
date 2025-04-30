@@ -17,6 +17,7 @@ void exportToCSV(std::vector<netInfo> &nets, std::vector<commonBoundary> &bounda
     }
     goldenArea = totalArea / nets.size();
     std::ofstream csvFile("net_area_data.csv");
+    csvFile<<std::setprecision(15);
     //以net為單位輸出資訊
     csvFile << "NetID,TargetArea,InitialArea,ActualArea,Ratio,InitialRatio\n";
     for(size_t i = 0; i < nets.size(); i++){
@@ -24,8 +25,8 @@ void exportToCSV(std::vector<netInfo> &nets, std::vector<commonBoundary> &bounda
 		<< goldenArea << ","
 		<< nets[i].areaInitial<< ","
 		<< nets[i].area<< ","
-		<< nets[i].area / goldenArea <<","
-		<< nets[i].areaInitial / goldenArea
+		<< nets[i].areaInitial / goldenArea <<","
+		<< nets[i].area / goldenArea
 		<< "\n";
     }
     //以boundary為單位輸出資訊
@@ -272,6 +273,7 @@ int main(int argc, char* argv[])
                 }
 		//更新phase2平移後與目標面積值的誤差到每條邊界線
 		b.phase2_deviation = uVal;
+
 		//corner 若切換成斜線後,面積反而給出得太多,則boundary_move_direction需要反轉並返還面積
 		if(b.shiftAmount - aArea < 0){
 		    if(b.boundary_move_direction == 0)
@@ -279,6 +281,8 @@ int main(int argc, char* argv[])
 		    else if(b.boundary_move_direction == 1)
 		        b.boundary_move_direction = 0;
 		}
+
+
                 std::cout<<"Boundary "<<b.boundaryID<<" (shiftDir="<<b.shift_Direction
                          <<"): b1= "<<b1Val<<", b2= "<<b2Val<< ", delta1= "<<d1Val<<", delta2="<<d2Val
                          <<", targetArea="<<b.shiftAmount
