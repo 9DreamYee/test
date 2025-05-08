@@ -102,18 +102,28 @@ bool isLineIntersectRectangle(Point rect_1,Point rect_2,Segment line,int &Inters
 
 }
 int main(int argc, char *argv[]){
-    //usage: ./eliminated_inner_boundary <input_file>(0521_all_net_coord_info.txt)
+    //usage: ./eliminated_inner_boundary <input_file> inner_rect x1, inner_rect y1, inner_rect width, inner_rect height(0521_all_net_coord_info.txt)
     ifstream file(argv[1]);
     ofstream outfile("eliminated_inner_boundary_result.txt");
+    double inner_rect_x = stod(argv[2]);
+    double inner_rect_y = stod(argv[3]);
+    double inner_rect_w = stod(argv[4]);
+    double inner_rect_h = stod(argv[5]);
     string line,str,str_start_x,str_start_y,str_end_x,str_end_y,str_;
     double int_start_x,int_start_y,int_end_x,int_end_y;
-    int side = 0; //Decide which side the boundary intersect with. for inner rectangle. 1 for Top, 2 for Bottom , 3 for Left , 4 for Right 5 for inside Rectangle
+    //Decide which side the boundary intersect with. for inner rectangle. 1 for Top, 2 for Bottom , 3 for Left , 4 for Right 5 for inside Rectangle
+    int side = 0;     
     stringstream ss;
-    vector<Segment> vec_boundary; // Boundary that produced by VD.
-    vector<Segment> vec_net_coord; // Original net coordinates.
-    vector<Segment> remain_boundary_coord; // Atfer eliminated redundant boundaries, the remain boundaries.
-    vector<Segment> insideInnerRectSegment; //segments that in inner rect or intersect with inner rect which need to be eliminated.
-    vector<Segment> outsideInnerRectSegment; //segments that outside inner rect which need to be remain.
+    // Boundary that produced by VD.
+    vector<Segment> vec_boundary; 
+    // Original net coordinates.
+    vector<Segment> vec_net_coord;
+     // Atfer eliminated redundant boundaries, the remain boundaries.
+    vector<Segment> remain_boundary_coord;
+    //segments that in inner rect or intersect with inner rect which need to be eliminated.
+    vector<Segment> insideInnerRectSegment;
+    //segments that outside inner rect which need to be remain.
+    vector<Segment> outsideInnerRectSegment; 
     vector<Segment> eliminated_boundary;
     ss.clear();
     ss.str("");
@@ -251,7 +261,8 @@ int main(int argc, char *argv[]){
     file.clear();
     file.seekg(0,ios::beg);
     //rect = {rect_Bottomleft.x,rect_Bottomleft.y,rect_Width.rect_Height}.
-    Rectangle rect = {-5e+07,-5e+07,1e+08,1e+08};
+    //Rectangle rect = {-5e+07,-5e+07,1e+08,1e+08};
+    Rectangle rect = {inner_rect_x, inner_rect_y,inner_rect_w,inner_rect_h};
     for (auto & coords : remain_boundary_coord){
         if(!isIntersecting(coords,rect)){
             outsideInnerRectSegment.emplace_back(coords.start.x,coords.start.y,coords.end.x,coords.end.y);

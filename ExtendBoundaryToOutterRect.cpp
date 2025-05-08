@@ -8,7 +8,8 @@
 #include <unordered_set>
 #include <sstream>
 #include <fstream>
-#include <boost/polygon/polygon.hpp>
+#include "net.h"
+/*#include <boost/polygon/polygon.hpp>
 #include <boost/polygon/voronoi.hpp>
 using boost::polygon::voronoi_builder;
 using boost::polygon::voronoi_diagram;
@@ -16,9 +17,8 @@ using boost::polygon::x;
 using boost::polygon::y;
 using boost::polygon::low;
 using boost::polygon::high;
-
-//#include "voronoi_visual_utils.hpp"
-
+*/
+/*
 struct Point {
   int a;
   int b;
@@ -36,9 +36,6 @@ struct Rectangle{
     double rect_w;
     double rect_h;
 };
-/*struct boundary{
-   std::vector<Segment> segments;
-};*/
 
 namespace boost {
 namespace polygon {
@@ -74,7 +71,7 @@ struct segment_traits<Segment> {
 };
 }  // polygon
 }  // boost
-
+*/
 void InputFile_EliminatedInnerBoundaryResult(std::ifstream &file,std::vector<Segment> &segments,std::vector<Segment> &nets){
     std::string str,temp,str_start_x,str_start_y,str_end_x,str_end_y;
     std::stringstream ss;
@@ -139,7 +136,7 @@ void InputFile_EliminatedInnerBoundaryResult(std::ifstream &file,std::vector<Seg
 void OutputFileBoundariesToDrawing(std::vector<std::vector<Segment>> &boundaries,std::vector<std::vector<Segment>> &NetsBoundaries){
     std:: ofstream outfile("ExtendBoundaryToOutterRect_result.txt");
     outfile<<"all_net info start, the number of nets:\n"<<NetsBoundaries.size()<<"\n";
-    for(int i =0;i<NetsBoundaries.size();i++){
+    for(int i = 0; i < NetsBoundaries.size(); i++){
        outfile<<"Net"<<i<<":\n"; 
        for(auto Netseg: NetsBoundaries[i]){
            outfile<<"Net_segment: "<<std::scientific<<Netseg.p0.a<<" "<<Netseg.p0.b<<" "<<Netseg.p1.a<<" "<<Netseg.p1.b<<"\n";
@@ -149,6 +146,7 @@ void OutputFileBoundariesToDrawing(std::vector<std::vector<Segment>> &boundaries
     for(int i = 0;i < boundaries.size(); i++){
         outfile<<"boundary"<<i<<":\n";
         for(auto seg : boundaries[i]){
+            //std::cout<<"_view.drawLine("<<std::scientific<<seg.p0.a<<","<<std::scientific<<seg.p0.b<<","<<std::scientific<<seg.p1.a<<","<<std::scientific<<seg.p1.b<<");\n";
             outfile<<"boundary: "<<std::scientific<<seg.p0.a<<" "<<seg.p0.b<<" "<<seg.p1.a<<" "<<seg.p1.b<<"\n";
         }
     }
@@ -372,22 +370,32 @@ void Eliminate_IsolatedSegment(std::vector<Segment> &boundary){
 int main(int argc,char * argv[]){
     //usage ./ExtendBoundaryToOutterRect <input_file>(eliminated_inner_boundary_result.txt)
     std::ifstream file(argv[1]);
+    double outter_rect_x = stod(argv[2]);
+    double outter_rect_y = stod(argv[3]);
+    double outter_rect_w = stod(argv[4]);
+    double outter_rect_h = stod(argv[5]);
+
     std::string temp,str,str_start_x,str_start_y,str_end_x,str_end_y;
     std::stringstream ss;
     std::vector<Segment> segments;
     std::vector<Segment> nets;
     std::vector<std::vector<Segment>> boundaries;
     std::vector<std::vector<Segment>> NetsBoundaries;
+    //std::vector<std::vector<Segment>> InitialRouting_extendedtoOutterRect;
     int Segment_side = 0; //closest Segment_side: 1 for start, 2 for end
     int Rect_side = 0; //closest Rect_side: 1 for top, 2 for bottom, 3 for left, 4 for right
     int closest_segment_p0_a = 0,closest_segment_p0_b = 0,closest_segment_p1_a = 0,closest_segment_p1_b = 0;
     double start_x,start_y,end_x,end_y;
     Segment closest_segment = {0,0,0,0};
-    Rectangle rect = {-1.4e+8,-1.4e+8,2.8e+8,2.8e+8};
+
+    //Rectangle rect = {-1.4e+8,-1.4e+8,2.8e+8,2.8e+8};
+    Rectangle rect = {outter_rect_x,outter_rect_y,outter_rect_w,outter_rect_h};
 
     InputFile_EliminatedInnerBoundaryResult(file,segments,nets);
     boundaries = groupSegments(segments);  
     NetsBoundaries = groupSegments(nets);
+    //InitialRouting_extendedtoOutterRect = NetsBoundaries;
+    //extend each boundary to outter rect
     for(int i = 0; i < boundaries.size();i++){
         findClosestSegment(boundaries[i],rect,Rect_side,Segment_side,closest_segment_p0_a,closest_segment_p0_b,closest_segment_p1_a,closest_segment_p1_b);
         closest_segment.p0.a = closest_segment_p0_a;
@@ -396,10 +404,23 @@ int main(int argc,char * argv[]){
         closest_segment.p1.b = closest_segment_p1_b;
         extendBoundaryToOutterRect(boundaries[i],closest_segment,rect,Rect_side,Segment_side);
     }
+    //extend each initial routing to outter rect
+    /*
+    for(int i = 0; i < InitialRouting_extendedtoOutterRect.size();i++){
+        findClosestSegment(InitialRouting_extendedtoOutterRect[i],rect,Rect_side,Segment_side,closest_segment_p0_a,closest_segment_p0_b,closest_segment_p1_a,closest_segment_p1_b);
+        closest_segment.p0.a = closest_segment_p0_a;
+        closest_segment.p0.b = closest_segment_p0_b;
+        closest_segment.p1.a = closest_segment_p1_a;
+        closest_segment.p1.b = closest_segment_p1_b;
+        extendBoundaryToOutterRect(InitialRouting_extendedtoOutterRect[i],closest_segment,rect,Rect_side,Segment_side);
+    }
+    */
+    
     for(int i = 0; i < boundaries.size(); i++){
        Eliminate_RedudantSegment(boundaries[i]);
        Eliminate_IsolatedSegment(boundaries[i]);
     }
+    //OutputFileBoundariesToDrawing(boundaries,NetsBoundaries,InitialRouting_extendedtoOutterRect);
     OutputFileBoundariesToDrawing(boundaries,NetsBoundaries);
 }//main end
 
