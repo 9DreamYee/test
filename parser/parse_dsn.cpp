@@ -7,215 +7,303 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <cctype>
 using namespace std;
 
-// 二維座標點結構
-struct Point {
-    double x, y;
+// Remove leading/trailing whitespace
+static string trim(const string &s) {
+    auto a = s.find_first_not_of(" \t\r\n");
+    auto b = s.find_last_not_of(" \t\r\n");
+    return (a == string::npos ? string() : s.substr(a, b - a + 1));
+}
+
+struct Point { double x, y; };
+struct PadEntry {
+    int lineIndex;
+    string indent, pinName, pinNum, suffix;
+    Point newPos;
+    int edgeIdx;
 };
 
-// 將點 p 投影到線段 ab 上
-static Point projectToSegment(const Point& p, const Point& a, const Point& b) {
-    double vx = b.x - a.x;
-    double vy = b.y - a.y;
-    double wx = p.x - a.x;
-    double wy = p.y - a.y;
-    double denom = vx*vx + vy*vy;
-    double t = (denom > 0 ? (vx*wx + vy*wy) / denom : 0.0);
+// Project point p onto segment ab
+static Point projSeg(const Point& p, const Point& a, const Point& b) {
+    double vx = b.x - a.x, vy = b.y - a.y;
+    double wx = p.x - a.x, wy = p.y - a.y;
+    double d = vx*vx + vy*vy;
+    double t = d > 0 ? (vx*wx + vy*wy) / d : 0;
     t = max(0.0, min(1.0, t));
     return { a.x + t*vx, a.y + t*vy };
 }
 
-// 在 outline 四邊中尋找距離 p 最近的投影點，並返回該點與所在邊索引
-static pair<Point,int> findNearestOnOutlineIndexed(const Point& p, const vector<Point>& outline) {
-    Point bestPt = p;
+// Find nearest point on outline and return which edge
+static pair<Point,int> nearest(const Point& p, const vector<Point>& outline) {
+    Point best = p;
     double bestD2 = numeric_limits<double>::infinity();
     int bestIdx = -1;
-    int n = outline.size();
-    for (int i = 0; i < n; ++i) {
-        const Point& A = outline[i];
-        const Point& B = outline[(i+1)%n];
-        Point Q = projectToSegment(p, A, B);
-        double dx = p.x - Q.x;
-        double dy = p.y - Q.y;
+    for (int i = 0; i < (int)outline.size(); ++i) {
+        Point q = projSeg(p, outline[i], outline[(i+1)%outline.size()]);
+        double dx = p.x - q.x, dy = p.y - q.y;
         double d2 = dx*dx + dy*dy;
         if (d2 < bestD2) {
             bestD2 = d2;
-            bestPt = Q;
+            best = q;
             bestIdx = i;
         }
     }
-    return { bestPt, bestIdx };
+    return { best, bestIdx };
 }
 
-// 計算能放下所有 ball 的大矩形 outline
-static vector<Point> computeBallOutline(double x0, double y0, double w, double h,
-                                        const array<int,4>& counts, double ballPitch) {
-    double Nbot = counts[0], Nrt = counts[1], Ntop = counts[2], Nlt = counts[3];
-    double Wreq = max((Nbot>1?(Nbot-1)*ballPitch:0.0), (Ntop>1?(Ntop-1)*ballPitch:0.0));
-    double Hreq = max((Nlt>1?(Nlt-1)*ballPitch:0.0), (Nrt>1?(Nrt-1)*ballPitch:0.0));
-    double xmin = x0, ymin = y0;
-    double xmax = x0 + w, ymax = y0 + h;
-    double cx = 0.5*(xmin+xmax);
-    double cy = 0.5*(ymin+ymax);
-    double halfW = 0.5*Wreq + ballPitch;
-    double halfH = 0.5*Hreq + ballPitch;
-    return vector<Point>{
-        {cx-halfW, cy-halfH},
-        {cx+halfW, cy-halfH},
-        {cx+halfW, cy+halfH},
-        {cx-halfW, cy+halfH}
-    };
+// DIE outline corners
+static vector<Point> dieOutline(double x0,double y0,double w,double h) {
+    return {{x0,y0},{x0+w,y0},{x0+w,y0+h},{x0,y0+h}};
 }
 
-struct PadEntry { int lineIndex; string indent, pinKw, suffix; Point newPos; int edgeIdx; };
-
-int main(int argc, char* argv[]) {
-    if (argc != 9) {
-        cerr << "用法: " << argv[0] << " input.dsn output.dsn x y width height padPitch ballPitch\n";
-        return 1;
-    }
-    string inFile  = argv[1];
-    string outFile = argv[2];
-    double x0      = stod(argv[3]);
-    double y0      = stod(argv[4]);
-    double w       = stod(argv[5]);
-    double h       = stod(argv[6]);
-    double padPitch  = stod(argv[7]);
-    double ballPitch = stod(argv[8]);
-
-    // DIE1 outline
-    vector<Point> outline = {{x0,y0},{x0+w,y0},{x0+w,y0+h},{x0,y0+h}};
-
-    // 讀取檔案
-    vector<string> lines;
-    ifstream ifs(inFile);
-    if (!ifs) { cerr<<"無法開啟輸入檔: "<<inFile<<"\n"; return 1; }
-    string line;
-    while (getline(ifs, line)) lines.push_back(line);
-    ifs.close();
-    int total = lines.size();
-
-    // DIE1 pad 區間
-    int dieS=-1, dieE=-1;
-    for (int i=0;i<total;++i) {
-        if (dieS<0 && lines[i].find("(image")!=string::npos && lines[i].find("DIE1")!=string::npos)
-            dieS = i;
-        if (dieS>=0 && dieE<0 && lines[i].find("(outline")!=string::npos)
-            dieE = i;
-    }
-    if (dieS<0 || dieE<0) return 1;
-
-    // 收集 pads
-    vector<PadEntry> pads;
-    for (int i=dieS+1;i<dieE;++i) {
-        auto &ln = lines[i];
-        size_t p = ln.find("(pin");
-        if (p==string::npos) continue;
-        string indent = ln.substr(0,p);
-        istringstream iss(ln.substr(p));
-        string pin, name, num, xs, ys;
+// Parse pads, align them, return count per edge
+static array<int,4> parsePads(
+    vector<string>& lines,int s,int e,
+    const vector<Point>& outline,
+    double padPitch,
+    vector<PadEntry>& pads,
+    vector<bool>& keep)
+{
+    for (int i = s+1; i < e; ++i) {
+        auto pos = lines[i].find("(pin");
+        if (pos == string::npos) continue;
+        string indent = lines[i].substr(0,pos);
+        string rest   = lines[i].substr(pos);
+        istringstream iss(rest);
+        string pin,name,num,xs,ys;
         if (!(iss>>pin>>name>>num>>xs>>ys)) continue;
-        while (!ys.empty() && !isdigit(ys.back()) && ys.back()!='.' && ys.back()!='-') ys.pop_back();
+        while (!ys.empty() && !(isdigit((unsigned char)ys.back())||ys.back()=='.'||ys.back()=='-')) ys.pop_back();
         if (ys.empty()) continue;
-        double xv=stod(xs), yv=stod(ys);
-        auto pr = findNearestOnOutlineIndexed({xv,yv}, outline);
-        size_t yPos = ln.find(ys);
-        string suffix = (yPos!=string::npos? ln.substr(yPos+ys.size()):")");
-        pads.push_back({i, indent, string("(pin ")+name+" "+num+" ", suffix, pr.first, pr.second});
+        Point oldp{ stod(xs), stod(ys) };
+        auto pr = nearest(oldp, outline);
+        size_t yp = rest.find(ys);
+        string suf = yp!=string::npos ? rest.substr(yp + ys.size()) : ")";
+        pads.push_back({ i, indent, name, num, suf, pr.first, pr.second });
     }
-    int M = pads.size();
-    vector<bool> keep(M,false);
-    for (int i=0;i<M;++i) {
-        bool ok=true;
-        for (int j=0;j<i;++j) if (keep[j]) {
-            double dx = pads[i].newPos.x - pads[j].newPos.x;
-            double dy = pads[i].newPos.y - pads[j].newPos.y;
-            if (sqrt(dx*dx+dy*dy) < padPitch) { ok=false; break; }
-        }
-        keep[i] = ok;
+    int P = pads.size();
+    keep.assign(P,true);
+    for (int i = 0; i < P; ++i) for (int j = 0; j < i; ++j) if (keep[j]) {
+        double dx = pads[i].newPos.x - pads[j].newPos.x;
+        double dy = pads[i].newPos.y - pads[j].newPos.y;
+        if (sqrt(dx*dx+dy*dy) < padPitch) { keep[i]=false; break; }
     }
     array<int,4> cnt = {0,0,0,0};
-    for (int i=0;i<M;++i) if (keep[i]) cnt[pads[i].edgeIdx]++;
+    for (int i = 0; i < P; ++i) {
+        auto &pe = pads[i];
+        if (!keep[i]) {
+            lines[pe.lineIndex] = "#" + lines[pe.lineIndex];
+        } else {
+            ostringstream os;
+            os << pe.indent
+               << "(pin "<<pe.pinName<<" "<<pe.pinNum
+               << " "<<pe.newPos.x<<" "<<pe.newPos.y
+               << pe.suffix;
+            lines[pe.lineIndex] = os.str();
+            ++cnt[pe.edgeIdx];
+        }
+    }
+    return cnt;
+}
 
-    // 計算 ballOutline 同前略...
-    double tx=x0, ty=y0;
-    if (x0==0 && y0==0) { tx=-w/2; ty=-h/2; }
-    auto ballOutline = computeBallOutline(tx,ty,w,h,cnt,ballPitch);
+// Compute ball outline rectangle
+static vector<Point> ballOutline(
+    double x0,double y0,double w,double h,
+    const array<int,4>& cnt,double pitch)
+{
+    double N0=cnt[0],N1=cnt[1],N2=cnt[2],N3=cnt[3];
+    double W = max((N0>1?(N0-1)*pitch:0.0),(N2>1?(N2-1)*pitch:0.0));
+    double H = max((N3>1?(N3-1)*pitch:0.0),(N1>1?(N1-1)*pitch:0.0));
+    double cx = x0 + w/2, cy = y0 + h/2;
+    double hw = W/2 + pitch, hh = H/2 + pitch;
+    return {{cx-hw,cy-hh},{cx+hw,cy-hh},{cx+hw,cy+hh},{cx-hw,cy+hh}};
+}
 
-    // 計算 ballPos, ballKeys 同前略...
-    vector<Point> ballPos;
-    vector<string> ballKeys;
+// Generate ball points & keys along each edge
+static void genBalls(
+    const vector<Point>& bo,
+    const array<int,4>& cnt,
+    double pitch,
+    vector<Point>& bp,
+    vector<string>& bk)
+{
     const char ec[4]={'B','R','T','L'};
     for (int e=0;e<4;++e) {
-        int C=cnt[e]; if(C<=0) continue;
-        Point A=ballOutline[e], B=ballOutline[(e+1)%4];
-        for(int j=0;j<C;++j) {
-            double t = (C>1? double(j)/(C-1):0.5);
-            ballPos.push_back({ A.x + t*(B.x-A.x), A.y + t*(B.y-A.y) });
-            ballKeys.push_back(string(1,ec[e]) + to_string(j+1));
+        int N = cnt[e]; if (N<=0) continue;
+        bool inc = (e==0||e==2);
+        Point A=bo[e], B=bo[(e+1)%4];
+        for (int j=0;j<N;++j) {
+            double t = inc?(N>1?double(j)/(N-1):0.5):double(j+1)/double(N+1);
+            bp.push_back({A.x + t*(B.x-A.x), A.y + t*(B.y-A.y)});
+            bk.push_back(string(1,ec[e]) + to_string(j+1));
         }
     }
+}
 
-    // 處理 BGA_BGA block 內容，只更新坐標，保留原 token0~2
-    int bgaS=-1,bgaE=-1,depth=0;
-    for(int i=0;i<total;++i) {
-        if (bgaS<0 && lines[i].find("(image")!=string::npos && lines[i].find("BGA_BGA")!=string::npos) {
-            bgaS=i;
-            depth = count(lines[i].begin(), lines[i].end(), '(')
-                  - count(lines[i].begin(), lines[i].end(), ')');
-        } else if (bgaS>=0 && bgaE<0) {
-            depth += count(lines[i].begin(), lines[i].end(), '(')
-                   - count(lines[i].begin(), lines[i].end(), ')');
-            if (depth<=0) bgaE=i;
+// Rewrite BGA_BGA image pins
+static void rewriteBGA(
+    const vector<Point>& bp,
+    const vector<string>& bk,
+    vector<string>& lines)
+{
+    int bs=-1, be=-1, depth=0;
+    for (int i=0;i<(int)lines.size();++i) {
+        if (bs<0
+            && lines[i].find("(image")!=string::npos
+            && lines[i].find("BGA_BGA")!=string::npos)
+        {
+            bs = i;
+            depth = count(lines[i].begin(),lines[i].end(),'(')
+                  - count(lines[i].begin(),lines[i].end(),')');
+        } else if (bs>=0 && be<0) {
+            depth += count(lines[i].begin(),lines[i].end(),'(')
+                   - count(lines[i].begin(),lines[i].end(),')');
+            if (depth<=0) { be=i; break; }
         }
     }
-    if (bgaS>=0 && bgaE> bgaS) {
-        vector<int> bl;
-        for(int i=bgaS+1;i<bgaE;++i)
-            if(lines[i].find("(pin")!=string::npos) bl.push_back(i);
-        int K=ballPos.size();
-        for(int i=0;i<bl.size();++i) {
-            int idx=bl[i]; string orig=lines[idx];
-            size_t p2=orig.find("(pin"); if(p2==string::npos) continue;
-            string indent=orig.substr(0,p2), t2=orig.substr(p2);
-            istringstream iss2(t2); vector<string> tok;
-            string w;
-            while(iss2>>w) tok.push_back(w);
-            if(tok.size()<4) continue;
-            if(i<K) {
-                // 保留 tok[0] tok[1] tok[2]
-                ostringstream oss;
-                oss << indent
-                    << tok[0] << " "
-                    << tok[1] << " "
-                    << tok[2] << " "
-                    << ballPos[i].x << " " << ballPos[i].y << ")";
-                lines[idx] = oss.str();
-            } else {
-                lines[idx] = "#" + orig;
+    if (bs<0||be<0) return;
+    vector<int> idx;
+    for (int i=bs+1;i<be;++i)
+        if (lines[i].find("(pin")!=string::npos)
+            idx.push_back(i);
+    for (int k=0;k<(int)idx.size();++k) {
+        int id = idx[k];
+        string orig = lines[id];
+        size_t p = orig.find("(pin");
+        string indent = orig.substr(0,p), rest=orig.substr(p);
+        istringstream iss(rest);
+        vector<string> tok;
+        for (string w; iss>>w;) tok.push_back(w);
+        if (k < (int)bp.size() && k < (int)bk.size()) {
+            ostringstream os;
+            os << indent << tok[0] << " " << tok[1]
+               << " " << bk[k]
+               << " " << bp[k].x << " " << bp[k].y << ")";
+            lines[id] = os.str();
+        } else {
+            lines[id] = "#" + orig;
+        }
+    }
+}
+
+// Debug pad & ball counts
+static void debugCounts(const array<int,4>& pc, const vector<string>& bk) {
+    array<int,4> bc={0,0,0,0};
+    for (auto &k: bk) if (!k.empty()) {
+        int e = string("BRTL").find(k[0]);
+        if (e<4) ++bc[e];
+    }
+    cerr << "DEBUG Pads: B="<<pc[0]<<" R="<<pc[1]
+         <<" T="<<pc[2]<<" L="<<pc[3]<<"\n";
+    cerr << "DEBUG Balls: B="<<bc[0]<<" R="<<bc[1]
+         <<" T="<<bc[2]<<" L="<<bc[3]<<"\n";
+}
+
+int main(int argc,char*argv[]) {
+    if (argc!=9) {
+        cerr<<"Usage: "<<argv[0]<<" input.dsn output.dsn x0 y0 w h padPitch ballPitch\n";
+        return 1;
+    }
+    string inF=argv[1], outF=argv[2];
+    double x0=stod(argv[3]), y0=stod(argv[4]);
+    double w=stod(argv[5]), h=stod(argv[6]);
+    double padPitch=stod(argv[7]), ballPitch=stod(argv[8]);
+
+    vector<string> lines;
+    { ifstream ifs(inF); for (string l; getline(ifs,l);) lines.push_back(l); }
+
+    auto outline = dieOutline(x0,y0,w,h);
+    int ds=-1,de=-1;
+    for (int i=0;i<(int)lines.size();++i) {
+        if (ds<0 && lines[i].find("(image")!=string::npos && lines[i].find("DIE1")!=string::npos)
+            ds=i;
+        if (ds>=0 && de<0 && lines[i].find("(outline")!=string::npos)
+            de=i;
+    }
+    if (ds<0||de<0) { cerr<<"Error: DIE1 block not found\n"; return 1; }
+
+    vector<PadEntry> pads; vector<bool> keep;
+    auto padCnt = parsePads(lines, ds, de, outline, padPitch, pads, keep);
+
+    double tx=x0, ty=y0;
+    if (x0==0 && y0==0) { tx=-w/2; ty=-h/2; }
+    auto bo = ballOutline(tx, ty, w, h, padCnt, ballPitch);
+
+    vector<Point> bp; vector<string> bk;
+    genBalls(bo, padCnt, ballPitch, bp, bk);
+
+    rewriteBGA(bp, bk, lines);
+    debugCounts(padCnt, bk);
+
+    // New debug: ballOutline size
+    double boW = bo[2].x - bo[0].x;
+    double boH = bo[2].y - bo[0].y;
+    cerr << "DEBUG BallOutline size: " << boW << "x" << boH << "\n";
+
+    array<vector<PadEntry>,4> pbe;
+    array<vector<string>,4> bbe;
+    for (int i=0;i<(int)pads.size();++i)
+        if (keep[i]) pbe[pads[i].edgeIdx].push_back(pads[i]);
+    for (int e=0;e<4;++e) {
+        sort(pbe[e].begin(),pbe[e].end(),[e](auto &a,auto &b){
+            if(e==0) return a.newPos.x < b.newPos.x;
+            if(e==1) return a.newPos.y < b.newPos.y;
+            if(e==2) return a.newPos.x > b.newPos.x;
+            return a.newPos.y > b.newPos.y;
+        });
+    }
+    for (auto &k : bk) {
+        int e = string("BRTL").find(k[0]);
+        if (e<4) bbe[e].push_back(k);
+    }
+    for (int e=0;e<4;++e)
+        sort(bbe[e].begin(),bbe[e].end(),[](auto &a,auto &b){
+            return stoi(a.substr(1)) < stoi(b.substr(1));
+        });
+
+    vector<string> netBlock;
+    netBlock.push_back("(network");
+    int netIdx=1;
+    for (int e=0;e<4;++e) {
+        int N=min((int)pbe[e].size(),(int)bbe[e].size());
+        for (int i=0;i<N;++i) {
+            auto &pe = pbe[e][i];
+            string ballKey=bbe[e][i];
+            string padId  =pe.pinNum;
+            netBlock.push_back("  (net NET_"+to_string(netIdx));
+            netBlock.push_back("    (pins BGA-"+ballKey+" DIE1-"+padId+"))");
+            ++netIdx;
+        }
+    }
+    netBlock.push_back(")");
+
+    // Replace original network block precisely
+    int ns=-1, ne=-1;
+    for (int i=0;i<(int)lines.size();++i) {
+        if (lines[i].find("(network")!=string::npos) { ns=i; break; }
+    }
+    if (ns>=0) {
+        int depth=0;
+        for (int i=ns;i<(int)lines.size();++i) {
+            for (char c:lines[i]) {
+                if (c=='(') ++depth;
+                else if (c==')') --depth;
             }
+            if (i>ns && depth==0) { ne=i; break; }
         }
+        if (ne>ns) {
+            vector<string> out;
+            out.insert(out.end(), lines.begin(), lines.begin()+ns);
+            out.insert(out.end(), netBlock.begin(), netBlock.end());
+            out.insert(out.end(), lines.begin()+ne+1, lines.end());
+            lines.swap(out);
+        }
+    } else {
+        lines.insert(lines.end(), netBlock.begin(), netBlock.end());
     }
 
-    // 更新 DIE1 pads
-    for(int i=0;i<M;++i) {
-        int idx=pads[i].lineIndex;
-        if(!keep[i]) lines[idx]="#"+lines[idx];
-        else {
-            ostringstream oss;
-            oss<<pads[i].indent<<pads[i].pinKw
-               <<pads[i].newPos.x<<" "<<pads[i].newPos.y<<pads[i].suffix;
-            lines[idx]=oss.str();
-        }
-    }
-
-    // 輸出結果
-    ofstream ofs(outFile, ios::out|ios::binary);
-    if(!ofs) { cerr<<"無法寫入: "<<outFile<<"\n"; return 1; }
-    for(auto &l: lines) ofs<<l<<"\n";
-    ofs.close();
-
-    cout<<"parse_dsn 完成。"<<endl;
+    ofstream ofs(outF);
+    for (auto &l: lines) ofs<<l<<"\n";
     return 0;
 }
