@@ -18,7 +18,12 @@ static string trim(const string &s) {
 }
 
 struct Point { double x, y; };
-struct PadEntry { int lineIndex; string indent, pinName, pinNum, suffix; Point newPos; int edgeIdx; };
+struct PadEntry { 
+    int lineIndex; 
+    string indent, pinName, pinNum, suffix; 
+    Point newPos; 
+    int edgeIdx; 
+};
 using PPI = pair<Point,int>;
 
 static Point projSeg(const Point& p, const Point& a, const Point& b) {
@@ -30,28 +35,92 @@ static Point projSeg(const Point& p, const Point& a, const Point& b) {
 }
 
 static PPI nearest(const Point& p, const vector<Point>& outline) {
-    Point best = p; double bestD2 = numeric_limits<double>::infinity(); int bestIdx = -1;
+    Point best = p;
+    double bestD2 = numeric_limits<double>::infinity();
+    int bestIdx = -1;
     for (int i = 0; i < (int)outline.size(); ++i) {
         Point q = projSeg(p, outline[i], outline[(i+1)%outline.size()]);
         double dx = p.x - q.x, dy = p.y - q.y, d2 = dx*dx + dy*dy;
-        if (d2 < bestD2) { bestD2 = d2; best = q; bestIdx = i; }
+        if (d2 < bestD2) {
+            bestD2 = d2;
+            best = q;
+            bestIdx = i;
+        }
     }
     return {best, bestIdx};
 }
 
-static vector<Point> dieOutline(double x0,double y0,double w,double h) {
-    return {{x0,y0},{x0+w,y0},{x0+w,y0+h},{x0,y0+h}};
+static vector<Point> dieOutline(double x0, double y0, double w, double h) {
+    return {{x0,y0}, {x0+w,y0}, {x0+w,y0+h}, {x0,y0+h}};
 }
 
-static array<int,4> parsePads(vector<string>& lines,int s,int e,const vector<Point>& outline,
-                              double padPitch, vector<PadEntry>& pads) {
+/// 在投影之后，处理同一边上重叠的 pad，沿边界方向移动一个 padPitch
+static void resolveOverlaps(vector<PadEntry>& pads,
+                            const vector<Point>& outline,
+                            double padPitch) {
+    const double eps = 1e-6;
+    for (int e = 0; e < 4; ++e) {
+        // 收集属于边 e 的所有 pad 索引
+        vector<int> idxs;
+        for (int i = 0; i < (int)pads.size(); ++i)
+            if (pads[i].edgeIdx == e) idxs.push_back(i);
+        if (idxs.size() < 2) continue;
+
+        // 判断这一边是水平还是垂直
+        bool horizontal = fabs(outline[e].y - outline[(e+1)%4].y) < eps;
+        if (horizontal) {
+            // 水平边：比较 x 坐标
+            double xMin = min(outline[e].x, outline[(e+1)%4].x);
+            double xMax = max(outline[e].x, outline[(e+1)%4].x);
+            for (int i1 = 0; i1 < (int)idxs.size(); ++i1) {
+                for (int i2 = i1+1; i2 < (int)idxs.size(); ++i2) {
+                    int a = idxs[i1], b = idxs[i2];
+                    if (fabs(pads[a].newPos.x - pads[b].newPos.x) < eps) {
+                        // 重叠，移动第二个 pad
+                        if (pads[b].newPos.x + padPitch <= xMax + eps)
+                            pads[b].newPos.x += padPitch;
+                        else
+                            pads[b].newPos.x -= padPitch;
+                    }
+                }
+            }
+        } else {
+            // 垂直边：比较 y 坐标
+            double yMin = min(outline[e].y, outline[(e+1)%4].y);
+            double yMax = max(outline[e].y, outline[(e+1)%4].y);
+            for (int i1 = 0; i1 < (int)idxs.size(); ++i1) {
+                for (int i2 = i1+1; i2 < (int)idxs.size(); ++i2) {
+                    int a = idxs[i1], b = idxs[i2];
+                    if (fabs(pads[a].newPos.y - pads[b].newPos.y) < eps) {
+                        // 重叠，移动第二个 pad
+                        if (pads[b].newPos.y + padPitch <= yMax + eps)
+                            pads[b].newPos.y += padPitch;
+                        else
+                            pads[b].newPos.y -= padPitch;
+                    }
+                }
+            }
+        }
+    }
+}
+
+static array<int,4> parsePads(vector<string>& lines,
+                              int s, int e,
+                              const vector<Point>& outline,
+                              double padPitch,
+                              vector<PadEntry>& pads) {
     array<int,4> cnt = {0,0,0,0};
+    // 第一阶段：投影并收集所有 pad
     for (int i = s+1; i < e; ++i) {
-        auto pos = lines[i].find("(pin"); if (pos == string::npos) continue;
+        auto pos = lines[i].find("(pin");
+        if (pos == string::npos) continue;
         string indent = lines[i].substr(0,pos), rest = lines[i].substr(pos);
-        istringstream iss(rest); string pin, name, num, xs, ys;
+        istringstream iss(rest);
+        string pin, name, num, xs, ys;
         if (!(iss>>pin>>name>>num>>xs>>ys)) continue;
-        while (!ys.empty() && !(isdigit((unsigned char)ys.back())||ys.back()=='.'||ys.back()=='-'))
+        // 去掉尾部非数字字符
+        while (!ys.empty() && 
+              !(isdigit((unsigned char)ys.back())||ys.back()=='.'||ys.back()=='-'))
             ys.pop_back();
         Point oldp{stod(xs), stod(ys)};
         auto pr = nearest(oldp, outline);
@@ -59,6 +128,9 @@ static array<int,4> parsePads(vector<string>& lines,int s,int e,const vector<Poi
         string suf = yp!=string::npos ? rest.substr(yp+ys.size()) : ")";
         pads.push_back({i, indent, name, num, suf, pr.first, pr.second});
     }
+    // 第二阶段：解决重叠
+    resolveOverlaps(pads, outline, padPitch);
+    // 第三阶段：将调整后的位置写回，并统计每条边上的 pad 数
     for (auto &pe : pads) {
         ostringstream os;
         os << pe.indent << "(pin " << pe.pinName << " " << pe.pinNum
@@ -72,10 +144,14 @@ static array<int,4> parsePads(vector<string>& lines,int s,int e,const vector<Poi
 static vector<Point> ballOutline(double x0,double y0,double w,double h,
                                  const array<int,4>& cnt,double pitch) {
     double N0=cnt[0],N1=cnt[1],N2=cnt[2],N3=cnt[3];
-    double W = max((N0>1?(N0-1)*pitch:0.0), (N2>1?(N2-1)*pitch:0.0));
-    double H = max((N3>1?(N3-1)*pitch:0.0), (N1>1?(N1-1)*pitch:0.0));
-    double cx=x0+w/2, cy=y0+h/2, hw=W/2+pitch, hh=H/2+pitch;
-    return {{cx-hw,cy-hh}, {cx+hw,cy-hh}, {cx+hw,cy+hh}, {cx-hw,cy+hh}};
+    double W = max((N0>1?(N0-1)*pitch:0.0),
+                   (N2>1?(N2-1)*pitch:0.0));
+    double H = max((N3>1?(N3-1)*pitch:0.0),
+                   (N1>1?(N1-1)*pitch:0.0));
+    double cx=x0+w/2, cy=y0+h/2;
+    double hw=W/2+pitch, hh=H/2+pitch;
+    return {{cx-hw,cy-hh},{cx+hw,cy-hh},
+            {cx+hw,cy+hh},{cx-hw,cy+hh}};
 }
 
 static void genBalls(const vector<Point>& bo,const array<int,4>& cnt,double pitch,
@@ -94,7 +170,9 @@ static void genBalls(const vector<Point>& bo,const array<int,4>& cnt,double pitc
     }
 }
 
-static void rewriteBGA(const vector<Point>& bp,const vector<string>& bk,vector<string>& lines) {
+static void rewriteBGA(const vector<Point>& bp,
+                       const vector<string>& bk,
+                       vector<string>& lines) {
     int bs=-1, be=-1, depth=0;
     string padName;
     // 定位 BGA_BGA image block
@@ -115,7 +193,7 @@ static void rewriteBGA(const vector<Point>& bp,const vector<string>& bk,vector<s
         }
     }
     if (bs<0||be<0) return;
-    // 获取缩进
+    // 缩进
     string pinIndent = "   ";
     auto p = lines[bs+1].find("(pin");
     if (p!=string::npos) pinIndent = lines[bs+1].substr(0,p);
@@ -139,10 +217,14 @@ static void debugCounts(const array<int,4>& pc,const vector<string>& bk) {
         int e = (k[0]=='B'?0:k[0]=='R'?1:k[0]=='T'?2:3);
         ++bc[e];
     }
-    cerr<<"DEBUG Pads:   B="<<pc[0]<<" R="<<pc[1]
-        <<" T="<<pc[2]<<" L="<<pc[3]<<"\n";
-    cerr<<"DEBUG Balls:  B="<<bc[0]<<" R="<<bc[1]
-        <<" T="<<bc[2]<<" L="<<bc[3]<<"\n";
+    cerr<<"DEBUG Pads:   B="<<pc[0]
+        <<" R="<<pc[1]
+        <<" T="<<pc[2]
+        <<" L="<<pc[3]<<"\n";
+    cerr<<"DEBUG Balls:  B="<<bc[0]
+        <<" R="<<bc[1]
+        <<" T="<<bc[2]
+        <<" L="<<bc[3]<<"\n";
 }
 
 int main(int argc,char*argv[]) {
@@ -152,8 +234,8 @@ int main(int argc,char*argv[]) {
     }
     string inF=argv[1], outF=argv[2];
     double x0=stod(argv[3]), y0=stod(argv[4]);
-    double w=stod(argv[5]), h=stod(argv[6]);
-    double padPitch=stod(argv[7]), ballPitch=stod(argv[8]);
+    double w =stod(argv[5]), h =stod(argv[6]);
+    double padPitch =stod(argv[7]), ballPitch=stod(argv[8]);
 
     vector<string> lines;
     ifstream ifs(inF);
@@ -161,22 +243,30 @@ int main(int argc,char*argv[]) {
     ifs.close();
 
     auto outline = dieOutline(x0,y0,w,h);
-    int ds=-1,de=-1;
+    int ds=-1, de=-1;
     for (int i=0;i<(int)lines.size();++i) {
         if (ds<0 && lines[i].find("(image")!=string::npos
-                  && lines[i].find("DIE1")!=string::npos) ds=i;
-        if (ds>=0 && de<0 && lines[i].find("(outline")!=string::npos) de=i;
+                  && lines[i].find("DIE1")!=string::npos)
+            ds = i;
+        if (ds>=0 && de<0 && lines[i].find("(outline")!=string::npos)
+            de = i;
     }
-    if (ds<0||de<0) { cerr<<"DIE1 block not found\n"; return 1; }
+    if (ds<0||de<0) {
+        cerr<<"DIE1 block not found\n";
+        return 1;
+    }
 
+    // 解析并投影 + 解决重叠
     vector<PadEntry> pads;
     auto padCnt = parsePads(lines, ds, de, outline, padPitch, pads);
 
+    // 生成球引脚位置、重写 BGA、生成 net
     double tx=x0, ty=y0;
     if (x0==0 && y0==0) { tx=-w/2; ty=-h/2; }
     auto bo = ballOutline(tx, ty, w, h, padCnt, ballPitch);
 
-    vector<Point> bp; vector<string> bk;
+    vector<Point> bp; 
+    vector<string> bk;
     genBalls(bo, padCnt, ballPitch, bp, bk);
 
     rewriteBGA(bp, bk, lines);
