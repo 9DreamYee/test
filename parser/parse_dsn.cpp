@@ -266,7 +266,7 @@ int main(int argc,char*argv[]){
         int N=pg[e].size();
         if(N==0) continue;
         double alpha = double(padCnt[e])/double(totalPads);
-		alpha = 0.90;
+		alpha = 1.0;
         for(int i=0;i<N;++i,++idx){
             firstBallPos.push_back({
                 P[idx].x*(1-alpha) + U[idx].x*alpha,
@@ -278,14 +278,19 @@ int main(int argc,char*argv[]){
     // —— 5. 输出 original_coords.txt，并写入第一代 Ball 的 Rect 信息 —— 
     {
         ofstream fout("original_coords.txt");
+    fout << "Ball Rect: "
+	     << "xmin="<< bx0
+         << " ymin=" << by0
+         << " xmax=" << bw+bx0
+         << " ymax=" << bh+by0
+         << "\n";
+	fout << "Full Rect: "
+         << "xmin=" << sx0
+         << " ymin=" << sy0
+         << " xmax=" << sx1
+         << " ymax=" << sy1
+         << "\n";
 
-        // 写入第一代 Ball 的 Rect（xmin,ymin,xmax,ymax）
-        fout << "Ball Rect: "
-             << "xmin=" << bx0
-             << " ymin=" << by0
-             << " xmax=" << (bx0 + bw)
-             << " ymax=" << (by0 + bh)
-             << "\n";
 
         // 按边分组并排序 Pads
         array<vector<PadEntry*>,4> pb{};
@@ -369,90 +374,154 @@ int main(int argc,char*argv[]){
             }
         }
         pads.swap(newPads);
+		rotate(pads.begin(), pads.begin() + 1, pads.end());
     }
 
-    // 7. 写回 DIE1 pin block
+    // —— 7. 写回 DIE1 pin block （第二代 Pad） —— 
     {
-        int pS=-1,pE=-1,dep=0;
-        for(int i=ds;i<=de;++i){
-            if(trim(lines[i]).rfind("(pin",0)==0 && pS<0) pS=i;
-            if(pS>=0 && pE<0){
-                dep += count(lines[i].begin(),lines[i].end(),'(')
-                     - count(lines[i].begin(),lines[i].end(),')');
-                if(dep<=1 && trim(lines[i]).rfind("(pin",0)!=0){ pE=i; break; }
+        int pinStart = -1, pinEnd = -1, depth = 0;
+        for (int i = ds; i <= de; ++i) {
+            if (trim(lines[i]).rfind("(pin", 0) == 0 && pinStart < 0) {
+                pinStart = i;
+            }
+            if (pinStart >= 0 && pinEnd < 0) {
+                depth += count(lines[i].begin(), lines[i].end(), '(')
+                       - count(lines[i].begin(), lines[i].end(), ')');
+                if (depth <= 1 && trim(lines[i]).rfind("(pin", 0) != 0) {
+                    pinEnd = i;
+                    break;
+                }
             }
         }
-        if(pS<0) pS=ds+1; if(pE<0) pE=de;
-        lines.erase(lines.begin()+pS, lines.begin()+pE);
+        if (pinStart < 0) pinStart = ds + 1;
+        if (pinEnd   < 0) pinEnd   = de;
+        lines.erase(lines.begin() + pinStart, lines.begin() + pinEnd);
+
+        // epsilon for floating‐point comparison
+        const double eps = 1e-6;
         vector<string> out;
-        for(auto &pe:pads){
+        for (auto &pe : pads) {
             ostringstream os;
-            os<<pe.indent<<"(pin "<<pe.pinName<<" "<<pe.pinNum
-              <<" "<<pe.newPos.x<<" "<<pe.newPos.y;
-            if(pe.edgeIdx==1||pe.edgeIdx==3) os<<" (rotate 90)";
-            os<<pe.suffix;
+            os << pe.indent
+               << "(pin " << pe.pinName << " " << pe.pinNum
+               << " " << pe.newPos.x << " " << pe.newPos.y;
+
+            // 坐标判断：真正落在左/右边才旋转
+            bool onLeft  = fabs(pe.newPos.x - x0)      < eps;
+            bool onRight = fabs(pe.newPos.x - (x0 + w)) < eps;
+            if (onLeft || onRight) {
+                os << " (rotate 90)";
+            }
+
+            os << pe.suffix;
             out.push_back(os.str());
         }
-        lines.insert(lines.begin()+pS, out.begin(), out.end());
+        lines.insert(lines.begin() + pinStart, out.begin(), out.end());
     }
 
-    // 8. 第二代 Ball：将第一代投影到未缩放 signal outline
-    auto fullOutline=rectOutline(sx0,sy0, sx1-sx0, sy1-sy0);
-    vector<Point> projBall;
-    for(auto &p:firstBallPos){
-        projBall.push_back(nearest(p, fullOutline).first);
-    }
-    // 9. 重写 BGA_BGA
-    rewriteBGA(projBall, ballKeys, lines);
 
-    // 10. 重建 network block（保持原逻辑）
+// 8. 第二代 Ball：逐边取中点 + 角落中点，投影到 scaledBallOutline
+array<vector<int>,4> ballsByEdge{};
+for (int i = 0; i < (int)ballKeys.size(); ++i) {
+    int e = (ballKeys[i][0]=='B'?0
+          : ballKeys[i][0]=='R'?1
+          : ballKeys[i][0]=='T'?2 : 3);
+    ballsByEdge[e].push_back(i);
+}
+
+vector<Point> newBallPos;
+vector<string> newBallKeys;
+// 每条边上相邻两球的中点
+for (int e = 0; e < 4; ++e) {
+    auto &lst = ballsByEdge[e];
+    for (int i = 0; i + 1 < (int)lst.size(); ++i) {
+        Point A = firstBallPos[lst[i]];
+        Point B = firstBallPos[lst[i+1]];
+        Point mid{ 0.5*(A.x + B.x), 0.5*(A.y + B.y) };
+        // 投影到 scaledBallOutline
+        auto pr = nearest(mid, ballOutlineScaled);
+        newBallPos.push_back(pr.first);
+        newBallKeys.push_back(ballKeys[lst[i+1]]);
+    }
+}
+// 四个角的跨边中点
+for (int e = 0; e < 4; ++e) {
+    int e0 = (e + 3) % 4;
+    auto &v0 = ballsByEdge[e0];
+    auto &v1 = ballsByEdge[e];
+    if (!v0.empty() && !v1.empty()) {
+        Point A = firstBallPos[v0.back()];
+        Point B = firstBallPos[v1.front()];
+        Point mid{ 0.5*(A.x + B.x), 0.5*(A.y + B.y) };
+        auto pr = nearest(mid, ballOutlineScaled);
+        newBallPos.push_back(pr.first);
+        newBallKeys.push_back(ballKeys[v1.front()]);
+    }
+}
+
+// 9. 重写 BGA_BGA 区块
+rewriteBGA(newBallPos, newBallKeys, lines);
+
+
+    // 10. 重建 network block — 全局环状配对并 shift=1 —
     {
+        // —— a) 按旧逻辑分组／排序后的 pbe, bbe —— 保持不变 —— 
         array<vector<PadEntry>,4> pbe;
         array<vector<string>,4> bbe;
-        for(auto &pe:pads) pbe[pe.edgeIdx].push_back(pe);
-        for(int e=0;e<4;++e){
-            sort(pbe[e].begin(),pbe[e].end(),[&](auto &A,auto &B){
-                if(e==0) return A.newPos.x<B.newPos.x;
-                if(e==1) return A.newPos.y<B.newPos.y;
-                if(e==2) return A.newPos.x>B.newPos.x;
-                return A.newPos.y>B.newPos.y;
+        for (auto &pe : pads)               pbe[pe.edgeIdx].push_back(pe);
+        for (int e = 0; e < 4; ++e) {
+            sort(pbe[e].begin(), pbe[e].end(), [e](auto &A, auto &B) {
+                if      (e==0) return A.newPos.x < B.newPos.x;
+                else if (e==1) return A.newPos.y < B.newPos.y;
+                else if (e==2) return A.newPos.x > B.newPos.x;
+                else            return A.newPos.y > B.newPos.y;
             });
         }
-        for(auto &k:ballKeys){
-            int e=(k[0]=='B'?0:k[0]=='R'?1:k[0]=='T'?2:3);
+        for (auto &k : newBallKeys) {
+            int e = (k[0]=='B'?0 : k[0]=='R'?1 : k[0]=='T'?2 : 3);
             bbe[e].push_back(k);
         }
-        for(int e=0;e<4;++e){
-            sort(bbe[e].begin(),bbe[e].end(),[](auto &a,auto &b){
-                return stoi(a.substr(1))<stoi(b.substr(1));
+        for (int e = 0; e < 4; ++e) {
+            sort(bbe[e].begin(), bbe[e].end(), [](auto &a, auto &b){
+                return stoi(a.substr(1)) < stoi(b.substr(1));
             });
         }
+
+        // —— b) 展平成线性列表 —— 
+        vector<PadEntry> padList;
+        vector<string>    ballList;
+        for (int e = 0; e < 4; ++e) {
+            for (auto &pe : pbe[e])    padList.push_back(pe);
+            for (auto &bk : bbe[e])    ballList.push_back(bk);
+        }
+        int N = min(padList.size(), ballList.size());
+        int shift = 1;  // 向前偏移 1
+
+        // —— c) 构造 network block —— 
         vector<string> nb;
         nb.push_back("(network");
-        int ni=1;
-        for(int e=0;e<4;++e){
-            int N=min((int)pbe[e].size(),(int)bbe[e].size());
-            for(int i=0;i<N;++i){
-                nb.push_back("  (net NET_"+to_string(ni));
-                nb.push_back("    (pins BGA-"+bbe[e][i]
-                              +" DIE1-"+pbe[e][i].pinNum+"))");
-                ++ni;
-            }
+        for (int i = 0; i < N; ++i) {
+            int bi = (i + shift) % N;
+            nb.push_back("  (net NET_" + to_string(i+1));
+            nb.push_back("    (pins BGA-" + ballList[bi]
+                       + " DIE1-" + padList[i].pinNum + "))");
         }
         nb.push_back(")");
-        int ns=-1,ne=-1,dd=0;
-        for(int i=0;i<lines.size();++i){
-            if(ns<0 && trim(lines[i]).rfind("(network",0)==0){
-                ns=i;
-                dd=1+count(lines[i].begin(),lines[i].end(),'(')
-                     -count(lines[i].begin(),lines[i].end(),')');
-            } else if(ns>=0 && ne<0){
-                dd+=count(lines[i].begin(),lines[i].end(),'(')
-                   -count(lines[i].begin(),lines[i].end(),')');
-                if(dd==0){ ne=i; break; }
+
+        // —— d) 替换原有 network 块 —— 
+        int ns=-1, ne=-1, depth=0;
+        for (int i = 0; i < (int)lines.size(); ++i) {
+            if (ns < 0 && trim(lines[i]).rfind("(network",0) == 0) {
+                ns = i;
+                depth = count(lines[i].begin(), lines[i].end(), '(')
+                      - count(lines[i].begin(), lines[i].end(), ')');
+            } else if (ns >= 0 && ne < 0) {
+                depth += count(lines[i].begin(), lines[i].end(), '(')
+                       - count(lines[i].begin(), lines[i].end(), ')');
+                if (depth == 0) { ne = i; break; }
             }
         }
-        if(ns>=0 && ne>ns){
+        if (ns >= 0 && ne > ns) {
             vector<string> tmp;
             tmp.insert(tmp.end(), lines.begin(), lines.begin()+ns);
             tmp.insert(tmp.end(), nb.begin(), nb.end());
@@ -460,6 +529,7 @@ int main(int argc,char*argv[]){
             lines.swap(tmp);
         }
     }
+
 
     // 11. 写出 aligned .dsn
     ofstream ofs(outF);
