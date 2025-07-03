@@ -12,7 +12,16 @@ fi
 
 INPUT="$1"
 BASENAME=$(basename "$INPUT")
-
+#ballOutline往外推線性參數(避免無法繞線)
+#boundaryExpand=50
+boundaryExpand=150
+#ballOutline內縮比例參數
+#marginPercent=5
+marginPercent=5
+#pad Pitch
+#PITCH=26
+#alpha 
+alpha=0
 # Predefined settings for each known input file
 case "$BASENAME" in
   0507_59io_raw.dsn)
@@ -21,7 +30,7 @@ case "$BASENAME" in
     Y0=0
     W=3210
     H=2100
-    PITCH=80
+    PITCH=55
     BALLPITCH=500
     ;;
   0507_99io_raw.dsn)
@@ -30,7 +39,7 @@ case "$BASENAME" in
     Y0=-2488
     W=4932
     H=4976
-    PITCH=90
+    PITCH=66
     BALLPITCH=650
     ;;
   0507_256io_raw.dsn)
@@ -39,8 +48,8 @@ case "$BASENAME" in
     Y0=-3500
     W=7000
     H=7000
-    PITCH=100
-    BALLPITCH=1000
+    PITCH=80
+    BALLPITCH=500
     ;;
   0507_300io_raw.dsn)
     OUTPUT="aligned_300io.dsn"
@@ -48,7 +57,7 @@ case "$BASENAME" in
     Y0=-3580
     W=7160
     H=7160
-    PITCH=85
+    PITCH=50
     BALLPITCH=500
     ;;
   0507_400io_raw.dsn)
@@ -57,7 +66,7 @@ case "$BASENAME" in
     Y0=0
     W=4122
     H=4230
-    PITCH=75
+    PITCH=26
     BALLPITCH=650
     ;;
   0507_500io_raw.dsn)
@@ -66,7 +75,7 @@ case "$BASENAME" in
     Y0=-3735
     W=7470
     H=7470
-    PITCH=100
+    PITCH=30
     BALLPITCH=800
     ;;
   *)
@@ -74,13 +83,12 @@ case "$BASENAME" in
     exit 1
     ;;
 esac
-
 # Inform user
 echo "Aligning DIE1 pads for '$INPUT' -> '$OUTPUT'"
-echo "  Outline: origin=(${X0},${Y0}), size=${W}x${H}, pitch=${PITCH} ballPitch=${BALLPITCH}"
+echo "  Outline: origin=(${X0},${Y0}), size=${W}x${H}, pitch=${PITCH}"
 
 # Call the alignment tool (parse_dsn must be in PATH or same dir)
-./parse_dsn "$INPUT" "$OUTPUT" "$X0" "$Y0" "$W" "$H" "$PITCH" "$BALLPITCH"
+./parse_dsn "$INPUT" "$OUTPUT" "$X0" "$Y0" "$W" "$H" "$PITCH" "$BALLPITCH" "$marginPercent" "$boundaryExpand"
 
 if [ $? -eq 0 ]; then
   echo "Success: Output written to '$OUTPUT'"
