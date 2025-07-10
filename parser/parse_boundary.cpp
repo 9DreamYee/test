@@ -290,9 +290,16 @@ void drawScene(
     };
     project(l1);
     project(l2);
-
-    cout<<"_view.drawArc("<<bg::get<0>(pb.pad)<<","<<bg::get<1>(pb.pad)<<",100000);\n";
+/*
+    //59,500io
+	cout<<"_view.drawArc("<<bg::get<0>(pb.pad)<<","<<bg::get<1>(pb.pad)<<",20000);\n";
+    cout<<"_view.drawArc("<<bg::get<0>(pb.ball)<<","<<bg::get<1>(pb.ball)<<",20000);\n";
+	*/
+	//else
+	
+	cout<<"_view.drawArc("<<bg::get<0>(pb.pad)<<","<<bg::get<1>(pb.pad)<<",100000);\n";
     cout<<"_view.drawArc("<<bg::get<0>(pb.ball)<<","<<bg::get<1>(pb.ball)<<",100000);\n";
+	
 
     auto drawLines=[&](const LS &ls){
         for(size_t i=0;i+1<ls.size();++i){
@@ -307,7 +314,8 @@ void drawScene(
     cout<<"\n";
 }
 
-// applyLift：一次可以接多個 pad，只要任一個落在線段上就走 A 分支
+//-----------------------------------------------------------------------------
+// applyLift：接受多個 pad，只要任一個 pad 符合壓在線段上，即走 A 分支
 void applyLift(LS &ls,
                const vector<Pt> &pads,
                const Rect &dieRect,
@@ -316,40 +324,41 @@ void applyLift(LS &ls,
     const double EPS = 1e-6;
     const double K   = 10.0;
 
+    // 0) 至少有 A,B,C 三個點
     if (ls.size() < 3) return;
 
+    // 1) 取 A,B
     Pt A = ls[0], B = ls[1];
     double Ax = bg::get<0>(A), Ay = bg::get<1>(A);
     double Bx = bg::get<0>(B), By = bg::get<1>(B);
 
+    // 2) 判斷 A 在哪條邊
     Side sA = whichSide(A, dieRect);
     if (sA == NONE) return;
 
-    if ((sA==TOP||sA==BOTTOM) && fabs(Ay-By)>EPS) return;
-    if ((sA==LEFT||sA==RIGHT)  && fabs(Ax-Bx)>EPS) return;
+    // 3) 檢查 AB 是否平行
+    if ((sA==TOP||sA==BOTTOM) && fabs(Ay-By) > EPS) return;
+    if ((sA==LEFT||sA==RIGHT) && fabs(Ax-Bx) > EPS) return;
 
-    // 新：對所有 pads 做 OR，只要有 one covered_by 就算壓 pad
-    Seg segAB(A,B);
+    // 4) 多 pad 覆蓋判斷
+    Seg segAB(A, B);
     bool padOnAB = false;
     for (auto &pad : pads) {
-        if (bg::covered_by(pad, segAB)) {
-            padOnAB = true;
-            break;
-        }
+        if (bg::covered_by(pad, segAB)) { padOnAB = true; break; }
     }
 
+    // A 分支：貼邊＋壓 Pad → 抬高
     if (padOnAB) {
-        // —— A 分支：貼邊＋壓 Pad
         double delta = K * res;
-        Pt Ap=A, Bp=B;
+        Pt Ap = A, Bp = B;
         if (sA==TOP||sA==BOTTOM) {
             double dir = (sA==TOP?+1:-1);
-            bg::set<1>(Ap, Ay+dir*delta);
-            bg::set<1>(Bp, By+dir*delta);
+            bg::set<1>(Ap, Ay + dir*delta);
+            bg::set<1>(Bp, By + dir*delta);
         } else {
             double dir = (sA==RIGHT?+1:-1);
-            bg::set<0>(Ap, Ax+dir*delta);
-            bg::set<0>(Bp, Bx+dir*delta);
+            bg::set<0>(Ap, Ax + dir*delta);
+            bg::set<0>(Bp, Bx + dir*delta);
         }
         cerr << "[applyLift] A'= ("<<bg::get<0>(Ap)<<","<<bg::get<1>(Ap)
              <<") B'= ("<<bg::get<0>(Bp)<<","<<bg::get<1>(Bp)<<")\n";
@@ -395,42 +404,51 @@ void applyLift(LS &ls,
         return;
     }
 
-    // 分支 B：貼邊但不壓 Pad
-	int cnt = 0;
-    bool fullOverlap = false;
+    // B 分支：貼邊但不壓 Pad
+    // 先判 full overlap
+    bool fullOv = false;
     if (sA==TOP||sA==BOTTOM) {
-        double lo = min(Ax, Bx), hi = max(Ax, Bx);
-        if (lo >= dieRect.xmin - EPS && hi <= dieRect.xmax + EPS)
-            fullOverlap = true;
+        double lo=min(Ax,Bx), hi=max(Ax,Bx);
+        if (lo>=dieRect.xmin-EPS && hi<=dieRect.xmax+EPS) fullOv=true;
     } else {
-        double lo = min(Ay, By), hi = max(Ay, By);
-        if (lo >= dieRect.ymin - EPS && hi <= dieRect.ymax + EPS)
-            fullOverlap = true;
+        double lo=min(Ay,By), hi=max(Ay,By);
+        if (lo>=dieRect.ymin-EPS && hi<=dieRect.ymax+EPS) fullOv=true;
     }
-    if (fullOverlap) {
+    if (fullOv) {
         ls.erase(ls.begin());
-    //cerr<<" full covered pads loc: "<< bg::get<0>(pad)<<","<< bg::get<1>(pad)<< "\n";
-        return;
-    }
-    {
-        Pt E1, E2;
-        switch(sA) {
-        case TOP:    E1 = Pt(dieRect.xmin, dieRect.ymax), E2 = Pt(dieRect.xmax, dieRect.ymax); break;
-        case BOTTOM: E1 = Pt(dieRect.xmin, dieRect.ymin), E2 = Pt(dieRect.xmax, dieRect.ymin); break;
-        case LEFT:   E1 = Pt(dieRect.xmin, dieRect.ymin), E2 = Pt(dieRect.xmin, dieRect.ymax); break;
-        case RIGHT:  E1 = Pt(dieRect.xmax, dieRect.ymin), E2 = Pt(dieRect.xmax, dieRect.ymax); break;
-        default: break;
-        }
-        Seg brd(E1, E2), ab(A, B);
-        vector<Pt> tmp;
-        bg::intersection(ab, brd, tmp);
-        if (!tmp.empty()) ls[0] = tmp.front();
-    //cerr<<" partical covered pads loc: "<< bg::get<0>(pad)<<","<< bg::get<1>(pad)<< "\n";
+		cerr<<"full overlap!\n";
         return;
     }
 
-    // 分支 C：其餘不動
+    // 部分重疊：clamp B
+    Pt corner;
+    switch (sA) {
+        case TOP:
+            bg::set<0>(corner, std::clamp(Bx, dieRect.xmin, dieRect.xmax));
+            bg::set<1>(corner, dieRect.ymax);
+            break;
+        case BOTTOM:
+            bg::set<0>(corner, std::clamp(Bx, dieRect.xmin, dieRect.xmax));
+            bg::set<1>(corner, dieRect.ymin);
+            break;
+        case LEFT:
+            bg::set<0>(corner, dieRect.xmin);
+            bg::set<1>(corner, std::clamp(By, dieRect.ymin, dieRect.ymax));
+            break;
+        case RIGHT:
+            bg::set<0>(corner, dieRect.xmax);
+            bg::set<1>(corner, std::clamp(By, dieRect.ymin, dieRect.ymax));
+            break;
+        default:
+            return;
+    }
+    ls[0] = corner;
+	cerr<<"partical overlap!\n";
+    return;
+
+    // C 分支：其餘不動
 }
+
 
 
 
@@ -464,8 +482,8 @@ void buildAndPrintPolygon(LS raw0,LS raw1,const Rect &dieRect,const Rect &ballRe
         outer.push_back(Pt(cx,cy));
     }
     outer.push_back(Bout);
-    //for(size_t i=0;i+1<inner.size();++i){ auto&p=inner[i],&q=inner[i+1]; cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n"; }
-    //for(size_t i=0;i+1<outer.size();++i){ auto&p=outer[i],&q=outer[i+1]; cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n"; }
+    for(size_t i=0;i+1<inner.size();++i){ auto&p=inner[i],&q=inner[i+1]; cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n"; }
+    for(size_t i=0;i+1<outer.size();++i){ auto&p=outer[i],&q=outer[i+1]; cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n"; }
     vector<Pt> ring;
     ring.insert(ring.end(), inner.begin(), inner.end());
     ring.insert(ring.end(), raw1.begin(), raw1.end());
