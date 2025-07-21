@@ -1,5 +1,6 @@
 // parse_boundary.cpp — 統合新版 applyLift
-
+#include <fstream>
+#include <iomanip>
 #include <bits/stdc++.h>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/segment.hpp>
@@ -40,7 +41,6 @@ Side whichSide(const Pt &p, const Rect &r) {
     if (fabs(y - r.ymax) <= eps) return TOP;
     return NONE;
 }
-
 // 1. 解析 SES header
 struct SESInfo { double res=1, offX=0, offY=0; };
 SESInfo parseSesInfo(const string &file){
@@ -288,9 +288,8 @@ void drawScene(
             <<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n";
 		
     };
-    project(l1);
-    project(l2);
-/*
+
+	/*
     //59,500io
 	cout<<"_view.drawArc("<<bg::get<0>(pb.pad)<<","<<bg::get<1>(pb.pad)<<",20000);\n";
     cout<<"_view.drawArc("<<bg::get<0>(pb.ball)<<","<<bg::get<1>(pb.ball)<<",20000);\n";
@@ -300,7 +299,9 @@ void drawScene(
 	cout<<"_view.drawArc("<<bg::get<0>(pb.pad)<<","<<bg::get<1>(pb.pad)<<",100000);\n";
     cout<<"_view.drawArc("<<bg::get<0>(pb.ball)<<","<<bg::get<1>(pb.ball)<<",100000);\n";
 	
-
+    project(l1);
+    project(l2);
+	
     auto drawLines=[&](const LS &ls){
         for(size_t i=0;i+1<ls.size();++i){
             auto &p1=ls[i], &p2=ls[i+1];
@@ -311,7 +312,7 @@ void drawScene(
     };
     drawLines(l1);
     drawLines(l2);
-    cout<<"\n";
+    //cout<<"\n";
 }
 
 //-----------------------------------------------------------------------------
@@ -416,7 +417,7 @@ void applyLift(LS &ls,
     }
     if (fullOv) {
         ls.erase(ls.begin());
-		cerr<<"full overlap!\n";
+		//cerr<<"full overlap!\n";
         return;
     }
 
@@ -443,7 +444,7 @@ void applyLift(LS &ls,
             return;
     }
     ls[0] = corner;
-	cerr<<"partical overlap!\n";
+	//cerr<<"partical overlap!\n";
     return;
 
     // C 分支：其餘不動
@@ -453,46 +454,365 @@ void applyLift(LS &ls,
 
 
 
-// 7. buildAndPrintPolygon (unchanged)
-void buildAndPrintPolygon(LS raw0,LS raw1,const Rect &dieRect,const Rect &ballRect,const Rect &fullRect,const SESInfo &inf,int idx) {
-    Rect br=ballRect, fr=fullRect;
-    br.xmin*=inf.res; br.xmax*=inf.res; br.ymin*=inf.res; br.ymax*=inf.res;
-    fr.xmin*=inf.res; fr.xmax*=inf.res; fr.ymin*=inf.res; fr.ymax*=inf.res;
-    const double eps=10.0;
-    auto wsl=[&](const Pt &p,const Rect &r){ return whichSide(p,r); };
-    auto projPt=[&](const Pt &p){ Pt q=p; Side s=wsl(p,br);
-        if(s==LEFT) bg::set<0>(q,fr.xmin);
-        else if(s==RIGHT) bg::set<0>(q,fr.xmax);
-        else if(s==BOTTOM) bg::set<1>(q,fr.ymin);
-        else if(s==TOP) bg::set<1>(q,fr.ymax);
+// 生成多邊形，並把 raw0/raw1 延伸到 FullRect 尾端
+Polygon buildPolygon(
+    LS &raw0, LS &raw1,
+    const Rect &dieRect,
+    const Rect &ballRect,
+    const Rect &fullRect,
+    const SESInfo &inf
+) {
+    // 同 buildAndPrintPolygon 前半，計算延伸點
+    Rect br = ballRect, fr = fullRect;
+    br.xmin *= inf.res; br.xmax *= inf.res; br.ymin *= inf.res; br.ymax *= inf.res;
+    fr.xmin *= inf.res; fr.xmax *= inf.res; fr.ymin *= inf.res; fr.ymax *= inf.res;
+    auto whichSideLocal = [&](const Pt &p, const Rect &r) { return whichSide(p,r); };
+    auto projectPt = [&](const Pt &p){ Pt q=p; Side s=whichSideLocal(p,br);
+        if(s==LEFT)      bg::set<0>(q,fr.xmin);
+        else if(s==RIGHT)bg::set<0>(q,fr.xmax);
+        else if(s==BOTTOM)bg::set<1>(q,fr.ymin);
+        else if(s==TOP)   bg::set<1>(q,fr.ymax);
         return q;
     };
-    Pt A=raw0.front(), B=raw1.front();
-    Side siA=wsl(A,dieRect), siB=wsl(B,dieRect);
-    Pt Aout=projPt(raw0.back()), Bout=projPt(raw1.back());
-    Side soA=wsl(raw0.back(),br), soB=wsl(raw1.back(),br);
-    vector<Pt> inner{A}, outer{Aout};
-    if(siA!=NONE && siB!=NONE && siA!=siB){ double cx = (siA==LEFT||siB==LEFT?dieRect.xmin:dieRect.xmax);
-        double cy = (siA==BOTTOM||siB==BOTTOM?dieRect.ymin:dieRect.ymax);
+    // 延伸 raw0/raw1
+    Pt Aout = projectPt(raw0.back()); raw0.push_back(Aout);
+    Pt Bout = projectPt(raw1.back()); raw1.push_back(Bout);
+    // 構造 inner/outer
+    vector<Pt> inner; vector<Pt> outer;
+    Pt A = raw0.front(), B = raw1.front();
+    Side siA = whichSideLocal(A, dieRect), siB = whichSideLocal(B, dieRect);
+    inner.push_back(A);
+    if(siA!=NONE && siB!=NONE && siA!=siB){
+        double cx = (siA==LEFT||siB==LEFT? dieRect.xmin : dieRect.xmax);
+        double cy = (siA==BOTTOM||siB==BOTTOM? dieRect.ymin: dieRect.ymax);
         inner.push_back(Pt(cx,cy));
     }
     inner.push_back(B);
-    if(soA!=NONE && soB!=NONE && soA!=soB){ double cx = (soA==LEFT||soB==LEFT?fr.xmin:fr.xmax);
-        double cy = (soA==BOTTOM||soB==BOTTOM?fr.ymin:fr.ymax);
+    Side soA = whichSideLocal(raw0.back(), br), soB = whichSideLocal(raw1.back(), br);
+    outer.push_back(Aout);
+    if(soA!=NONE && soB!=NONE && soA!=soB){
+        double cx = (soA==LEFT||soB==LEFT? fr.xmin : fr.xmax);
+        double cy = (soA==BOTTOM||soB==BOTTOM? fr.ymin: fr.ymax);
         outer.push_back(Pt(cx,cy));
     }
     outer.push_back(Bout);
-    for(size_t i=0;i+1<inner.size();++i){ auto&p=inner[i],&q=inner[i+1]; cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n"; }
-    for(size_t i=0;i+1<outer.size();++i){ auto&p=outer[i],&q=outer[i+1]; cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n"; }
+    // 拼 ring
     vector<Pt> ring;
     ring.insert(ring.end(), inner.begin(), inner.end());
     ring.insert(ring.end(), raw1.begin(), raw1.end());
     ring.insert(ring.end(), outer.rbegin(), outer.rend());
     ring.insert(ring.end(), raw0.rbegin(), raw0.rend());
     ring.push_back(ring.front());
+    // build poly
     Polygon poly;
     bg::assign_points(poly, ring);
-    bg::correct(poly);
+    bg::correct(poly); 
+	if(!(bg::is_valid(poly))){
+		cerr << "Poly is not valid!\n";
+	}
+    return poly;
+}
+// 列印多邊形邊界 (inner + outer 折線)
+void printPolygon(
+    LS raw0, LS raw1,
+    const Rect &dieRect,
+    const Rect &ballRect,
+    const Rect &fullRect,
+    const SESInfo &inf
+) {
+    Rect br = ballRect, fr = fullRect;
+    br.xmin *= inf.res; br.xmax *= inf.res; br.ymin *= inf.res; br.ymax *= inf.res;
+    fr.xmin *= inf.res; fr.xmax *= inf.res; fr.ymin *= inf.res; fr.ymax *= inf.res;
+    auto whichSideLocal = [&](const Pt &p, const Rect &r) { return whichSide(p,r); };
+    // 頭尾與延伸已在 raw0/raw1
+    Pt A = raw0.front(), B = raw1.front();
+    Side siA = whichSideLocal(A,dieRect), siB = whichSideLocal(B,dieRect);
+    Pt Aout = raw0.back(), Bout = raw1.back();
+    // inner
+    vector<Pt> inner{A};
+    if(siA!=NONE && siB!=NONE && siA!=siB){
+        double cx = (siA==LEFT||siB==LEFT? dieRect.xmin : dieRect.xmax);
+        double cy = (siA==BOTTOM||siB==BOTTOM? dieRect.ymin: dieRect.ymax);
+        inner.push_back(Pt(cx,cy));
+    }
+    inner.push_back(B);
+    // outer
+    Side soA = whichSideLocal(Aout, fr), soB = whichSideLocal(Bout, fr);
+    vector<Pt> outer{Aout};
+    if(soA!=NONE && soB!=NONE && soA!=soB){
+        double cx = (soA==LEFT||soB==LEFT? fr.xmin : fr.xmax);
+        double cy = (soA==BOTTOM||soB==BOTTOM? fr.ymin: fr.ymax);
+        outer.push_back(Pt(cx,cy));
+    }
+    outer.push_back(Bout);
+    // print
+    for(size_t i=0;i+1<inner.size();++i){ auto&p=inner[i],&q=inner[i+1];
+        cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n";
+    }
+    for(size_t i=0;i+1<outer.size();++i){ auto&p=outer[i],&q=outer[i+1];
+        cout<<"_view.drawLine("<<bg::get<0>(p)<<","<<bg::get<1>(p)<<","<<bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n";
+    }
+}
+
+// 檢查多邊形是否覆蓋 pad 與 ball
+bool checkPolygonContainsPadBall(
+    const Polygon &poly,
+    const PB &pb
+) {
+    return bg::covered_by(pb.pad,  poly)
+        && bg::covered_by(pb.ball, poly);
+}
+// -----------------------------------------------------------------------------
+// 按 whichSide 将 NetGroup 分到 TOP/RIGHT/BOTTOM/LEFT 四组，
+// 并在组内按“左→右”、“上→下”、“右→左”、“下→上”排序，最后拼接成一份扁平列表
+vector<pair<string, vector<string>>> reorderBySide(
+    const vector<pair<string, vector<string>>> &pairs,
+    const map<string, PB>               &pbs,
+    const Rect                         &dieRect
+) {
+    // 四组临时容器
+    vector<pair<string, vector<string>>> topV, rightV, bottomV, leftV, others;
+
+    // 1) 分类
+    for (auto &pr : pairs) {
+        const Pt pad = pbs.at(pr.first).pad;
+        switch (whichSide(pad, dieRect)) {
+            case TOP:    topV.push_back(pr);    break;
+            case RIGHT:  rightV.push_back(pr);  break;
+            case BOTTOM: bottomV.push_back(pr); break;
+            case LEFT:   leftV.push_back(pr);   break;
+            default:     others.push_back(pr);  break;
+        }
+    }
+
+    // 2) 组内排序
+    auto cmpXasc  = [&](auto &a, auto &b){ return bg::get<0>(pbs.at(a.first).pad)
+                                                   < bg::get<0>(pbs.at(b.first).pad); };
+    auto cmpXdesc = [&](auto &a, auto &b){ return bg::get<0>(pbs.at(a.first).pad)
+                                                   > bg::get<0>(pbs.at(b.first).pad); };
+    auto cmpYasc  = [&](auto &a, auto &b){ return bg::get<1>(pbs.at(a.first).pad)
+                                                   < bg::get<1>(pbs.at(b.first).pad); };
+    auto cmpYdesc = [&](auto &a, auto &b){ return bg::get<1>(pbs.at(a.first).pad)
+                                                   > bg::get<1>(pbs.at(b.first).pad); };
+
+    sort(topV.begin(),    topV.end(),    cmpXasc);
+    sort(rightV.begin(),  rightV.end(),  cmpYdesc);
+    sort(bottomV.begin(), bottomV.end(), cmpXdesc);
+    sort(leftV.begin(),   leftV.end(),   cmpYasc);
+
+    // 3) 扁平化输出顺序
+    vector<pair<string, vector<string>>> ordered;
+    ordered.reserve(pairs.size());
+    for (auto &x : topV)    ordered.push_back(x);
+    for (auto &x : rightV)  ordered.push_back(x);
+    for (auto &x : bottomV) ordered.push_back(x);
+    for (auto &x : leftV)   ordered.push_back(x);
+    for (auto &x : others)  ordered.push_back(x);
+    return ordered;
+}
+
+// -----------------------------------------------------------------------------
+void outputNetInfo(
+    ofstream                                 &fout,
+    int                                       IDcnt,
+    const PB                                 &pb,
+    const vector<LS>                         &boundaries,   // 已 applyLift 的 ls0, ls1
+    const Rect                               &dieRect,
+    const Rect                               &ballRect,
+    const Rect                               &fullRect,
+    const SESInfo                            &inf,
+    const Polygon                            &poly
+) {
+    fout << fixed << scientific << setprecision(6);
+
+    // 1) Net header + pad/ball
+    fout << "Net" << IDcnt << ":\n";
+    fout << "pad_location:  "
+         << bg::get<0>(pb.pad) << " " << bg::get<1>(pb.pad) << "\n";
+    fout << "ball_location: "
+         << bg::get<0>(pb.ball)<< " " << bg::get<1>(pb.ball)<< "\n";
+
+    // 2) Initial / Extended (empty)
+    fout << "Initial_route_segment:\n";
+    fout << "Extended_Initial_route_segment:\n";
+
+    // 3) Boundary segments
+    for (size_t i = 0; i < boundaries.size(); ++i) {
+        const LS &ls = boundaries[i];
+        fout << "Boundary_segment_" << i << "_info_start:\n";
+        fout << "Boundary_" << i << "_startPoint: "
+             << bg::get<0>(ls.front()) << " " << bg::get<1>(ls.front())
+             << "  Boundary_" << i << "_endPoint: "
+             << bg::get<0>(ls.back())  << " " << bg::get<1>(ls.back()) << "\n";
+        fout << "Boundary_" << i << "_segment:";
+        for (auto &pt : ls) {
+            fout << " " << bg::get<0>(pt) << " " << bg::get<1>(pt);
+        }
+        fout << "\n";
+    }
+
+    // 4) InnerBoundary (1 or 2 segments)
+    {
+        auto whichSideLocal = [&](const Pt &p, const Rect &r){ return whichSide(p,r); };
+        Pt A = boundaries[0].front(), B = boundaries[1].front();
+        Side sA = whichSideLocal(A, dieRect), sB = whichSideLocal(B, dieRect);
+
+        vector<Pt> pts{A};
+        if (sA!=NONE && sB!=NONE && sA!=sB) {
+            double cx = (sA==LEFT||sB==LEFT ? dieRect.xmin : dieRect.xmax);
+            double cy = (sA==BOTTOM||sB==BOTTOM ? dieRect.ymin : dieRect.ymax);
+            pts.push_back(Pt(cx, cy));
+        }
+        pts.push_back(B);
+
+        for (size_t j = 0; j + 1 < pts.size(); ++j) {
+            fout << "InnerBoundary_segment_" << j << "_info_start:\n";
+            fout << "InnerBoundary_"<< j <<"_startPoint: "
+                 << bg::get<0>(pts[j])<<" "<<bg::get<1>(pts[j])
+                 <<"  InnerBoundary_"<< j <<"_endPoint: "
+                 << bg::get<0>(pts[j+1])<<" "<<bg::get<1>(pts[j+1])<<"\n";
+            fout << "InnerBoundary_"<< j <<"_segment:";
+            for (auto &p : pts) {
+                fout << " " << bg::get<0>(p) << " " << bg::get<1>(p);
+            }
+            fout << "\n";
+        }
+    }
+
+    // 5) OutterBoundary (1 or 2 segments)
+    {
+        auto whichSideLocal = [&](const Pt &p, const Rect &r){ return whichSide(p,r); };
+        Rect br = ballRect, fr = fullRect;
+        br.xmin*=inf.res; br.xmax*=inf.res; br.ymin*=inf.res; br.ymax*=inf.res;
+        fr.xmin*=inf.res; fr.xmax*=inf.res; fr.ymin*=inf.res; fr.ymax*=inf.res;
+
+        vector<Pt> outs;
+        for (auto &ls : boundaries) {
+            Pt ed = ls.back(), q = ed;
+            Side s = whichSideLocal(ed, fr);
+            if      (s==LEFT)   bg::set<0>(q, fr.xmin);
+            else if (s==RIGHT)  bg::set<0>(q, fr.xmax);
+            else if (s==BOTTOM) bg::set<1>(q, fr.ymin);
+            else if (s==TOP)    bg::set<1>(q, fr.ymax);
+            outs.push_back(q);
+        }
+
+        Side s0 = whichSideLocal(outs[0], fr),
+             s1 = whichSideLocal(outs[1], fr);
+
+        vector<Pt> pts{outs[0]};
+        if (s0!=NONE && s1!=NONE && s0!=s1) {
+            double cx = (s0==LEFT||s1==LEFT ? fr.xmin : fr.xmax);
+            double cy = (s0==BOTTOM||s1==BOTTOM ? fr.ymin : fr.ymax);
+            pts.push_back(Pt(cx, cy));
+        }
+        pts.push_back(outs[1]);
+
+        for (size_t k = 0; k + 1 < pts.size(); ++k) {
+            fout << "OutterBoundary_segment_"<< k <<"_info_start:\n";
+            fout << "OutterBoundary_"<< k <<"_startPoint: "
+                 << bg::get<0>(pts[k])<<" "<<bg::get<1>(pts[k])
+                 <<"  OutterBoundary_"<< k <<"_endPoint: "
+                 << bg::get<0>(pts[k+1])<<" "<<bg::get<1>(pts[k+1])<<"\n";
+            fout << "OutterBoundary_"<< k <<"_segment:";
+            for (auto &p : pts) {
+                fout << " " << bg::get<0>(p) << " " << bg::get<1>(p);
+            }
+            fout << "\n";
+        }
+    }
+
+    // 6) Area
+    fout << "Net" << IDcnt << "_area: "
+         << bg::area(poly) << "\n";
+/*
+    // 7) Echo draw commands into same fout
+    //    Pad & Ball
+    fout << "_view.drawArc("
+         << bg::get<0>(pb.pad)<<","<<bg::get<1>(pb.pad)<<",20000);\n";
+    fout << "_view.drawArc("
+         << bg::get<0>(pb.ball)<<","<<bg::get<1>(pb.ball)<<",20000);\n";
+
+    //    Original boundaries
+    for (auto &ls : boundaries) {
+        for (size_t i = 0; i+1 < ls.size(); ++i) {
+            auto &p = ls[i], &q = ls[i+1];
+            fout << "_view.drawLine("
+                 << bg::get<0>(p)<<","<<bg::get<1>(p)<<","
+                 << bg::get<0>(q)<<","<<bg::get<1>(q)<<");\n";
+        }
+    }
+    //    InnerBoundary
+    {
+        auto whichSideLocal = [&](const Pt &p,const Rect &r){ return whichSide(p,r); };
+        Pt A = boundaries[0].front(), B = boundaries[1].front();
+        Side sA = whichSideLocal(A, dieRect), sB = whichSideLocal(B, dieRect);
+        vector<Pt> pts{A};
+        if (sA!=NONE && sB!=NONE && sA!=sB) {
+            double cx = (sA==LEFT||sB==LEFT ? dieRect.xmin : dieRect.xmax);
+            double cy = (sA==BOTTOM||sB==BOTTOM ? dieRect.ymin : dieRect.ymax);
+            pts.push_back(Pt(cx,cy));
+        }
+        pts.push_back(B);
+        for (size_t i = 0; i+1 < pts.size(); ++i) {
+            fout << "_view.drawLine("
+                 << bg::get<0>(pts[i])<<","<<bg::get<1>(pts[i])<<","
+                 << bg::get<0>(pts[i+1])<<","<<bg::get<1>(pts[i+1])<<");\n";
+        }
+    }
+    //    OutterBoundary
+    {
+        auto whichSideLocal = [&](const Pt &p,const Rect &r){ return whichSide(p,r); };
+        Rect br=ballRect, fr=fullRect;
+        br.xmin*=inf.res; br.xmax*=inf.res; br.ymin*=inf.res; br.ymax*=inf.res;
+        fr.xmin*=inf.res; fr.xmax*=inf.res; fr.ymin*=inf.res; fr.ymax*=inf.res;
+        vector<Pt> outs;
+        for (auto &ls : boundaries) {
+            Pt ed=ls.back(), q=ed;
+            Side s=whichSideLocal(ed, fr);
+            if      (s==LEFT)   bg::set<0>(q, fr.xmin);
+            else if (s==RIGHT)  bg::set<0>(q, fr.xmax);
+            else if (s==BOTTOM) bg::set<1>(q, fr.ymin);
+            else if (s==TOP)    bg::set<1>(q, fr.ymax);
+            outs.push_back(q);
+        }
+        Side s0=whichSideLocal(outs[0], fr), s1=whichSideLocal(outs[1], fr);
+        vector<Pt> pts{outs[0]};
+        if (s0!=NONE && s1!=NONE && s0!=s1) {
+            double cx=(s0==LEFT||s1==LEFT?fr.xmin:fr.xmax);
+            double cy=(s0==BOTTOM||s1==BOTTOM?fr.ymin:fr.ymax);
+            pts.push_back(Pt(cx,cy));
+        }
+        pts.push_back(outs[1]);
+        for (size_t i=0;i+1<pts.size();++i){
+            fout << "_view.drawLine("
+                 << bg::get<0>(pts[i])<<","<<bg::get<1>(pts[i])<<","
+                 << bg::get<0>(pts[i+1])<<","<<bg::get<1>(pts[i+1])<<");\n";
+        }
+    }
+*/
+}
+void exportNetAreasToCSV(
+    const std::string &filepath,
+    const std::vector<std::pair<int,double>> &netAreas
+) {
+
+    std::ofstream fout(filepath);
+	fout << std::fixed 
+     << std::scientific 
+     << std::setprecision(6)  // match your TXT precision
+     << std::nouppercase;     // lowercase “e” if you prefer
+    if (!fout) {
+        std::cerr << "ERROR: cannot open " << filepath << "\n";
+        return;
+    }
+    // CSV 标头
+    fout << "NetIndex,Area\n";
+    // 每行一个 Net
+    for (auto &p : netAreas) {
+        fout << p.first << "," << p.second << "\n";
+    }
+    fout.close();
 }
 
 int main(int argc,char**argv) {
@@ -513,18 +833,22 @@ int main(int argc,char**argv) {
 
 
     auto pairs = assignByBallEndNearest(pbs, nets);
-	
+	auto orderedPairs = reorderBySide(pairs, pbs, dieRect);
     // 1) 把 pairs 反轉，收集 netName -> pads[]
     map<string, vector<Pt>> net2pads;
-    for (auto &pr : pairs) {
+    for (auto &pr : orderedPairs) {
         const Pt pad = pbs[pr.first].pad;
         for (auto &netName : pr.second) {
             net2pads[netName].push_back(pad);
         }
     }
-
-    int idx = 0;
-    for (auto &pr : pairs) {
+	ofstream fout("net_info.txt", ios::trunc);
+    if (!fout) { cerr<<"Cannot open net_info.txt\n"; return 1; }
+	//output area info to csv file
+	std::vector<std::pair<int,double>> netAreas;
+	netAreas.reserve(orderedPairs.size());
+    int IDcnt = 0;
+    for (auto &pr : orderedPairs) {
         // 原本是 pr.first = padID, pr.second = {net0, net1}
         auto net0 = pr.second[0];
         auto net1 = pr.second[1];
@@ -537,10 +861,27 @@ int main(int argc,char**argv) {
         // 3) 傳入所有對應的 pads
         applyLift(ls0, net2pads[net0], dieRect, inf.res);
         applyLift(ls1, net2pads[net1], dieRect, inf.res);
-
-        // 4) 繪圖與多邊形
+        // 畫線
         drawScene(ls0, ls1, pb, ballRect, fullRect, inf);
-        buildAndPrintPolygon(ls0, ls1, dieRect, ballRect, fullRect, inf, idx++);
+        Polygon poly = buildPolygon(ls0, ls1, dieRect, ballRect, fullRect, inf);
+        printPolygon(ls0, ls1, dieRect, ballRect, fullRect, inf);
+
+        if (!checkPolygonContainsPadBall(poly, pb)) {
+            cerr << "[Warning] net " << pr.first
+                 << " polygon does not cover pad/ball\n";
+        }
+		 // 调用写入 + echo
+		outputNetInfo(fout,
+                  IDcnt,
+                  pb,
+                  vector<LS>{ls0, ls1},
+                  dieRect, ballRect, fullRect,
+                  inf,
+                  poly);
+		double area = bg::area(poly);
+		netAreas.emplace_back(IDcnt, area);
+	    IDcnt++;
     }
+	exportNetAreasToCSV("net_areas.csv", netAreas);
     return 0;
 }
