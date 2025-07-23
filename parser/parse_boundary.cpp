@@ -624,6 +624,27 @@ void outputNetInfo(
     const Polygon                            &poly
 ) {
     fout << fixed << scientific << setprecision(6);
+	
+	// 0) Resolution & DieRect &　FullRect info
+	if(IDcnt == 0)
+    {
+		fout<<"Resolution: "<< inf.res<<"\n";
+
+        double w = (dieRect.xmax - dieRect.xmin) ;
+        double h = (dieRect.ymax - dieRect.ymin) ;
+        fout << "DieRect:  "
+             << dieRect.xmin  << " "
+             << dieRect.ymin  << " "
+             << w            << " "
+             << h            << "\n";
+        double fr_w = (fullRect.xmax - fullRect.xmin) * inf.res;
+        double fr_h = (fullRect.ymax - fullRect.ymin) * inf.res;
+        fout << "FullRect: "
+             << fullRect.xmin * inf.res << " "
+             << fullRect.ymin * inf.res << " "
+             << fr_w              << " "
+             << fr_h              << "\n";
+    }
 
     // 1) Net header + pad/ball
     fout << "Net" << IDcnt << ":\n";
@@ -661,7 +682,10 @@ void outputNetInfo(
         if (sA!=NONE && sB!=NONE && sA!=sB) {
             double cx = (sA==LEFT||sB==LEFT ? dieRect.xmin : dieRect.xmax);
             double cy = (sA==BOTTOM||sB==BOTTOM ? dieRect.ymin : dieRect.ymax);
-            pts.push_back(Pt(cx, cy));
+			Pt temp_ct(cx, cy);
+			if(!bg::equals(A, temp_ct) && !bg::equals(B, temp_ct)){
+                pts.push_back(Pt(cx, cy));
+			}
         }
         pts.push_back(B);
 
@@ -672,8 +696,22 @@ void outputNetInfo(
                  <<"  InnerBoundary_"<< j <<"_endPoint: "
                  << bg::get<0>(pts[j+1])<<" "<<bg::get<1>(pts[j+1])<<"\n";
             fout << "InnerBoundary_"<< j <<"_segment:";
-            for (auto &p : pts) {
-                fout << " " << bg::get<0>(p) << " " << bg::get<1>(p);
+            //沒有角點
+			if(pts.size() == 2){
+                for (auto &p : pts) {
+                    fout << " " << bg::get<0>(p) << " " << bg::get<1>(p);
+                }
+			}
+            //有角點存在
+            else {
+               if(j == 0){
+                   fout<<" "<<bg::get<0>(pts[0])<<" "<<bg::get<1>(pts[0]);
+                   fout<<" "<<bg::get<0>(pts[1])<<" "<<bg::get<1>(pts[1]);
+               }
+               else{
+                   fout<<" "<<bg::get<0>(pts[1])<<" "<<bg::get<1>(pts[1]);
+                   fout<<" "<<bg::get<0>(pts[2])<<" "<<bg::get<1>(pts[2]);
+               }
             }
             fout << "\n";
         }
@@ -704,6 +742,12 @@ void outputNetInfo(
         if (s0!=NONE && s1!=NONE && s0!=s1) {
             double cx = (s0==LEFT||s1==LEFT ? fr.xmin : fr.xmax);
             double cy = (s0==BOTTOM||s1==BOTTOM ? fr.ymin : fr.ymax);
+            /*
+			Pt temp_ct(cx, cy);
+			if(!bg::equals(outs[0], temp_ct) && !bg::equals(outs[1], temp_ct)){
+                pts.push_back(Pt(cx, cy));
+			}
+            */
             pts.push_back(Pt(cx, cy));
         }
         pts.push_back(outs[1]);
@@ -715,8 +759,22 @@ void outputNetInfo(
                  <<"  OutterBoundary_"<< k <<"_endPoint: "
                  << bg::get<0>(pts[k+1])<<" "<<bg::get<1>(pts[k+1])<<"\n";
             fout << "OutterBoundary_"<< k <<"_segment:";
-            for (auto &p : pts) {
-                fout << " " << bg::get<0>(p) << " " << bg::get<1>(p);
+            //沒有角點
+			if(pts.size() == 2){
+                for (auto &p : pts) {
+                    fout << " " << bg::get<0>(p) << " " << bg::get<1>(p);
+                }
+			}
+            //有角點存在
+            else {
+               if(k == 0){
+                   fout<<" "<<bg::get<0>(pts[0])<<" "<<bg::get<1>(pts[0]);
+                   fout<<" "<<bg::get<0>(pts[1])<<" "<<bg::get<1>(pts[1]);
+               }
+               else{
+                   fout<<" "<<bg::get<0>(pts[1])<<" "<<bg::get<1>(pts[1]);
+                   fout<<" "<<bg::get<0>(pts[2])<<" "<<bg::get<1>(pts[2]);
+               }
             }
             fout << "\n";
         }
